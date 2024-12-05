@@ -1,9 +1,9 @@
 # Connecting to the Radio
 Connecting to the radio can be done in multiple ways:
 
->Ethernet
->Wifi
->Configuring your IpV4
+- Ethernet
+- Wifi
+- Configuring your IpV4
 
 Ethernet: Get an ethernet wire and plug it into the ethernet port of your laptop and the ethernet port of the radio (Aux2 port).
 
