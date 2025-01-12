@@ -116,7 +116,7 @@ public class Gyro extends SubsystemBase {
       lastSimYawRad = simyawrad;
       pidgey.setYaw(simYaw);
     }
-    double yaw = (pidgey.getYaw().getValue() % 360 + 360) % 360;
+    double yaw = (pidgey.getYaw().getValueAsDouble() % 360 + 360) % 360;
     // we're not using pitch and roll, don't bother requesting them over the CAN bus.
     // double pitch = (pidgey.getPitch().getValue();
     // double roll = (pidgey.getRoll().getValue(); 
