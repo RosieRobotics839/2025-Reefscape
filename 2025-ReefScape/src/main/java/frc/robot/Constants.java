@@ -23,7 +23,7 @@ import edu.wpi.first.wpilibj.Filesystem;
 //import frc.robot.subsystems.Climber;
 import frc.robot.subsystems.DriveTrain;
 //import frc.robot.subsystems.IntakeShooter;
-//import frc.robot.subsystems.Vision;
+import frc.robot.subsystems.Vision;
 import frc.utils.NTValues.NTBoolean;
 import frc.utils.NTValues.NTDouble;
 import frc.utils.NTValues.NTInteger;
@@ -183,7 +183,7 @@ public final class Constants {
     public static final double kWheelBase = Units.inchesToMeters(22.75);       // Distance between front and back wheels
   }
 
-  public static class IntakeConstants {
+  /* public static class IntakeConstants {
     // Velocity Control PID Gains
     public static double kIntakeRollerKp  = NTDouble.create(0.00002,"Intake/kRollerKp",val->{ kIntakeRollerKp = val; IntakeShooter.getInstance().m_pidIntake.setP(val,0);});
     public static double kIntakeRollerKi  = NTDouble.create(0, "Intake/kRollerKi",val->{ kIntakeRollerKi = val; IntakeShooter.getInstance().m_pidIntake.setI(val,0);});
@@ -205,9 +205,9 @@ public final class Constants {
     public static double kBeamBreakDebounceSec = NTDouble.create(0.010, "Intake/kBeamBreakDebounceSec", val->{kBeamBreakDebounceSec=val; IntakeShooter.getInstance().m_beamDebouncer = new Debouncer(val, Debouncer.DebounceType.kBoth);});
     public static boolean kIntakeIsInverted = false;
     public static double kRetractDistance = NTDouble.create(10, "Intake/kRetractDistance", val->{kRetractDistance=val;});
-  }
+  } */
 
-  public static class ShooterConstants {
+  /* public static class ShooterConstants {
     public static double kMaxSpeed = NTDouble.create(3000,"Shooter/kMaxSpeed",val->kMaxSpeed = val);
     public static double kMaxSpeedBack = NTDouble.create(1000,"Shooter/Back/kMaxBackSpeed",val->kMaxSpeed = val);
     public static double kAtMaxSpeedPercent = 0.8;
@@ -273,9 +273,9 @@ public final class Constants {
       public static double Ground = Units.degreesToRadians(NTDouble.create(-3,"Intake/kAnglePreset/Ground", val->Ground=Units.degreesToRadians(val)));
       public static double Up = Units.degreesToRadians(NTDouble.create(90,"Intake/kAnglePreset/Up", val->Up=Units.degreesToRadians(val)));
     }
-  }
+  } */
 
-  public static class ClimberConstants {
+  /* public static class ClimberConstants {
     public static int kCANIDLeft = 3;
     public static int kCANIDRight = 11;
     public static double kPIDKp  = NTDouble.create(30,"Climber/PID/Kp",val->{ kPIDKp = val; Climber.right().m_pidClimber.setP(val); Climber.left().m_pidClimber.setP(val);});
@@ -299,7 +299,7 @@ public final class Constants {
     public static double kInitCurrentLimit = NTDouble.create(3,"Climber/kInitCurrentLimit",val->kInitCurrentLimit=val);
 
     public static double kMaxSpeed = Units.inchesToMeters(NTDouble.create(6, "Climber/kMaxSpeed", val -> kMaxSpeed = Units.inchesToMeters(val)));
-  }
+  } */
 
   public static class AutoConstants {
 
@@ -410,8 +410,8 @@ public final class Constants {
       public static double kCalibrationRearRight = 2011.0;
 
       // Maximum Current Limits
-      public static double kDrivingMotorCurrentLimit = NTDouble.create(40,"SwerveModule/kDrivingMotorCurrentLimit",val->DriveTrain.forEachSwerveModule((m)->{m.m_motorDrive.setSmartCurrentLimit((int)val);}));
-      public static double kSteeringMotorCurrentLimit = NTDouble.create(5,"SwerveModule/kSteeringMotorCurrentLimit",val->DriveTrain.forEachSwerveModule((m)->{m.m_motorSteer.setSmartCurrentLimit((int)val);}));
+      public static double kDrivingMotorCurrentLimit = NTDouble.create(40,"SwerveModule/kDrivingMotorCurrentLimit",val->DriveTrain.forEachSwerveModule((m)->{m.m_pidDrive.smartCurrentLimit((int)val);}));
+      public static double kSteeringMotorCurrentLimit = NTDouble.create(5,"SwerveModule/kSteeringMotorCurrentLimit",val->DriveTrain.forEachSwerveModule((m)->{m.m_pidSteer.smartCurrentLimit((int)val);}));
 
       // Gear Ratios
       // Drive Characteristics
