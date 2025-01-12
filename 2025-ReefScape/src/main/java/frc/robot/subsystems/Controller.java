@@ -15,8 +15,8 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
-import frc.robot.Constants.ClimberConstants;
-import frc.robot.Constants.ShooterConstants;
+//import frc.robot.Constants.ClimberConstants;
+//import frc.robot.Constants.ShooterConstants;
 import frc.robot.Constants.kDriveTrain.DriveConstants;
 public class Controller extends XboxController {
 
@@ -121,7 +121,7 @@ public class Controller extends XboxController {
 
       /* Set climber values(?) */
 
-      LB.whileTrue(new RepeatCommand(new InstantCommand(() -> {
+      /* LB.whileTrue(new RepeatCommand(new InstantCommand(() -> {
         Climber.setAverageHeight(Climber.getAverageTargetHeight() - ClimberConstants.kMaxSpeed * 0.02);
       })));
       RB.whileTrue(new RepeatCommand(new InstantCommand(() -> {
@@ -134,10 +134,10 @@ public class Controller extends XboxController {
         Climber.setOffset(Climber.getTargetOffset() + ClimberConstants.kMaxSpeed * 0.02);
       })));
 
-      LS.and(RS).onTrue(new InstantCommand(() -> IntakeShooter.getInstance().setAngleInverted()));
+      LS.and(RS).onTrue(new InstantCommand(() -> IntakeShooter.getInstance().setAngleInverted())); 
       /* Set shooter amp / speaker */
 
-      Blue.onTrue(new InstantCommand(() -> {
+      /* Blue.onTrue(new InstantCommand(() -> { 
         // TODO: Set amp shoot & change to that angle
         IntakeShooter.getInstance().setShooterSpeedRatio(1);
       }));
@@ -150,12 +150,12 @@ public class Controller extends XboxController {
       }));
       Green.onFalse(new InstantCommand(() -> {
         IntakeShooter.getInstance().setShooterSpeedRatio(0);
-      }));
+      })); */
       
       
       /* Set intake in / out */
       
-      Orange.onTrue(new InstantCommand(() -> {
+      /* Orange.onTrue(new InstantCommand(() -> {
         IntakeShooter.getInstance().intakeSequence = false;
         IntakeShooter.getInstance().intakeNote.cancel();
         IntakeShooter.getInstance().setIntakeSpeedRatio(0.75);
@@ -170,12 +170,12 @@ public class Controller extends XboxController {
       }));
       Red.onFalse(new InstantCommand(() -> {
         IntakeShooter.getInstance().setIntakeSpeedRatio(0);
-      }));
+      })); */
 
 
       /* Set arm positions. */
 
-      DPadDown.onTrue(new InstantCommand(() -> {
+      /* DPadDown.onTrue(new InstantCommand(() -> {
         IntakeShooter.getInstance().setShooterAngle(ShooterConstants.kAnglePreset.Ground);
       }));
       DPadLeft.onTrue(new InstantCommand(() -> {
@@ -192,8 +192,8 @@ public class Controller extends XboxController {
       }));
       DPadRight.onFalse(new InstantCommand(() -> {
         IntakeShooter.getInstance().setShooterAngle(ShooterConstants.kAnglePreset.Speaker);
-      }));
-    }
+      })); */
+    } 
   }
 
   public Controller(int port) {
@@ -212,14 +212,14 @@ public class Controller extends XboxController {
     rotate = -Rstick.getX(); // Counter Clockwise is Positive consistent the FRC field coordinate system
     
 
-    if (DriverStation.isTeleopEnabled()){
+    /* if (DriverStation.isTeleopEnabled()){
       IntakeShooter.getInstance().setShooterAngle(IntakeShooter.getInstance().getAngleTarget() + ShooterConstants.kManualAngleSpeed * 0.02 * forward);
-    }
+    } */
     // getLeftX()
     // getLeftY()
     // getRightX()
     // getRightY()
-  }
+  } 
 
   public void armThing() {
     if (this.getLeftY() < 0.01 && this.getLeftY() > -0.01) {

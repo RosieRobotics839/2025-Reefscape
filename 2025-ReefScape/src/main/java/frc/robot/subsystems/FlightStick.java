@@ -5,7 +5,7 @@
 package frc.robot.subsystems;
 
 import frc.robot.Constants.OperatorConstants;
-import frc.robot.Constants.ShooterConstants;
+//import frc.robot.Constants.ShooterConstants;
 import frc.robot.Constants.kDriveTrain.DriveConstants;
 import frc.utils.VectorUtils;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -101,7 +101,7 @@ public class FlightStick extends Joystick {
 
         /* Aim at Speaker */
 
-      Btm8Btn.onTrue(new InstantCommand(()->{
+      /* Btm8Btn.onTrue(new InstantCommand(()->{
         Autonomous.getInstance().aimAtPoint(Vision.getInstance().aprilTagFieldLayout.getTagPose(AutonomousCommands.speakerTag()).get().toPose2d(),Units.degreesToRadians(180));
       }));
       Btm8Btn.onFalse(new InstantCommand(()->{
@@ -114,17 +114,17 @@ public class FlightStick extends Joystick {
       }));
       Btm7Btn.onFalse(new InstantCommand(()->{
         Autonomous.getInstance().stopAiming();
-      }));
+      })); */
       /* Go to HP / Amp */
 
-      Top4Btn.onTrue(new InstantCommand(()->{
+      /* Top4Btn.onTrue(new InstantCommand(()->{
         PathPlanning.getInstance().navigateTo(new Pose2d(PathPlanning.AprilTagAtDistance(5,Units.feetToMeters(2)).getTranslation(),new Rotation2d(Units.degreesToRadians(-90))));
         IntakeShooter.getInstance().setShooterAngle(ShooterConstants.kAnglePreset.Amp);
       }));
       Top3Btn.onTrue(new InstantCommand(()->{
         PathPlanning.getInstance().navigateTo(new Pose2d(PathPlanning.AprilTagAtDistance(4,Units.feetToMeters(6)).getTranslation(),new Rotation2d(Units.degreesToRadians(180))));
         IntakeShooter.getInstance().setShooterAngle(ShooterConstants.kAnglePreset.Speaker);
-      }));
+      })); */
 
 
       /* Swap between field centric and proportional */
@@ -141,7 +141,7 @@ public class FlightStick extends Joystick {
 
 
       /* Intake in */
-      Btm10Btn.onTrue(new InstantCommand(() -> {
+      /* Btm10Btn.onTrue(new InstantCommand(() -> {
         IntakeShooter.getInstance().setIntakeSpeedRatio(1);
       }));
       Btm10Btn.onFalse(new InstantCommand(() -> {
@@ -154,7 +154,7 @@ public class FlightStick extends Joystick {
       Btm12Btn.onFalse(new InstantCommand(() -> {
         m_preventDriverRotation = false;
         Vision.getInstance().unlockTarget();
-      }));
+      })); */
     }
   }
 
