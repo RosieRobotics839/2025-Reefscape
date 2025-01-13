@@ -79,8 +79,8 @@ public class Vision extends SubsystemBase {
     cam1.setPipelineIndex(VisionConstants.kPipelineIndex);
     cam2.setPipelineIndex(VisionConstants.kPipelineIndex);
 
-    photonPoseEstimatorFront = new PhotonPoseEstimator(aprilTagFieldLayout, PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR, cam1, VisionConstants.frontCamera.kCameraToRobot().inverse());
-    photonPoseEstimatorRear = new PhotonPoseEstimator(aprilTagFieldLayout, PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR, cam2, VisionConstants.rearCamera.kCameraToRobot().inverse());
+    photonPoseEstimatorFront = new PhotonPoseEstimator(aprilTagFieldLayout, PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR, VisionConstants.frontCamera.kCameraToRobot().inverse());
+    photonPoseEstimatorRear = new PhotonPoseEstimator(aprilTagFieldLayout, PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR, VisionConstants.rearCamera.kCameraToRobot().inverse());
 
     if (Robot.isSimulation()){
       simVision = new VisionSystemSim(
@@ -119,7 +119,12 @@ public class Vision extends SubsystemBase {
     if (res.hasTargets()) {
       
       photonPoseEstimatorFront.setReferencePose(PoseEstimator.getInstance().m_finalPose3d);
-      Optional<EstimatedRobotPose> robotPose = photonPoseEstimatorFront.update();
+      // In photonlib v2025, update call now needs to include camera matrix and distortion coefficients
+      Optional<EstimatedRobotPose> robotPose = photonPoseEstimatorFront.update(
+        res,
+        cam1.getCameraMatrix(),
+        cam1.getDistCoeffs()
+      );
       
       nt_ambiguity.set(res.getBestTarget().getPoseAmbiguity());
       if (robotPose.isPresent()){
@@ -143,7 +148,12 @@ public class Vision extends SubsystemBase {
     if (res.hasTargets()) {
       
       photonPoseEstimatorRear.setReferencePose(PoseEstimator.getInstance().m_finalPose3d);
-      Optional<EstimatedRobotPose> robotPose = photonPoseEstimatorRear.update();
+      // In photonlib v2025, update call now needs to include camera matrix and distortion coefficients
+      Optional<EstimatedRobotPose> robotPose = photonPoseEstimatorRear.update(
+        res,
+        cam2.getCameraMatrix(),
+        cam2.getDistCoeffs()
+      );
       
       nt_ambiguity.set(res.getBestTarget().getPoseAmbiguity());
       if (robotPose.isPresent()){
