@@ -36,15 +36,18 @@ import frc.utils.FirstOrderLag;
 import frc.utils.CANSparkMax.MyCANSparkMax;
 import frc.robot.Robot;
 import frc.robot.Constants.CANID_t;
+
 public class SwerveModule extends SubsystemBase {
 
   static NetworkTable table = NetworkTableInstance.getDefault().getTable("roboRIO/Drivetrain/wheel");
 
   public MyCANSparkMax m_motorDrive, m_motorSteer;
   public RelativeEncoder m_encoderDrive, m_encoderSteer;
-  public SparkMaxConfig m_pidDrive, m_pidSteer;
-  SparkClosedLoopController m_controllerDrive = m_motorDrive.getClosedLoopController();
-  SparkClosedLoopController m_controllerSteer = m_motorSteer.getClosedLoopController();
+  public SparkMaxConfig m_pidDrive = new SparkMaxConfig(); 
+  public SparkMaxConfig m_pidSteer = new SparkMaxConfig();
+
+  SparkClosedLoopController m_controllerDrive;
+  SparkClosedLoopController m_controllerSteer;
   int m_steeringOffset;
   SwerveModuleState optimizedState = new SwerveModuleState(0, new Rotation2d(0));
 
@@ -60,7 +63,7 @@ public class SwerveModule extends SubsystemBase {
     nt_angle,
     nt_speedcmd,
     nt_anglecmd,
-    nt_speed, nt_i, nt_analog;
+    nt_speed, nt_i, nt_analog, nt_steeri;
 
   public SwerveModule(CANID_t CANID, double angleCalibration, String name) {
    
@@ -71,10 +74,13 @@ public class SwerveModule extends SubsystemBase {
     nt_speedcmd = table.getDoubleTopic("speedcmd/"+name).publish();
     nt_anglecmd = table.getDoubleTopic("anglecmd/"+name).publish();
     nt_i = table.getDoubleTopic("current/"+name).publish();
+    nt_steeri = table.getDoubleTopic("current/"+name).publish();
     nt_analog = table.getDoubleTopic("analog/"+name).publish();
 
     /* Define drive motor controller. */
-    m_motorDrive = new MyCANSparkMax(CANID.driving, MotorType.kBrushless);
+    /* m_motorDrive = new MyCANSparkMax(CANID.driving, MotorType.kBrushless);
+
+    m_controllerDrive = m_motorDrive.getClosedLoopController();
 
     m_pidDrive
         .inverted(true)
@@ -87,11 +93,13 @@ public class SwerveModule extends SubsystemBase {
         .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
         .pidf(kSwerveModule.kDriveKp, kSwerveModule.kDriveKi, kSwerveModule.kDriveKd, kSwerveModule.kDriveKff)
         .outputRange(-1,1)
-        .iZone(0.15);
+        .iZone(0.15); */
     
     /* Define steer motor controller. */
     m_motorSteer = new MyCANSparkMax(CANID.steering, MotorType.kBrushless);
     
+    m_controllerSteer  = m_motorSteer.getClosedLoopController();
+
     m_pidSteer
         .inverted(true)
         .idleMode(IdleMode.kBrake)
@@ -111,7 +119,7 @@ public class SwerveModule extends SubsystemBase {
     m_analogEncoder = new AnalogInput(CANID.encoder);
     this.angleCalibration = angleCalibration;
     
-    m_setupDriving.ignoringDisable(true).schedule();
+    //m_setupDriving.ignoringDisable(true).schedule();
     m_setupSteering.ignoringDisable(true).schedule();
 
     setState(optimizedState);
@@ -167,7 +175,8 @@ Command m_setupDriving = Commands.sequence(
   }
 
   public void setState(SwerveModuleState targetState) {
-    if (!m_setupDriveDone || !m_setupSteerDone) return;
+    if (!m_setupSteerDone) return;
+    //if (!m_setupDriveDone || !m_setupSteerDone) return;
     // Sets the target state of the swerve drive equal to the input state
     optimizedState = SwerveModuleState.optimize(targetState, new Rotation2d(getSteerPosition()));
     //m_pidSteer.setReference(0,CANSparkMax.ControlType.kPosition);
@@ -179,8 +188,8 @@ Command m_setupDriving = Commands.sequence(
     double speedcmd = m_magLimiter.calculate(optimizedState.speedMetersPerSecond);
     double anglecmd = optimizedState.angle.getRadians();
     
-    if (m_setupDriveDone && m_setupSteerDone){
-      m_controllerDrive.setReference(speedcmd,SparkMax.ControlType.kVelocity);
+    if (/* m_setupDriveDone && */ m_setupSteerDone){
+      //m_controllerDrive.setReference(speedcmd,SparkMax.ControlType.kVelocity);
       m_controllerSteer.setReference(anglecmd,SparkMax.ControlType.kPosition);
 
       // This method will be called once per scheduler run
@@ -188,7 +197,8 @@ Command m_setupDriving = Commands.sequence(
       nt_speed.set(getDriveVelocity());
       nt_anglecmd.set(anglecmd);
       nt_speedcmd.set(speedcmd);
-      nt_i.set(m_motorDrive.getOutputCurrent());
+      //nt_i.set(m_motorDrive.getOutputCurrent());
+      nt_steeri.set(m_motorSteer.getOutputCurrent());
     }
     nt_analog.set(m_analogEncoder.getValue());
   }

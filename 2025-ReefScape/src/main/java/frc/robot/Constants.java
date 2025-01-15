@@ -116,7 +116,7 @@ public final class Constants {
     public static int    kPipelineIndex = NTInteger.create(0, "Vision/kPipelineIndex", val->Vision.cam1.setPipelineIndex(val));
     public static double kMinTargetArea = NTDouble.create(.05, "Vision/kMinTargetArea", val->kMinTargetArea=val);
 
-    public static String kFieldLayout = Filesystem.getDeployDirectory()+"/2024-crescendo.json";
+    public static String kFieldLayout = Filesystem.getDeployDirectory()+"/2025-ReefScape.json";
 
     public static double kMaxLatencyCompensationMillis = 200; // ms
 
