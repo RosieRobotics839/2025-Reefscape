@@ -4,9 +4,22 @@
 
 package frc.robot;
 
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import frc.robot.Constants.AutoConstants;
+import frc.robot.subsystems.Autonomous;
+import frc.robot.subsystems.DriveTrain;
+import frc.robot.subsystems.FlightStick;
+import frc.robot.subsystems.Gyro;
+import frc.robot.subsystems.PathPlanning;
+import frc.robot.subsystems.Vision;
+import frc.robot.subsystems.PoseEstimator;
+import frc.robot.subsystems.SystemLog;
 
 /**
  * The methods in this class are called automatically corresponding to each mode, as described in
@@ -14,6 +27,20 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
  * this project, you must also update the Main.java file in the project.
  */
 public class Robot extends TimedRobot {
+
+  public Command m_autonomousCommand;
+  public SystemLog m_systemlog = SystemLog.getInstance();
+  public DriveTrain m_drivetrain = DriveTrain.getInstance();
+  public Gyro m_gyro = Gyro.getInstance();
+  public PoseEstimator m_poseestimator = PoseEstimator.getInstance();
+  public PathPlanning m_pathplanning = PathPlanning.getInstance();
+  public Vision m_vision = Vision.getInstance();
+  public Autonomous m_autonomous = Autonomous.getInstance();
+
+  Alliance myAlliance = Alliance.Red;
+
+  public boolean changedAlly = true;
+
   private static final String kDefaultAuto = "Default";
   private static final String kCustomAuto = "My Auto";
   private String m_autoSelected;
@@ -36,8 +63,35 @@ public class Robot extends TimedRobot {
    * <p>This runs after the mode specific periodic functions, but before LiveWindow and
    * SmartDashboard integrated updating.
    */
+
+  boolean noDS = true;
   @Override
-  public void robotPeriodic() {}
+  public void robotPeriodic() {
+
+  CommandScheduler.getInstance().run();
+    
+    changedAlly = false;
+    if ((noDS || myAlliance==Alliance.Blue) && DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == Alliance.Red){
+      myAlliance = Alliance.Red;
+      changedAlly = true;
+      noDS = false;
+    } else if ((noDS || myAlliance==Alliance.Red) && DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == Alliance.Blue){
+      myAlliance = Alliance.Blue;
+      changedAlly = true;
+      noDS = false;
+    } else if (DriverStation.getAlliance().isPresent() == false){
+      noDS = true;
+    }
+
+    if (changedAlly){
+      FlightStick.m_blueAlly = (myAlliance == Alliance.Blue ? true : false);
+      PoseEstimator.getInstance().reset();
+      Gyro.getInstance().setGyroInit((myAlliance == Alliance.Blue ? 0 : Math.PI), 0, 0);
+      AutoConstants.calcAllianceNotes(myAlliance == Alliance.Blue ? true : false);
+      PathPlanning.getInstance().calcFieldGraph();
+    }
+  
+  }
 
   /**
    * This autonomous (along with the chooser code above) shows how to select between different
@@ -72,7 +126,15 @@ public class Robot extends TimedRobot {
 
   /** This function is called once when teleop is enabled. */
   @Override
-  public void teleopInit() {}
+  public void teleopInit() {
+
+    //IntakeShooter.getInstance().m_aimForDistance = false;
+    DriveTrain.getInstance().m_poseQueue.clear();
+    Autonomous.getInstance().stopAiming();
+    if (m_autonomousCommand != null) {
+      m_autonomousCommand.cancel();
+    }
+  }
 
   /** This function is called periodically during operator control. */
   @Override

@@ -111,6 +111,7 @@ public class Vision extends SubsystemBase {
 
   @Override
   public void periodic() {
+    if (true) return;
     // This method will be called once per scheduler run
     var res = cam1.getLatestResult();
 
