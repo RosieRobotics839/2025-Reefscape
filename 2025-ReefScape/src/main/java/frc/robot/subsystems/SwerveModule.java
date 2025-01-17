@@ -34,20 +34,25 @@ import frc.robot.Constants.kDriveTrain.DriveConstants;
 import frc.robot.Constants.kDriveTrain.kSwerveModule;
 import frc.utils.FirstOrderLag;
 import frc.utils.CANSparkMax.MyCANSparkMax;
+import frc.utils.Motor;
 import frc.robot.Robot;
+import frc.robot.Constants;
 import frc.robot.Constants.CANID_t;
 
 public class SwerveModule extends SubsystemBase {
 
   static NetworkTable table = NetworkTableInstance.getDefault().getTable("roboRIO/Drivetrain/wheel");
 
-  public MyCANSparkMax m_motorDrive, m_motorSteer;
-  public RelativeEncoder m_encoderDrive, m_encoderSteer;
-  public SparkMaxConfig m_pidDrive = new SparkMaxConfig(); 
-  public SparkMaxConfig m_pidSteer = new SparkMaxConfig();
+  //public MyCANSparkMax m_motorDrive, m_motorSteer;
+  //public RelativeEncoder m_encoderDrive, m_encoderSteer;
+  //public SparkMaxConfig m_pidDrive = new SparkMaxConfig(); 
+  //public SparkMaxConfig m_pidSteer = new SparkMaxConfig();
 
-  SparkClosedLoopController m_controllerDrive;
-  SparkClosedLoopController m_controllerSteer;
+  //SparkClosedLoopController m_controllerDrive;
+  //SparkClosedLoopController m_controllerSteer;
+
+  public Motor m_motorDrive, m_motorSteer;
+
   int m_steeringOffset;
   SwerveModuleState optimizedState = new SwerveModuleState(0, new Rotation2d(0));
 
@@ -96,16 +101,15 @@ public class SwerveModule extends SubsystemBase {
         .iZone(0.15); */
     
     /* Define steer motor controller. */
-    m_motorSteer = new MyCANSparkMax(CANID.steering, MotorType.kBrushless);
+    m_motorSteer = new Motor(CANID.steering, Motor.MyMotorType.NEO, name+"_steering"); //new MyCANSparkMax(CANID.steering, MotorType.kBrushless);
     
-    m_controllerSteer  = m_motorSteer.getClosedLoopController();
+    // m_controllerSteer  = m_motorSteer.getClosedLoopController();
 
-    m_pidSteer
-        .inverted(true)
-        .idleMode(IdleMode.kBrake)
-        .smartCurrentLimit((int)kSwerveModule.kSteeringMotorCurrentLimit);
-    m_pidSteer.encoder
-        .positionConversionFactor(kSwerveModule.kSteerEncoderPositionFactor);
+    m_motorSteer
+      .inverted(true)
+      .idleMode(IdleMode.kBrake)
+      .smartCurrentLimit((int)kSwerveModule.kSteeringMotorCurrentLimit)
+      .positionConversionFactor(kSwerveModule.kSteerEncoderPositionFactor);
     m_pidSteer.closedLoop
         .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
         .pidf(kSwerveModule.kSteerKp, kSwerveModule.kSteerKi, kSwerveModule.kSteerKd, kSwerveModule.kSteerKff)
