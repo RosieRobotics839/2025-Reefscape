@@ -109,15 +109,13 @@ public class SwerveModule extends SubsystemBase {
       .inverted(true)
       .idleMode(IdleMode.kBrake)
       .smartCurrentLimit((int)kSwerveModule.kSteeringMotorCurrentLimit)
-      .positionConversionFactor(kSwerveModule.kSteerEncoderPositionFactor);
-    m_pidSteer.closedLoop
-        .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
-        .pidf(kSwerveModule.kSteerKp, kSwerveModule.kSteerKi, kSwerveModule.kSteerKd, kSwerveModule.kSteerKff)
-        .outputRange(-1,1)
-        .iZone(0.05)
-        .positionWrappingEnabled(true)
-        .positionWrappingMinInput(-Math.PI)
-        .positionWrappingMaxInput(Math.PI);
+      .positionConversionFactor(kSwerveModule.kSteerEncoderPositionFactor)
+      .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
+      .pidf(kSwerveModule.kSteerKp, kSwerveModule.kSteerKi, kSwerveModule.kSteerKd, kSwerveModule.kSteerKff)
+      .outputRange(-1,1)
+      .iZone(0.05)
+      .positionWrappingEnabled(true)
+      .positionWrappingConfig(-Math.PI, Math.PI);
     
     /* Define steer analog encoder and store calibration value */
     m_analogEncoder = new AnalogInput(CANID.encoder);
