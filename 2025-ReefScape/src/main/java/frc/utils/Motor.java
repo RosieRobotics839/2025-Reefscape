@@ -35,6 +35,8 @@ public class Motor {
         switch (motorType){       
             case KRAKEN:
                 motor_talon = new TalonFX(CANID);
+                config_talon = new TalonFXConfiguration();
+                motor_talon.getConfigurator().apply(config_talon);
                 break;
             case NEO:
                 motor_neo = new MyCANSparkMax(CANID, MotorType.kBrushless);
@@ -66,6 +68,7 @@ public class Motor {
     public Motor idleMode(IdleMode idleMode){
         switch (motorType) {
             case KRAKEN:
+
                 break;
             case NEO:
                 config_neo.idleMode(idleMode);       
@@ -77,6 +80,7 @@ public class Motor {
     public Motor positionConversionFactor(double positionFactor){
         switch (motorType) {
             case KRAKEN:
+
                 break;
             case NEO:
                 config_neo.encoder.positionConversionFactor(positionFactor);       
@@ -112,7 +116,10 @@ public class Motor {
     public Motor pidf(double p, double i, double d, double ff){ // needs params
         switch (motorType) {
             case KRAKEN:
-
+                config_talon.Slot0.withKP(p)
+                    .withKI(i)
+                    .withKD(d)
+                    .withKV(ff);
                 break;
             case NEO:
                 config_neo.closedLoop.pidf(p,i,d,ff); // use params       
@@ -136,7 +143,7 @@ public class Motor {
     public Motor iZone(double zone){
         switch (motorType) {
             case KRAKEN:
-
+                
                 break;
             case NEO:
                 config_neo.closedLoop.iZone(zone);    
@@ -174,7 +181,7 @@ public class Motor {
     public void setSpeed(double speed){
         switch (motorType) {
             case KRAKEN:
-
+                motor_talon.set(speed);
                 break;
             case NEO:
                 controller_neo.setReference(speed, SparkMax.ControlType.kVelocity);       
@@ -185,7 +192,7 @@ public class Motor {
     public void setPosition(double position){
         switch (motorType) {
             case KRAKEN:
-
+                motor_talon.set(position);
                 break;
             case NEO:
                 controller_neo.setReference(position, SparkMax.ControlType.kPosition);
