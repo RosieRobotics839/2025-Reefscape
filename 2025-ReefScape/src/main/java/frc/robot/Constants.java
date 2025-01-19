@@ -9,6 +9,8 @@ import java.util.Arrays;
 import java.util.stream.Collectors;
 import java.util.stream.LongStream;
 
+import com.ctre.phoenix6.configs.Slot0Configs;
+
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -28,6 +30,7 @@ import frc.robot.subsystems.Vision;
 import frc.utils.NTValues.NTBoolean;
 import frc.utils.NTValues.NTDouble;
 import frc.utils.NTValues.NTInteger;
+import frc.utils.Motor;
 /**
  * The Constants class provides a convenient place for teams to hold robot-wide numerical or boolean
  * constants. This class should not be used for any other purpose. All constants should be declared
@@ -459,7 +462,7 @@ public final class Constants {
       // Control Loop Gains - Steering
 
       private static void updateSteerpidf(SwerveModule module, Double p, Double i, Double d, Double ff) {
-        module.m_pidDrive.closedLoop.pidf(
+        module.m_pidSteer.closedLoop.pidf(
           p != null ? p : kSteerKp,
           i != null ? i : kSteerKi,
           d != null ? d : kSteerKd,
