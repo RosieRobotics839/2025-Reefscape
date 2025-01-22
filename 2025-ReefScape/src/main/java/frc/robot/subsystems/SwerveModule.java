@@ -127,6 +127,7 @@ public class SwerveModule extends SubsystemBase {
     setState(optimizedState);
   }
 
+  // Most of this command sequence will be moved into a new class in Motor.java
 Command m_setupDriving = Commands.sequence(
     Commands.waitUntil(() -> (m_encoderDrive = m_motorDrive.getEncoder()) != null),
     Commands.waitUntil(() -> (m_motorDrive.configure(m_pidDrive, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters)) == REVLibError.kOk),
@@ -154,7 +155,8 @@ Command m_setupDriving = Commands.sequence(
     return new SwerveModulePosition(getDrivePosition(),
         new Rotation2d(angle));
   }
-
+  // These methods were previosuly called, replace all references with calls to Motor.java
+/* 
   private double getDriveVelocity(){
     if (!m_setupDriveDone) return 0;
     return m_encoderDrive.getVelocity();
@@ -169,6 +171,7 @@ Command m_setupDriving = Commands.sequence(
     if (!m_setupSteerDone) return 0;
     return m_encoderSteer.getPosition();
   }
+*/
 
   public void setSpeed(double speedMetersPerSecond){
     if (!m_setupDriveDone) return;
