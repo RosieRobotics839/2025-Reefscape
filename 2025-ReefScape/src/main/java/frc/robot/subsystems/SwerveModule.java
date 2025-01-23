@@ -83,22 +83,20 @@ public class SwerveModule extends SubsystemBase {
     nt_analog = table.getDoubleTopic("analog/"+name).publish();
 
     /* Define drive motor controller. */
-    /* m_motorDrive = new MyCANSparkMax(CANID.driving, MotorType.kBrushless);
+    m_motorDrive = new Motor(CANID.driving, Motor.MyMotorType.KRAKEN, name+"_driving");
 
-    m_controllerDrive = m_motorDrive.getClosedLoopController();
+    // m_controllerDrive = m_motorDrive.getClosedLoopController();
 
-    m_pidDrive
+    m_motorDrive
         .inverted(true)
         .idleMode(IdleMode.kBrake)
-        .smartCurrentLimit((int)kSwerveModule.kDrivingMotorCurrentLimit);
-    m_pidDrive.encoder
+        .smartCurrentLimit((int)kSwerveModule.kDrivingMotorCurrentLimit)
         .positionConversionFactor((Robot.isSimulation() ? 60: kSwerveModule.kDriveEncoderPositionFactor))
-        .velocityConversionFactor(kSwerveModule.kDriveEncoderVelocityFactor);
-    m_pidDrive.closedLoop
+        .velocityConversionFactor(kSwerveModule.kDriveEncoderVelocityFactor)
         .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
         .pidf(kSwerveModule.kDriveKp, kSwerveModule.kDriveKi, kSwerveModule.kDriveKd, kSwerveModule.kDriveKff)
         .outputRange(-1,1)
-        .iZone(0.15); */
+        .iZone(0.15); 
     
     /* Define steer motor controller. */
     m_motorSteer = new Motor(CANID.steering, Motor.MyMotorType.NEO, name+"_steering"); //new MyCANSparkMax(CANID.steering, MotorType.kBrushless);
@@ -121,13 +119,14 @@ public class SwerveModule extends SubsystemBase {
     m_analogEncoder = new AnalogInput(CANID.encoder);
     this.angleCalibration = angleCalibration;
     
-    //m_setupDriving.ignoringDisable(true).schedule();
-    m_setupSteering.ignoringDisable(true).schedule();
+    // m_setupDriving.ignoringDisable(true).schedule();
+    // m_setupSteering.ignoringDisable(true).schedule();
 
     setState(optimizedState);
   }
 
   // Most of this command sequence will be moved into a new class in Motor.java
+  /*
 Command m_setupDriving = Commands.sequence(
     Commands.waitUntil(() -> (m_encoderDrive = m_motorDrive.getEncoder()) != null),
     Commands.waitUntil(() -> (m_motorDrive.configure(m_pidDrive, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters)) == REVLibError.kOk),
@@ -140,19 +139,19 @@ Command m_setupDriving = Commands.sequence(
     Commands.waitUntil(() -> (m_motorSteer.configure(m_pidSteer, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters)) == REVLibError.kOk),
     Commands.waitUntil(() -> m_encoderSteer.setPosition(-(m_steeringOffset-angleCalibration)/4096.0 * (2*Math.PI)) == REVLibError.kOk),
     new InstantCommand(()-> m_setupSteerDone = true)
-  );
+  );*/
 
   public SwerveModuleState getState() {
     // Returns the velocity of the swerve drive wheel and angle
-    return new SwerveModuleState(getDriveVelocity(),
-        new Rotation2d(getSteerPosition()));
+    return new SwerveModuleState(m_motorDrive.getVelocity(),
+        new Rotation2d(m_motorSteer.getPosition()));
   }
   
   public SwerveModulePosition getPosition() {
     // Returns the position of the swerve module wheel and angle
     double angle;
-    angle = getSteerPosition();
-    return new SwerveModulePosition(getDrivePosition(),
+    angle = m_motorSteer.getPosition();
+    return new SwerveModulePosition(m_motorDrive.getPosition(),
         new Rotation2d(angle));
   }
   // These methods were previosuly called, replace all references with calls to Motor.java
@@ -176,14 +175,14 @@ Command m_setupDriving = Commands.sequence(
   public void setSpeed(double speedMetersPerSecond){
     if (!m_setupDriveDone) return;
     optimizedState.speedMetersPerSecond = speedMetersPerSecond;
-    m_controllerDrive.setReference(speedMetersPerSecond,SparkMax.ControlType.kVelocity);
+    m_motorDrive.setSpeed(speedMetersPerSecond);
   }
 
   public void setState(SwerveModuleState targetState) {
     if (!m_setupSteerDone) return;
     //if (!m_setupDriveDone || !m_setupSteerDone) return;
     // Sets the target state of the swerve drive equal to the input state
-    optimizedState = SwerveModuleState.optimize(targetState, new Rotation2d(getSteerPosition()));
+    optimizedState = SwerveModuleState.optimize(targetState, new Rotation2d(m_motorSteer.getPosition()));
     //m_pidSteer.setReference(0,CANSparkMax.ControlType.kPosition);
   }
   
@@ -195,11 +194,11 @@ Command m_setupDriving = Commands.sequence(
     
     if (/* m_setupDriveDone && */ m_setupSteerDone){
       //m_controllerDrive.setReference(speedcmd,SparkMax.ControlType.kVelocity);
-      m_controllerSteer.setReference(anglecmd,SparkMax.ControlType.kPosition);
+      m_motorSteer.setPosition(anglecmd);
 
       // This method will be called once per scheduler run
-      nt_angle.set(getSteerPosition());
-      nt_speed.set(getDriveVelocity());
+      nt_angle.set(m_motorSteer.getPosition());
+      nt_speed.set(m_motorDrive.getVelocity());
       nt_anglecmd.set(anglecmd);
       nt_speedcmd.set(speedcmd);
       //nt_i.set(m_motorDrive.getOutputCurrent());
@@ -213,17 +212,17 @@ Command m_setupDriving = Commands.sequence(
   static SparkMaxSim m_simDrive;
   static SparkMaxSim m_simSteer;
   public void simulationInit(){
-    m_simDrive = new SparkMaxSim(m_motorDrive, m_simMotorDrive);
-    m_simSteer = new SparkMaxSim(m_motorSteer, m_simMotorSteer);
+    m_simDrive = new SparkMaxSim(m_motorDrive.motor_neo, m_simMotorDrive);
+    m_simSteer = new SparkMaxSim(m_motorSteer.motor_neo, m_simMotorSteer);
   }
 
   public void simulationPeriodic(){
     if (!m_setupDriveDone || !m_setupSteerDone) return;
   
     if (!RobotController.isSysActive()){
-      m_controllerDrive.setReference(0,SparkMax.ControlType.kVelocity);
+      m_motorDrive.setSpeed(0);
     } else {
-      m_encoderSteer.setPosition(optimizedState.angle.getRadians());
+      m_motorSteer.setPosition(optimizedState.angle.getRadians());
     }
     //m_simDrive.run();
     //m_simSteer.run();

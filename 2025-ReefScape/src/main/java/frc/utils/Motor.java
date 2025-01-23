@@ -3,11 +3,13 @@ package frc.utils;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.signals.InvertedValue;
+import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
+import com.revrobotics.spark.config.SparkBaseConfig;
 import com.revrobotics.spark.config.SparkMaxConfig;
 import com.revrobotics.spark.config.ClosedLoopConfig.FeedbackSensor;
 
@@ -16,13 +18,15 @@ import frc.robot.Constants;
 
 public class Motor {
     int CANID;
+    double positionFactor;
+    double velocityFactor; 
     MyMotorType motorType;
     String name;
 
-    TalonFX motor_talon;
+    public TalonFX motor_talon;
     TalonFXConfiguration config_talon;
 
-    MyCANSparkMax motor_neo;
+    public MyCANSparkMax motor_neo;
     SparkClosedLoopController controller_neo;
     SparkMaxConfig config_neo;
     RelativeEncoder encoder_neo;
@@ -31,6 +35,8 @@ public class Motor {
         CANID = CANID_;
         motorType = motorType_;
         name = name_;
+        positionFactor = 1;
+        velocityFactor = 1;
 
         switch (motorType){       
             case KRAKEN:
@@ -65,10 +71,11 @@ public class Motor {
         return this;
     }
 
-    public Motor idleMode(IdleMode idleMode){
+    public Motor idleMode(IdleMode idleMode){ 
         switch (motorType) {
             case KRAKEN:
-
+                if (idleMode == SparkBaseConfig.IdleMode.kCoast) motor_talon.setNeutralMode(NeutralModeValue.Coast);
+                else motor_talon.setNeutralMode(NeutralModeValue.Brake); 
                 break;
             case NEO:
                 config_neo.idleMode(idleMode);       
@@ -77,13 +84,24 @@ public class Motor {
         return this;
     } 
 
-    public Motor positionConversionFactor(double positionFactor){
+    public Motor positionConversionFactor(double _positionFactor){
         switch (motorType) {
             case KRAKEN:
-
+                positionFactor = _positionFactor; // No easy equivalent methods found, Doing the math manually
                 break;
             case NEO:
-                config_neo.encoder.positionConversionFactor(positionFactor);       
+                config_neo.encoder.positionConversionFactor(_positionFactor);       
+                break;
+        }
+        return this;
+    } 
+    public Motor velocityConversionFactor(double _velocityFactor){
+        switch (motorType) {
+            case KRAKEN:
+                velocityFactor = _velocityFactor; // No easy equivalent methods found, Doing the math manually
+                break;
+            case NEO:
+                config_neo.encoder.positionConversionFactor(_velocityFactor);       
                 break;
         }
         return this;
@@ -101,19 +119,19 @@ public class Motor {
         return this;
     } 
 
-    public Motor feedbackSensor(FeedbackSensor sensor){ // needs params
+    public Motor feedbackSensor(FeedbackSensor sensor){
         switch (motorType) {
             case KRAKEN:  
-
+                // Not really needed As of 1/21/2025
                 break;
             case NEO:
-                config_neo.closedLoop.feedbackSensor(sensor); // use params       
+                config_neo.closedLoop.feedbackSensor(sensor);     
                 break;
         }
         return this;
     } 
 
-    public Motor pidf(double p, double i, double d, double ff){ // needs params
+    public Motor pidf(double p, double i, double d, double ff){
         switch (motorType) {
             case KRAKEN:
                 config_talon.Slot0.withKP(p)
@@ -122,13 +140,13 @@ public class Motor {
                     .withKV(ff);
                 break;
             case NEO:
-                config_neo.closedLoop.pidf(p,i,d,ff); // use params       
+                config_neo.closedLoop.pidf(p,i,d,ff);    
                 break;
         }
         return this;
     } 
 
-    public Motor outputRange(double rangeMin, double rangeMax){
+    public Motor outputRange(double rangeMin, double rangeMax){ // cant find
         switch (motorType) {
             case KRAKEN:
 
@@ -140,7 +158,7 @@ public class Motor {
         return this;
     } 
 
-    public Motor iZone(double zone){
+    public Motor iZone(double zone){ //
         switch (motorType) {
             case KRAKEN:
                 
@@ -152,7 +170,7 @@ public class Motor {
         return this;
     } 
 
-    public Motor positionWrappingEnabled(boolean enabled){
+    public Motor positionWrappingEnabled(boolean enabled){ //
         switch (motorType) {
             case KRAKEN:
 
@@ -164,7 +182,7 @@ public class Motor {
         return this;
     } 
 
-    public Motor positionWrappingConfig(double min, double max){
+    public Motor positionWrappingConfig(double min, double max){ //
         switch (motorType) {
             case KRAKEN:
             
@@ -203,7 +221,7 @@ public class Motor {
     public double getVelocity(){
         switch (motorType) {
             case KRAKEN:
-                return motor_talon.getVelocity().getValueAsDouble()/60.0; // Talon method returns rotations Per second
+                return motor_talon.getVelocity().getValueAsDouble()/60.0 * velocityFactor; // Talon method returns rotations Per second
             case NEO:
                 return encoder_neo.getVelocity(); // Our math is based on rotations per Minute
         }
@@ -213,9 +231,19 @@ public class Motor {
     public double getPosition(){
         switch (motorType) {
             case KRAKEN:
-                return motor_talon.getPosition().getValueAsDouble();
+                return motor_talon.getPosition().getValueAsDouble() * positionFactor;
             case NEO:
                 return encoder_neo.getPosition();
+        }
+        return 0.0;
+    }
+
+    public double getOutputCurrent(){
+        switch (motorType) {
+            case KRAKEN:
+                break;
+            case NEO:
+                return motor_neo.getOutputCurrent();
         }
         return 0.0;
     }
