@@ -56,8 +56,8 @@ public class SwerveModule extends SubsystemBase {
   int m_steeringOffset;
   SwerveModuleState optimizedState = new SwerveModuleState(0, new Rotation2d(0));
 
-  public boolean m_setupDriveDone = false;
-  public boolean m_setupSteerDone = false;
+  public boolean m_setupDriveDone = true;
+  public boolean m_setupSteerDone = true;
 
   public AnalogInput m_analogEncoder;
   public double angleCalibration;
@@ -125,53 +125,12 @@ public class SwerveModule extends SubsystemBase {
     setState(optimizedState);
   }
 
-  // Most of this command sequence will be moved into a new class in Motor.java
-  /*
-Command m_setupDriving = Commands.sequence(
-    Commands.waitUntil(() -> (m_encoderDrive = m_motorDrive.getEncoder()) != null),
-    Commands.waitUntil(() -> (m_motorDrive.configure(m_pidDrive, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters)) == REVLibError.kOk),
-    new InstantCommand(()-> m_setupDriveDone = true)
-  );
-
-  Command m_setupSteering = Commands.sequence(
-    Commands.waitUntil(() -> {m_steeringOffset = m_analogEncoder.getValue(); nt_angleinit.set(m_steeringOffset); return true;}),
-    Commands.waitUntil(() -> (m_encoderSteer = m_motorSteer.getEncoder()) != null),
-    Commands.waitUntil(() -> (m_motorSteer.configure(m_pidSteer, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters)) == REVLibError.kOk),
-    Commands.waitUntil(() -> m_encoderSteer.setPosition(-(m_steeringOffset-angleCalibration)/4096.0 * (2*Math.PI)) == REVLibError.kOk),
-    new InstantCommand(()-> m_setupSteerDone = true)
-  );*/
-
   public SwerveModuleState getState() {
     // Returns the velocity of the swerve drive wheel and angle
     return new SwerveModuleState(m_motorDrive.getVelocity(),
         new Rotation2d(m_motorSteer.getPosition()));
   }
-  
-  public SwerveModulePosition getPosition() {
-    // Returns the position of the swerve module wheel and angle
-    double angle;
-    angle = m_motorSteer.getPosition();
-    return new SwerveModulePosition(m_motorDrive.getPosition(),
-        new Rotation2d(angle));
-  }
-  // These methods were previosuly called, replace all references with calls to Motor.java
-/* 
-  private double getDriveVelocity(){
-    if (!m_setupDriveDone) return 0;
-    return m_encoderDrive.getVelocity();
-  }
-
-  private double getDrivePosition(){
-    if (!m_setupDriveDone) return 0;
-    return m_encoderDrive.getPosition();
-  }
-
-  private double getSteerPosition(){
-    if (!m_setupSteerDone) return 0;
-    return m_encoderSteer.getPosition();
-  }
-*/
-
+ 
   public void setSpeed(double speedMetersPerSecond){
     if (!m_setupDriveDone) return;
     optimizedState.speedMetersPerSecond = speedMetersPerSecond;
@@ -185,7 +144,29 @@ Command m_setupDriving = Commands.sequence(
     optimizedState = SwerveModuleState.optimize(targetState, new Rotation2d(m_motorSteer.getPosition()));
     //m_pidSteer.setReference(0,CANSparkMax.ControlType.kPosition);
   }
-  
+  public SwerveModulePosition getPosition() {
+    // Returns the position of the swerve module wheel and angle
+    double angle;
+    angle = getSteerPosition();
+    return new SwerveModulePosition(getDrivePosition(),
+        new Rotation2d(angle));
+  }
+
+  private double getDriveVelocity(){
+    if (!m_setupDriveDone) return 0;
+    return m_motorDrive.getVelocity();
+  }
+
+  private double getDrivePosition(){
+    if (!m_setupDriveDone) return 0;
+    return m_motorDrive.getPosition();
+  }
+
+  private double getSteerPosition(){
+     if (!m_setupSteerDone) return 0;
+    return m_motorSteer.getPosition();
+  }
+
   @Override
   public void periodic() {
 
