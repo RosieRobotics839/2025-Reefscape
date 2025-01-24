@@ -414,8 +414,8 @@ public final class Constants {
       public static double kCalibrationRearRight = 2011.0;
 
       // Maximum Current Limits
-      public static double kDrivingMotorCurrentLimit = NTDouble.create(40,"SwerveModule/kDrivingMotorCurrentLimit",val->DriveTrain.forEachSwerveModule((m)->{m.m_pidDrive.smartCurrentLimit((int)val);}));
-      public static double kSteeringMotorCurrentLimit = NTDouble.create(5,"SwerveModule/kSteeringMotorCurrentLimit",val->DriveTrain.forEachSwerveModule((m)->{m.m_pidSteer.smartCurrentLimit((int)val);}));
+      public static double kDrivingMotorCurrentLimit = NTDouble.create(40,"SwerveModule/kDrivingMotorCurrentLimit",val->DriveTrain.forEachSwerveModule((m)->{m.m_motorDrive.smartCurrentLimit((int)val);}));
+      public static double kSteeringMotorCurrentLimit = NTDouble.create(5,"SwerveModule/kSteeringMotorCurrentLimit",val->DriveTrain.forEachSwerveModule((m)->{m.m_motorSteer.smartCurrentLimit((int)val);}));
 
       // Gear Ratios
       // Drive Characteristics
@@ -446,7 +446,7 @@ public final class Constants {
       // Control Loop Gains - Drive
 
       private static void updateDrivepidf(SwerveModule module, Double p, Double i, Double d, Double ff) {
-        module.m_pidDrive.closedLoop.pidf(
+        module.m_motorDrive.pidf(
           p != null ? p : kDriveKp,
           i != null ? i : kDriveKi,
           d != null ? d : kDriveKd,
@@ -462,7 +462,7 @@ public final class Constants {
       // Control Loop Gains - Steering
 
       private static void updateSteerpidf(SwerveModule module, Double p, Double i, Double d, Double ff) {
-        module.m_pidSteer.closedLoop.pidf(
+        module.m_motorSteer.pidf(
           p != null ? p : kSteerKp,
           i != null ? i : kSteerKi,
           d != null ? d : kSteerKd,

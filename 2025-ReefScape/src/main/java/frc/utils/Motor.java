@@ -4,18 +4,32 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
+import com.revrobotics.REVLibError;
 import com.revrobotics.RelativeEncoder;
+import com.revrobotics.spark.SparkBase.PersistMode;
+import com.revrobotics.spark.SparkBase.ResetMode;
 import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkBaseConfig;
 import com.revrobotics.spark.config.SparkMaxConfig;
+
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
+
 import com.revrobotics.spark.config.ClosedLoopConfig.FeedbackSensor;
 
 import frc.utils.CANSparkMax.MyCANSparkMax;
 import frc.robot.Constants;
-
+/*  Command m_setupSteering = Commands.sequence(
+    Commands.waitUntil(() -> {m_steeringOffset = m_analogEncoder.getValue(); nt_angleinit.set(m_steeringOffset); return true;}),
+    Commands.waitUntil(() -> (m_encoderSteer = m_motorSteer.getEncoder()) != null),
+    Commands.waitUntil(() -> (m_motorSteer.configure(m_pidSteer, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters)) == REVLibError.kOk),
+    Commands.waitUntil(() -> m_encoderSteer.setPosition(-(m_steeringOffset-angleCalibration)/4096.0 * (2*Math.PI)) == REVLibError.kOk),
+    new InstantCommand(()-> m_setupSteerDone = true)
+  ); */
 public class Motor {
     int CANID;
     double positionFactor;
@@ -28,7 +42,7 @@ public class Motor {
 
     public MyCANSparkMax motor_neo;
     SparkClosedLoopController controller_neo;
-    SparkMaxConfig config_neo;
+    SparkBaseConfig config_neo;
     RelativeEncoder encoder_neo;
 
     public Motor (int CANID_, MyMotorType motorType_, String name_) {
@@ -48,6 +62,13 @@ public class Motor {
                 motor_neo = new MyCANSparkMax(CANID, MotorType.kBrushless);
                 controller_neo = motor_neo.getClosedLoopController();
                 encoder_neo = motor_neo.getEncoder();
+                config_neo = new SparkMaxConfig();
+                motor_neo.configure(config_neo, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters); /* 
+                Command m_setupMotor = Commands.sequence(
+                    Commands.waitUntil(() -> (m_encoderDrive = m_motorDrive.getEncoder()) != null),
+                    Commands.waitUntil(() -> (m_motorDrive.configure(m_pidDrive, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters)) == REVLibError.kOk),
+                    new InstantCommand(()-> m_setupDriveDone = true)
+                );*/
                 break;
         }
     }
