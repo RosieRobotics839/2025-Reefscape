@@ -15,6 +15,10 @@ import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkBaseConfig;
 import com.revrobotics.spark.config.SparkMaxConfig;
 
+import edu.wpi.first.networktables.DoublePublisher;
+import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.wpilibj.AnalogInput;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
@@ -23,14 +27,11 @@ import com.revrobotics.spark.config.ClosedLoopConfig.FeedbackSensor;
 
 import frc.utils.CANSparkMax.MyCANSparkMax;
 import frc.robot.Constants;
-/*  Command m_setupSteering = Commands.sequence(
-    Commands.waitUntil(() -> {m_steeringOffset = m_analogEncoder.getValue(); nt_angleinit.set(m_steeringOffset); return true;}),
-    Commands.waitUntil(() -> (m_encoderSteer = m_motorSteer.getEncoder()) != null),
-    Commands.waitUntil(() -> (m_motorSteer.configure(m_pidSteer, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters)) == REVLibError.kOk),
-    Commands.waitUntil(() -> m_encoderSteer.setPosition(-(m_steeringOffset-angleCalibration)/4096.0 * (2*Math.PI)) == REVLibError.kOk),
-    new InstantCommand(()-> m_setupSteerDone = true)
-  ); */
+
 public class Motor {
+
+    static NetworkTable table = NetworkTableInstance.getDefault().getTable("roboRIO/Drivetrain/wheel");
+
     int CANID;
     double positionFactor;
     double velocityFactor; 
@@ -41,9 +42,16 @@ public class Motor {
     TalonFXConfiguration config_talon;
 
     public MyCANSparkMax motor_neo;
+    public boolean m_setupMotorDone = false;
+    public double angleCalibration;
+    public AnalogInput m_analogEncoder;
     SparkClosedLoopController controller_neo;
     SparkBaseConfig config_neo;
     RelativeEncoder encoder_neo;
+    int offset_neo;
+
+    DoublePublisher 
+    nt_angleinit;
 
     public Motor (int CANID_, MyMotorType motorType_, String name_) {
         CANID = CANID_;
@@ -51,6 +59,7 @@ public class Motor {
         name = name_;
         positionFactor = 1;
         velocityFactor = 1;
+        nt_angleinit = table.getDoubleTopic("angle/init/"+name).publish();
 
         switch (motorType){       
             case KRAKEN:
@@ -63,12 +72,28 @@ public class Motor {
                 controller_neo = motor_neo.getClosedLoopController();
                 encoder_neo = motor_neo.getEncoder();
                 config_neo = new SparkMaxConfig();
-                motor_neo.configure(config_neo, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters); /* 
+                motor_neo.configure(config_neo, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters); 
+
+                String text = name_;
+                if (text.contains(name+"_driving")) {
+                
                 Command m_setupMotor = Commands.sequence(
-                    Commands.waitUntil(() -> (m_encoderDrive = m_motorDrive.getEncoder()) != null),
-                    Commands.waitUntil(() -> (m_motorDrive.configure(m_pidDrive, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters)) == REVLibError.kOk),
-                    new InstantCommand(()-> m_setupDriveDone = true)
-                );*/
+                    Commands.waitUntil(() -> (encoder_neo = motor_neo.getEncoder()) != null),
+                    Commands.waitUntil(() -> (motor_neo.configure(config_neo, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters)) == REVLibError.kOk),
+                    new InstantCommand(()-> m_setupMotorDone = true)
+                ); 
+
+                } else if (text.contains(name+"_steering")) {
+                
+                Command m_setupSteering = Commands.sequence(
+                    Commands.waitUntil(() -> {offset_neo = m_analogEncoder.getValue(); nt_angleinit.set(offset_neo); return true;}),
+                    Commands.waitUntil(() -> (encoder_neo = motor_neo.getEncoder()) != null),
+                    Commands.waitUntil(() -> (motor_neo.configure(config_neo, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters)) == REVLibError.kOk),
+                    Commands.waitUntil(() -> encoder_neo.setPosition(-(offset_neo-angleCalibration)/4096.0 * (2*Math.PI)) == REVLibError.kOk),
+                    new InstantCommand(()-> m_setupMotorDone = true)
+                ); 
+
+                }
                 break;
         }
     }
