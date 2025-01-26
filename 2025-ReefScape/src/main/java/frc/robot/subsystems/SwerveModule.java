@@ -56,8 +56,8 @@ public class SwerveModule extends SubsystemBase {
   int m_steeringOffset;
   SwerveModuleState optimizedState = new SwerveModuleState(0, new Rotation2d(0));
 
-  public boolean m_setupDriveDone = true;
-  public boolean m_setupSteerDone = true;
+  public boolean m_setupDriveDone = false;
+  public boolean m_setupSteerDone = false;
 
   public AnalogInput m_analogEncoder;
   public double angleCalibration;
@@ -139,7 +139,7 @@ public class SwerveModule extends SubsystemBase {
 
   public void setState(SwerveModuleState targetState) {
     if (!m_setupSteerDone) return;
-    //if (!m_setupDriveDone || !m_setupSteerDone) return;
+    if (!m_setupDriveDone || !m_setupSteerDone) return;
     // Sets the target state of the swerve drive equal to the input state
     optimizedState = SwerveModuleState.optimize(targetState, new Rotation2d(m_motorSteer.getPosition()));
     //m_pidSteer.setReference(0,CANSparkMax.ControlType.kPosition);
@@ -147,28 +147,16 @@ public class SwerveModule extends SubsystemBase {
   public SwerveModulePosition getPosition() {
     // Returns the position of the swerve module wheel and angle
     double angle;
-    angle = getSteerPosition();
-    return new SwerveModulePosition(getDrivePosition(),
+    angle = m_motorSteer.getPosition();
+    return new SwerveModulePosition(m_motorDrive.getPosition(),
         new Rotation2d(angle));
-  }
-
-  private double getDriveVelocity(){
-    if (!m_setupDriveDone) return 0;
-    return m_motorDrive.getVelocity();
-  }
-
-  private double getDrivePosition(){
-    if (!m_setupDriveDone) return 0;
-    return m_motorDrive.getPosition();
-  }
-
-  private double getSteerPosition(){
-     if (!m_setupSteerDone) return 0;
-    return m_motorSteer.getPosition();
   }
 
   @Override
   public void periodic() {
+
+    m_setupDriveDone = m_motorDrive.isSetupDone();
+    m_setupSteerDone = m_motorSteer.isSetupDone();
 
     double speedcmd = m_magLimiter.calculate(optimizedState.speedMetersPerSecond);
     double anglecmd = optimizedState.angle.getRadians();

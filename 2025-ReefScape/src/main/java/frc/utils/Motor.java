@@ -42,7 +42,7 @@ public class Motor {
     TalonFXConfiguration config_talon;
 
     public MyCANSparkMax motor_neo;
-    public boolean m_setupMotorDone = false;
+    private boolean m_setupMotorDone = false;
     public double angleCalibration;
     public AnalogInput m_analogEncoder;
     SparkClosedLoopController controller_neo;
@@ -264,6 +264,7 @@ public class Motor {
     }
 
     public double getVelocity(){
+        if (!m_setupMotorDone) return 0;
         switch (motorType) {
             case KRAKEN:
                 return motor_talon.getVelocity().getValueAsDouble()/60.0 * velocityFactor; // Talon method returns rotations Per second
@@ -274,6 +275,7 @@ public class Motor {
     }
 
     public double getPosition(){
+        if (!m_setupMotorDone) return 0;
         switch (motorType) {
             case KRAKEN:
                 return motor_talon.getPosition().getValueAsDouble() * positionFactor;
@@ -291,5 +293,9 @@ public class Motor {
                 return motor_neo.getOutputCurrent();
         }
         return 0.0;
+    }
+
+    public boolean isSetupDone() {
+        return m_setupMotorDone;
     }
 }
