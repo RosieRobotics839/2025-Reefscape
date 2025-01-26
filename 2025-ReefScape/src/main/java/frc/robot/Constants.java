@@ -408,7 +408,7 @@ public final class Constants {
       public static CANID_t kCANID_RearRight = new CANID_t(1, 14, 13);
 
       
-      public static double kCalibrationFrontLeft = 1502.0;
+      public static double kCalibrationFrontLeft = 454.0;
       public static double kCalibrationFrontRight = 2455.0;
       public static double kCalibrationRearLeft = 3634.0;
       public static double kCalibrationRearRight = 2011.0;

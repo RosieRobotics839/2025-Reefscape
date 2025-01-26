@@ -127,6 +127,7 @@ public class VectorUtils {
 
       double r_in = vector.getNorm();
       double r_out;
+      Rotation2d angle_out;
   
       if (r_in < deadband){
         r_out = 0;
@@ -135,7 +136,11 @@ public class VectorUtils {
       } else {
         r_out = r_in;
       }
-  
-      return new Translation2d(r_out, vector.getAngle());
+      if (r_out == 0) {
+        angle_out = new Rotation2d(0);
+      } else {
+        angle_out = vector.getAngle();
+      }
+      return new Translation2d(r_out, angle_out);
     }
 }
