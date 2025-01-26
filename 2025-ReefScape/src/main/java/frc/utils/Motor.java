@@ -32,6 +32,8 @@ public class Motor {
 
     static NetworkTable table = NetworkTableInstance.getDefault().getTable("roboRIO/Drivetrain/wheel");
 
+    Command m_setupMotor;
+
     int CANID;
     double positionFactor;
     double velocityFactor; 
@@ -48,24 +50,29 @@ public class Motor {
     SparkClosedLoopController controller_neo;
     SparkBaseConfig config_neo;
     RelativeEncoder encoder_neo;
-    int offset_neo;
+    int m_steeringOffset;
+    boolean m_setupScheduled = false;
 
     DoublePublisher 
     nt_angleinit;
 
-    public Motor (int CANID_, MyMotorType motorType_, String name_) {
+    public Motor (int CANID_, MyMotorType motorType_, String name_, int m_steeringOffset_) {
         CANID = CANID_;
         motorType = motorType_;
         name = name_;
+        m_steeringOffset = m_steeringOffset_;
         positionFactor = 1;
         velocityFactor = 1;
         nt_angleinit = table.getDoubleTopic("angle/init/"+name).publish();
 
-        switch (motorType){       
+        switch (motorType){   
             case KRAKEN:
                 motor_talon = new TalonFX(CANID);
                 config_talon = new TalonFXConfiguration();
                 motor_talon.getConfigurator().apply(config_talon);
+                m_setupMotor = Commands.sequence( 
+                    new InstantCommand(()-> m_setupMotorDone = true)
+                    ); 
                 break;
             case NEO:
                 motor_neo = new MyCANSparkMax(CANID, MotorType.kBrushless);
@@ -73,26 +80,17 @@ public class Motor {
                 encoder_neo = motor_neo.getEncoder();
                 config_neo = new SparkMaxConfig();
                 motor_neo.configure(config_neo, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters); 
-
-                if (name_.contains("driving")) { //Determining whether the Neo is used for Driving by detecting "driving" within the string name.
                 
-                Command m_setupMotor = Commands.sequence(
+                m_setupMotor = Commands.sequence(
+                    Commands.waitUntil(() -> {nt_angleinit.set(m_steeringOffset);
+                                              return true;
+                                             }),
                     Commands.waitUntil(() -> (encoder_neo = motor_neo.getEncoder()) != null),
                     Commands.waitUntil(() -> (motor_neo.configure(config_neo, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters)) == REVLibError.kOk),
+                    Commands.waitUntil(() -> encoder_neo.setPosition(-(m_steeringOffset-angleCalibration)/4096.0 * (2*Math.PI)) == REVLibError.kOk),
                     new InstantCommand(()-> m_setupMotorDone = true)
                 ); 
-
-                } else if (name_.contains("steering")) { //Determining whether the Neo is used for Steering by detecting "steering" within the string name.
                 
-                Command m_setupSteering = Commands.sequence(
-                    Commands.waitUntil(() -> {offset_neo = m_analogEncoder.getValue(); nt_angleinit.set(offset_neo); return true;}),
-                    Commands.waitUntil(() -> (encoder_neo = motor_neo.getEncoder()) != null),
-                    Commands.waitUntil(() -> (motor_neo.configure(config_neo, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters)) == REVLibError.kOk),
-                    Commands.waitUntil(() -> encoder_neo.setPosition(-(offset_neo-angleCalibration)/4096.0 * (2*Math.PI)) == REVLibError.kOk),
-                    new InstantCommand(()-> m_setupMotorDone = true)
-                ); 
-
-                }
                 break;
         }
     }
@@ -296,6 +294,11 @@ public class Motor {
     }
 
     public boolean isSetupDone() {
+        if (m_setupScheduled == false && m_setupMotor != null) {
+            m_setupMotor.ignoringDisable(true).schedule();
+            m_setupScheduled = true;
+        }
         return m_setupMotorDone;
     }
+    
 }

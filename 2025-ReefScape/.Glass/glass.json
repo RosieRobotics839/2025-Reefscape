@@ -31,7 +31,8 @@
   },
   "NetworkTables Settings": {
     "mode": "Client (NT4)",
-    "serverTeam": "839"
+    "serverTeam": "839",
+    "visible": false
   },
   "Plots": {
     "Plot <0>": {
@@ -57,7 +58,7 @@
                 0.6901960968971252,
                 1.0
               ],
-              "id": "NT:/roboRIO/Drivetrain/wheel/current/frontRight"
+              "id": "NT:/roboRIO/Drivetrain/wheel/analog/frontLeft"
             },
             {
               "color": [
@@ -66,25 +67,7 @@
                 0.32156863808631897,
                 1.0
               ],
-              "id": "NT:/roboRIO/Drivetrain/wheel/current/rearRight"
-            },
-            {
-              "color": [
-                0.3333333432674408,
-                0.658823549747467,
-                0.4078431725502014,
-                1.0
-              ],
-              "id": "NT:/roboRIO/Drivetrain/wheel/current/frontLeft"
-            },
-            {
-              "color": [
-                0.7686275243759155,
-                0.30588236451148987,
-                0.32156863808631897,
-                1.0
-              ],
-              "id": "NT:/roboRIO/Drivetrain/wheel/current/rearLeft"
+              "id": "NT:/roboRIO/Drivetrain/wheel/analog/rearLeft"
             }
           ]
         }
