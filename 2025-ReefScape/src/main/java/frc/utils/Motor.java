@@ -74,8 +74,7 @@ public class Motor {
                 config_neo = new SparkMaxConfig();
                 motor_neo.configure(config_neo, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters); 
 
-                String text = name_;
-                if (text.contains(name+"_driving")) {
+                if (name_.contains("driving")) { //Determining whether the Neo is used for Driving by detecting "driving" within the string name.
                 
                 Command m_setupMotor = Commands.sequence(
                     Commands.waitUntil(() -> (encoder_neo = motor_neo.getEncoder()) != null),
@@ -83,7 +82,7 @@ public class Motor {
                     new InstantCommand(()-> m_setupMotorDone = true)
                 ); 
 
-                } else if (text.contains(name+"_steering")) {
+                } else if (name_.contains("steering")) { //Determining whether the Neo is used for Steering by detecting "steering" within the string name.
                 
                 Command m_setupSteering = Commands.sequence(
                     Commands.waitUntil(() -> {offset_neo = m_analogEncoder.getValue(); nt_angleinit.set(offset_neo); return true;}),
