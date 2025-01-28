@@ -1,7 +1,9 @@
 package frc.utils;
 
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.StatusCode;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.controls.VelocityDutyCycle;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.revrobotics.REVLibError;
@@ -45,7 +47,7 @@ public class Motor {
 
     public MyCANSparkMax motor_neo;
     private boolean m_setupMotorDone = false;
-    public double angleCalibration;
+    public double calibration = 0;
     public AnalogInput m_analogEncoder;
     SparkClosedLoopController controller_neo;
     SparkBaseConfig config_neo;
@@ -56,11 +58,10 @@ public class Motor {
     DoublePublisher 
     nt_angleinit;
 
-    public Motor (int CANID_, MyMotorType motorType_, String name_, int m_steeringOffset_) {
+    public Motor (int CANID_, MyMotorType motorType_, String name_) {
         CANID = CANID_;
         motorType = motorType_;
         name = name_;
-        m_steeringOffset = m_steeringOffset_;
         positionFactor = 1;
         velocityFactor = 1;
         nt_angleinit = table.getDoubleTopic("angle/init/"+name).publish();
@@ -69,8 +70,8 @@ public class Motor {
             case KRAKEN:
                 motor_talon = new TalonFX(CANID);
                 config_talon = new TalonFXConfiguration();
-                motor_talon.getConfigurator().apply(config_talon);
                 m_setupMotor = Commands.sequence( 
+                    Commands.waitUntil(() -> motor_talon.getConfigurator().apply(config_talon).isOK()),
                     new InstantCommand(()-> m_setupMotorDone = true)
                     ); 
                 break;
@@ -87,7 +88,7 @@ public class Motor {
                                              }),
                     Commands.waitUntil(() -> (encoder_neo = motor_neo.getEncoder()) != null),
                     Commands.waitUntil(() -> (motor_neo.configure(config_neo, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters)) == REVLibError.kOk),
-                    Commands.waitUntil(() -> encoder_neo.setPosition(-(m_steeringOffset-angleCalibration)/4096.0 * (2*Math.PI)) == REVLibError.kOk),
+                    Commands.waitUntil(() -> encoder_neo.setPosition(-(calibration)/4096.0 * (2*Math.PI)) == REVLibError.kOk),
                     new InstantCommand(()-> m_setupMotorDone = true)
                 ); 
                 
@@ -161,6 +162,11 @@ public class Motor {
         }
         return this;
     } 
+
+    public Motor setCalibration(double calibrate){
+        calibration = calibrate;
+        return this;
+    }
 
     public Motor feedbackSensor(FeedbackSensor sensor){
         switch (motorType) {
@@ -242,7 +248,7 @@ public class Motor {
     public void setSpeed(double speed){
         switch (motorType) {
             case KRAKEN:
-                motor_talon.set(speed);
+                motor_talon.setControl(new VelocityDutyCycle(velocityFactor * speed));
                 break;
             case NEO:
                 controller_neo.setReference(speed, SparkMax.ControlType.kVelocity);       

@@ -83,7 +83,7 @@ public class SwerveModule extends SubsystemBase {
     nt_analog = table.getDoubleTopic("analog/"+name).publish();
 
     /* Define drive motor controller. */
-    m_motorDrive = new Motor(CANID.driving, Motor.MyMotorType.KRAKEN, name+"_driving", 0);
+    m_motorDrive = new Motor(CANID.driving, Motor.MyMotorType.KRAKEN, name+"_driving");
 
     // m_controllerDrive = m_motorDrive.getClosedLoopController();
 
@@ -104,7 +104,7 @@ public class SwerveModule extends SubsystemBase {
     m_steeringOffset = m_analogEncoder.getValue();
     
     /* Define steer motor controller. */
-    m_motorSteer = new Motor(CANID.steering, Motor.MyMotorType.NEO, name+"_steering", m_steeringOffset); //new MyCANSparkMax(CANID.steering, MotorType.kBrushless);
+    m_motorSteer = new Motor(CANID.steering, Motor.MyMotorType.NEO, name+"_steering"); //new MyCANSparkMax(CANID.steering, MotorType.kBrushless);
     
     // m_controllerSteer  = m_motorSteer.getClosedLoopController();
 
@@ -118,7 +118,8 @@ public class SwerveModule extends SubsystemBase {
       .outputRange(-1,1)
       .iZone(0.05)
       .positionWrappingEnabled(true)
-      .positionWrappingConfig(-Math.PI, Math.PI);
+      .positionWrappingConfig(-Math.PI, Math.PI)
+      .setCalibration(m_steeringOffset - angleCalibration);
 
     setState(optimizedState);
   }
