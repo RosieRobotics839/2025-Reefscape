@@ -408,10 +408,10 @@ public final class Constants {
       public static CANID_t kCANID_RearRight = new CANID_t(1, 14, 13);
 
       
-      public static double kCalibrationFrontLeft = 454.0;
-      public static double kCalibrationFrontRight = 2455.0;
-      public static double kCalibrationRearLeft = 3634.0;
-      public static double kCalibrationRearRight = 2011.0;
+      public static double kCalibrationFrontLeft = 467.0;
+      public static double kCalibrationFrontRight = 3119.0;
+      public static double kCalibrationRearLeft = 2813.0;
+      public static double kCalibrationRearRight = 1921.0;
 
       // Maximum Current Limits
       public static double kDrivingMotorCurrentLimit = NTDouble.create(40,"SwerveModule/kDrivingMotorCurrentLimit",val->DriveTrain.forEachSwerveModule((m)->{m.m_motorDrive.smartCurrentLimit((int)val);}));
@@ -454,8 +454,8 @@ public final class Constants {
         );
       }
 
-      public static double kDriveKp  = NTDouble.create(.2,"SwerveModule/kDriveKp",val->DriveTrain.forEachSwerveModule((m)-> updateDrivepidf(m, val, null, null, null)));
-      public static double kDriveKi  = NTDouble.create(.001, "SwerveModule/kDriveKi",val->DriveTrain.forEachSwerveModule((m)-> updateDrivepidf(m, null, val, null, null)));
+      public static double kDriveKp  = NTDouble.create(.04,"SwerveModule/kDriveKp",val->DriveTrain.forEachSwerveModule((m)-> updateDrivepidf(m, val, null, null, null)));
+      public static double kDriveKi  = NTDouble.create(.0, "SwerveModule/kDriveKi",val->DriveTrain.forEachSwerveModule((m)-> updateDrivepidf(m, null, val, null, null)));
       public static double kDriveKd  = NTDouble.create(0,"SwerveModule/kDriveKd",val->DriveTrain.forEachSwerveModule((m)-> updateDrivepidf(m, null, null, val, null)));
       public static double kDriveKff = NTDouble.create(0.3,"SwerveModule/kDriveKff",val->DriveTrain.forEachSwerveModule((m)-> updateDrivepidf(m, null, null, null, val)));
       
