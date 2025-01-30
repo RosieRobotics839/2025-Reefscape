@@ -3,7 +3,7 @@ package frc.utils;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.StatusCode;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
-import com.ctre.phoenix6.controls.VelocityDutyCycle;
+import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.revrobotics.REVLibError;
@@ -56,7 +56,8 @@ public class Motor {
     boolean m_setupScheduled = false;
 
     DoublePublisher 
-    nt_angleinit;
+    nt_angleinit,
+    nt_speedcmd;
 
     public Motor (int CANID_, MyMotorType motorType_, String name_) {
         CANID = CANID_;
@@ -65,6 +66,7 @@ public class Motor {
         positionFactor = 1;
         velocityFactor = 1;
         nt_angleinit = table.getDoubleTopic("angle/init/"+name).publish();
+        nt_speedcmd = table.getDoubleTopic("motor/speedcmd/"+name).publish();
 
         switch (motorType){   
             case KRAKEN:
@@ -187,6 +189,9 @@ public class Motor {
                     .withKI(i)
                     .withKD(d)
                     .withKV(ff);
+                if (m_setupMotorDone){
+                    motor_talon.getConfigurator().apply(config_talon);
+                }
                 break;
             case NEO:
                 config_neo.closedLoop.pidf(p,i,d,ff);    
@@ -248,7 +253,8 @@ public class Motor {
     public void setSpeed(double speed){
         switch (motorType) {
             case KRAKEN:
-                motor_talon.setControl(new VelocityDutyCycle(velocityFactor * speed));
+                motor_talon.setControl(new VelocityVoltage(speed/velocityFactor));
+                nt_speedcmd.set(speed/velocityFactor);
                 break;
             case NEO:
                 controller_neo.setReference(speed, SparkMax.ControlType.kVelocity);       

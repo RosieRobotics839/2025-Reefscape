@@ -88,7 +88,7 @@ public class SwerveModule extends SubsystemBase {
     // m_controllerDrive = m_motorDrive.getClosedLoopController();
 
     m_motorDrive
-        .inverted(true)
+        .inverted(false)
         .idleMode(IdleMode.kBrake)
         .smartCurrentLimit((int)kSwerveModule.kDrivingMotorCurrentLimit)
         .positionConversionFactor((Robot.isSimulation() ? 60: kSwerveModule.kDriveEncoderPositionFactor))
@@ -160,8 +160,8 @@ public class SwerveModule extends SubsystemBase {
     double speedcmd = m_magLimiter.calculate(optimizedState.speedMetersPerSecond);
     double anglecmd = optimizedState.angle.getRadians();
     
-    if (/* m_setupDriveDone && */ m_setupSteerDone){
-      //m_controllerDrive.setReference(speedcmd,SparkMax.ControlType.kVelocity);
+    if ( m_setupDriveDone &&  m_setupSteerDone){
+      m_motorDrive.setSpeed(speedcmd);
       m_motorSteer.setPosition(anglecmd);
 
       // This method will be called once per scheduler run
@@ -169,7 +169,7 @@ public class SwerveModule extends SubsystemBase {
       nt_speed.set(m_motorDrive.getVelocity());
       nt_anglecmd.set(anglecmd);
       nt_speedcmd.set(speedcmd);
-      //nt_i.set(m_motorDrive.getOutputCurrent());
+      nt_i.set(m_motorDrive.getOutputCurrent());
       nt_steeri.set(m_motorSteer.getOutputCurrent());
     }
     nt_analog.set(m_analogEncoder.getValue());
