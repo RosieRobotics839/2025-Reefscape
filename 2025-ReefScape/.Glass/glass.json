@@ -2,15 +2,40 @@
   "NetworkTables": {
     "transitory": {
       "roboRIO": {
+        "Constants": {
+          "DriveConstants": {
+            "open": true
+          },
+          "Gyro": {
+            "open": true
+          },
+          "Operator": {
+            "open": true
+          },
+          "open": true
+        },
         "Drivetrain": {
+          "HeadingPID": {
+            "open": true
+          },
           "open": true,
           "wheel": {
-            "angle": {
-              "init": {
+            "SwerveModule": {
+              "open": true,
+              "speedcmd2": {
                 "open": true
               }
             },
-            "current": {
+            "analog": {
+              "open": true
+            },
+            "angle": {
+              "init": {
+                "open": true
+              },
+              "open": true
+            },
+            "anglecmd": {
               "open": true
             },
             "open": true,
@@ -21,6 +46,9 @@
               "open": true
             }
           }
+        },
+        "Gyro": {
+          "open": true
         },
         "open": true
       }
