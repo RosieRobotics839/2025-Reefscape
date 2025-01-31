@@ -85,7 +85,7 @@ public class Motor {
                 motor_neo.configure(config_neo, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters); 
                 
                 m_setupMotor = Commands.sequence(
-                    Commands.waitUntil(() -> {nt_angleinit.set(m_steeringOffset);
+                    Commands.waitUntil(() -> {nt_angleinit.set(calibration);
                                               return true;
                                              }),
                     Commands.waitUntil(() -> (encoder_neo = motor_neo.getEncoder()) != null),
@@ -147,7 +147,7 @@ public class Motor {
                 velocityFactor = _velocityFactor; // No easy equivalent methods found, Doing the math manually
                 break;
             case NEO:
-                config_neo.encoder.positionConversionFactor(_velocityFactor);       
+                config_neo.encoder.velocityConversionFactor(_velocityFactor);       
                 break;
         }
         return this;
