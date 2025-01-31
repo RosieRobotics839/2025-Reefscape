@@ -68,7 +68,7 @@ public class SwerveModule extends SubsystemBase {
     nt_angle,
     nt_speedcmd,
     nt_anglecmd,
-    nt_speed, nt_i, nt_analog, nt_steeri;
+    nt_speed, nt_i, nt_analog, nt_steeri, nt_steeringOffset;
 
   public SwerveModule(CANID_t CANID, double angleCalibration, String name) {
    
@@ -81,6 +81,7 @@ public class SwerveModule extends SubsystemBase {
     nt_i = table.getDoubleTopic("current/"+name).publish();
     nt_steeri = table.getDoubleTopic("current/"+name).publish();
     nt_analog = table.getDoubleTopic("analog/"+name).publish();
+    nt_steeringOffset = table.getDoubleTopic("angle/steeringOffset/"+name).publish();
 
     /* Define drive motor controller. */
     m_motorDrive = new Motor(CANID.driving, Motor.MyMotorType.KRAKEN, name+"_driving");
@@ -102,6 +103,7 @@ public class SwerveModule extends SubsystemBase {
     m_analogEncoder = new AnalogInput(CANID.encoder);
     this.angleCalibration = angleCalibration;
     m_steeringOffset = m_analogEncoder.getValue();
+    nt_steeringOffset.set(m_steeringOffset);
     
     /* Define steer motor controller. */
     m_motorSteer = new Motor(CANID.steering, Motor.MyMotorType.NEO, name+"_steering"); //new MyCANSparkMax(CANID.steering, MotorType.kBrushless);
