@@ -113,6 +113,7 @@ public class Vision extends SubsystemBase {
   public void periodic() {
     if (true) return;
     // This method will be called once per scheduler run
+    @SuppressWarnings("unused")
     var res = cam1.getLatestResult();
 
     if (res.hasTargets()) {
