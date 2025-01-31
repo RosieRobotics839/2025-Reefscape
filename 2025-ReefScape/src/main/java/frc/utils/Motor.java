@@ -1,8 +1,8 @@
 package frc.utils;
 
 import com.ctre.phoenix6.hardware.TalonFX;
-import com.ctre.phoenix6.StatusCode;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
@@ -28,7 +28,6 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import com.revrobotics.spark.config.ClosedLoopConfig.FeedbackSensor;
 
 import frc.utils.CANSparkMax.MyCANSparkMax;
-import frc.robot.Constants;
 
 public class Motor {
 
@@ -48,12 +47,15 @@ public class Motor {
     public MyCANSparkMax motor_neo;
     private boolean m_setupMotorDone = false;
     public double calibration = 0;
+    private boolean m_calibrated = false;
     public AnalogInput m_analogEncoder;
     SparkClosedLoopController controller_neo;
     SparkBaseConfig config_neo;
     RelativeEncoder encoder_neo;
     int m_steeringOffset;
     boolean m_setupScheduled = false;
+
+    public double m_Kp_0, m_Ki_0, m_Kd_0, m_Kff_0;
 
     DoublePublisher 
     nt_angleinit,
@@ -85,13 +87,16 @@ public class Motor {
                 motor_neo.configure(config_neo, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters); 
                 
                 m_setupMotor = Commands.sequence(
-                    Commands.waitUntil(() -> {nt_angleinit.set(calibration);
-                                              return true;
-                                             }),
                     Commands.waitUntil(() -> (encoder_neo = motor_neo.getEncoder()) != null),
                     Commands.waitUntil(() -> (motor_neo.configure(config_neo, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters)) == REVLibError.kOk),
-                    Commands.waitUntil(() -> encoder_neo.setPosition(-(calibration)/4096.0 * (2*Math.PI)) == REVLibError.kOk),
-                    new InstantCommand(()-> m_setupMotorDone = true)
+                    Commands.waitUntil(() -> {
+                        if(!m_calibrated){
+                            nt_angleinit.set(calibration);
+                            return encoder_neo.setPosition(-(calibration)/4096.0 * (2*Math.PI)) == REVLibError.kOk;
+                        }
+                        return true;
+                    }),
+                    new InstantCommand(()-> {m_setupMotorDone = true; m_calibrated = true;})
                 ); 
                 
                 break;
@@ -100,6 +105,15 @@ public class Motor {
 
     public enum MyMotorType {
         KRAKEN, NEO
+    }
+
+    private void repeatSetup(){
+        // Used for rescheduling the motor configuration when parameters change after setup via the Motor class methods.
+        if (m_setupMotorDone){
+            m_setupMotorDone = false;
+            m_setupMotor.ignoringDisable(true).schedule();
+            m_setupScheduled = true;
+        }
     }
 
     public Motor inverted(boolean invert){
@@ -114,6 +128,7 @@ public class Motor {
                 config_neo.inverted(invert);       
                 break;
         }
+        repeatSetup();
         return this;
     }
 
@@ -127,29 +142,34 @@ public class Motor {
                 config_neo.idleMode(idleMode);       
                 break;
         }
+        repeatSetup();
         return this;
     } 
 
     public Motor positionConversionFactor(double _positionFactor){
+        positionFactor = _positionFactor;
         switch (motorType) {
             case KRAKEN:
-                positionFactor = _positionFactor; // No easy equivalent methods found, Doing the math manually
+                // No easy equivalent methods found, Doing the math manually
                 break;
             case NEO:
                 config_neo.encoder.positionConversionFactor(_positionFactor);       
                 break;
         }
+        repeatSetup();
         return this;
     } 
     public Motor velocityConversionFactor(double _velocityFactor){
+        velocityFactor = _velocityFactor;
         switch (motorType) {
             case KRAKEN:
-                velocityFactor = _velocityFactor; // No easy equivalent methods found, Doing the math manually
+                // No easy equivalent methods found, Doing the math manually
                 break;
             case NEO:
                 config_neo.encoder.velocityConversionFactor(_velocityFactor);       
                 break;
         }
+        repeatSetup();
         return this;
     } 
 
@@ -162,11 +182,13 @@ public class Motor {
                 config_neo.smartCurrentLimit((int)stallLimit);       
                 break;
         }
+        repeatSetup();
         return this;
     } 
 
     public Motor setCalibration(double calibrate){
         calibration = calibrate;
+        repeatSetup();
         return this;
     }
 
@@ -182,21 +204,74 @@ public class Motor {
         return this;
     } 
 
-    public Motor pidf(double p, double i, double d, double ff){
-        switch (motorType) {
+    public Motor withKP(double Kp){
+        m_Kp_0 = Kp;
+        switch(motorType){
             case KRAKEN:
-                config_talon.Slot0.withKP(p)
-                    .withKI(i)
-                    .withKD(d)
-                    .withKV(ff);
-                if (m_setupMotorDone){
-                    motor_talon.getConfigurator().apply(config_talon);
-                }
+                config_talon.Slot0.withKP(m_Kp_0);
                 break;
             case NEO:
-                config_neo.closedLoop.pidf(p,i,d,ff);    
+                config_neo.closedLoop.pidf(m_Kp_0,m_Ki_0,m_Kd_0,m_Kff_0);
+        }
+        repeatSetup();
+        return this;
+    }
+
+    public Motor withKI(double val){
+        m_Ki_0 = val;
+        switch(motorType){
+            case KRAKEN:
+                config_talon.Slot0.withKI(m_Ki_0);
+                break;
+            case NEO:
+                config_neo.closedLoop.pidf(m_Kp_0,m_Ki_0,m_Kd_0,m_Kff_0);
+        }
+        repeatSetup();
+        return this;
+    }
+    public Motor withKD(double val){
+        m_Kd_0 = val;
+        switch(motorType){
+            case KRAKEN:
+                config_talon.Slot0.withKD(m_Kd_0);
+                break;
+            case NEO:
+                config_neo.closedLoop.pidf(m_Kp_0,m_Ki_0,m_Kd_0,m_Kff_0);
+        }
+        repeatSetup();
+        return this;
+    }
+
+    public Motor withKFF(double val){
+        m_Kff_0 = val;
+        switch(motorType){
+            case KRAKEN:
+                config_talon.Slot0.withKV(m_Kff_0);
+                break;
+            case NEO:
+                config_neo.closedLoop.pidf(m_Kp_0,m_Ki_0,m_Kd_0,m_Kff_0);
+        }
+        repeatSetup();
+        return this;
+    }
+
+    public Motor pidf(double p, double i, double d, double ff){
+        m_Kp_0 = p;
+        m_Ki_0 = i;
+        m_Kd_0 = d;
+        m_Kff_0 = ff;
+        switch (motorType) {
+            case KRAKEN:
+                config_talon.Slot0.withKP(m_Kp_0)
+                    .withKI(m_Ki_0)
+                    .withKD(m_Kd_0)
+                    .withKV(m_Kff_0);
+                break;
+            case NEO:
+                config_neo.closedLoop.pidf(m_Kp_0,m_Ki_0,m_Kd_0,m_Kff_0);    
                 break;
         }
+        repeatSetup();
         return this;
     } 
 
@@ -209,6 +284,7 @@ public class Motor {
                 config_neo.closedLoop.outputRange(rangeMin, rangeMax);     
                 break;
         }
+        repeatSetup();
         return this;
     } 
 
@@ -221,6 +297,7 @@ public class Motor {
                 config_neo.closedLoop.iZone(zone);    
                 break;
         }
+        repeatSetup();
         return this;
     } 
 
@@ -233,6 +310,7 @@ public class Motor {
                 config_neo.closedLoop.positionWrappingEnabled(enabled);    
                 break;
         }
+        repeatSetup();
         return this;
     } 
 
@@ -247,30 +325,39 @@ public class Motor {
                     .positionWrappingMaxInput(max);  
                 break;
         }
+        repeatSetup();
         return this;
     }     
 
-    public void setSpeed(double speed){
+    public boolean setSpeed(double speed){
+        nt_speedcmd.set(speed/velocityFactor);
+        boolean status;
         switch (motorType) {
             case KRAKEN:
-                motor_talon.setControl(new VelocityVoltage(speed/velocityFactor));
-                nt_speedcmd.set(speed/velocityFactor);
+                status = motor_talon.setControl(new VelocityVoltage(speed/velocityFactor)).isOK();
                 break;
             case NEO:
-                controller_neo.setReference(speed, SparkMax.ControlType.kVelocity);       
+                status = controller_neo.setReference(speed, SparkMax.ControlType.kVelocity) == REVLibError.kOk;
                 break;
+            default:
+                status = false;
         }
+        return status;
     }
 
-    public void setPosition(double position){
+    public boolean setPosition(double position){
+        boolean status;
         switch (motorType) {
             case KRAKEN:
-                motor_talon.set(position);
+                status = motor_talon.setControl(new PositionVoltage(position/positionFactor)).isOK();
                 break;
             case NEO:
-                controller_neo.setReference(position, SparkMax.ControlType.kPosition);
+                status = controller_neo.setReference(position, SparkMax.ControlType.kPosition) == REVLibError.kOk;
                 break;
+            default:
+                status = false;
         }
+        return status;
     }
 
     public double getVelocity(){

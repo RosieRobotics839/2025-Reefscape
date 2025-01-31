@@ -14,6 +14,7 @@ import frc.utils.NTValues.NTDouble;
 
 import com.ctre.phoenix6.configs.Pigeon2Configuration;
 import com.ctre.phoenix6.hardware.Pigeon2;
+import com.ctre.phoenix6.sim.Pigeon2SimState;
 
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.BooleanPublisher;
@@ -27,6 +28,7 @@ public class Gyro extends SubsystemBase {
   private double simYaw = 0;
 
   private static Pigeon2 pidgey = new Pigeon2(GyroConstants.kCANID_Pigeon, "rio");
+  private static Pigeon2SimState simstate = new Pigeon2SimState(pidgey);
 
   private static Gyro gyro = new Gyro(); 
   
@@ -112,9 +114,7 @@ public class Gyro extends SubsystemBase {
     // read sensor data from Pigeon2
     if (Robot.isSimulation()){
       double simyawrad = PoseEstimator.getInstance().m_sim_actualPose.getRotation().getRadians();
-      simYaw += Units.radiansToDegrees(VectorUtils.angleDifference(simyawrad,lastSimYawRad));
-      lastSimYawRad = simyawrad;
-      pidgey.setYaw(simYaw);
+      simstate.addYaw(Units.radiansToDegrees(VectorUtils.angleDifference(simyawrad,lastSimYawRad)));
     }
     double yaw = (pidgey.getYaw().getValueAsDouble() % 360 + 360) % 360;
     // we're not using pitch and roll, don't bother requesting them over the CAN bus.
