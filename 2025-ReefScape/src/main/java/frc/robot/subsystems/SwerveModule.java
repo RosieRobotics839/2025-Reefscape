@@ -139,11 +139,10 @@ public class SwerveModule extends SubsystemBase {
   }
 
   public void setState(SwerveModuleState targetState) {
-    if (!m_setupSteerDone) return;
     if (!m_setupDriveDone || !m_setupSteerDone) return;
     // Sets the target state of the swerve drive equal to the input state
-    optimizedState = SwerveModuleState.optimize(targetState, new Rotation2d(m_motorSteer.getPosition()));
-    //m_pidSteer.setReference(0,CANSparkMax.ControlType.kPosition);
+    targetState.optimize(new Rotation2d(m_motorSteer.getPosition()));
+    optimizedState = targetState;
   }
   public SwerveModulePosition getPosition() {
     // Returns the position of the swerve module wheel and angle
@@ -161,7 +160,9 @@ public class SwerveModule extends SubsystemBase {
 
     double speedcmd = m_magLimiter.calculate(optimizedState.speedMetersPerSecond);
     double anglecmd = optimizedState.angle.getRadians();
-    
+    nt_anglecmd.set(anglecmd);
+    nt_speedcmd.set(speedcmd);
+
     if ( m_setupDriveDone &&  m_setupSteerDone){
       m_motorDrive.setSpeed(speedcmd);
       m_motorSteer.setPosition(anglecmd);
@@ -169,8 +170,6 @@ public class SwerveModule extends SubsystemBase {
       // This method will be called once per scheduler run
       nt_angle.set(m_motorSteer.getPosition());
       nt_speed.set(m_motorDrive.getVelocity());
-      nt_anglecmd.set(anglecmd);
-      nt_speedcmd.set(speedcmd);
       nt_i.set(m_motorDrive.getOutputCurrent());
       nt_steeri.set(m_motorSteer.getOutputCurrent());
     }
@@ -192,9 +191,7 @@ public class SwerveModule extends SubsystemBase {
     if (!RobotController.isSysActive()){
       m_motorDrive.setSpeed(0);
     } else {
-      m_motorSteer.setPosition(optimizedState.angle.getRadians());
+      //m_motorSteer.setPosition(optimizedState.angle.getRadians());
     }
-    //m_simDrive.run();
-    //m_simSteer.run();
   }
 }

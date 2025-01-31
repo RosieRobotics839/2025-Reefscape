@@ -444,35 +444,15 @@ public final class Constants {
       public static double kSteerEncoderVelocityFactor = (2.0 * Math.PI) / kSteerMotorGearReduction / 60.0;
 
       // Control Loop Gains - Drive
-
-      private static void updateDrivepidf(SwerveModule module, Double p, Double i, Double d, Double ff) {
-        module.m_motorDrive.pidf(
-          p != null ? p : kDriveKp,
-          i != null ? i : kDriveKi,
-          d != null ? d : kDriveKd,
-          ff != null ? ff : kDriveKff
-        );
-      }
-
-      public static double kDriveKp  = NTDouble.create(.001,"SwerveModule/kDriveKp",val->DriveTrain.forEachSwerveModule((m)-> updateDrivepidf(m, val, null, null, null)));
-      public static double kDriveKi  = NTDouble.create(.0, "SwerveModule/kDriveKi",val->DriveTrain.forEachSwerveModule((m)-> updateDrivepidf(m, null, val, null, null)));
-      public static double kDriveKd  = NTDouble.create(.0,"SwerveModule/kDriveKd",val->DriveTrain.forEachSwerveModule((m)-> updateDrivepidf(m, null, null, val, null)));
-      public static double kDriveKff = NTDouble.create(.001,"SwerveModule/kDriveKff",val->DriveTrain.forEachSwerveModule((m)-> updateDrivepidf(m, null, null, null, val)));
+      public static double kDriveKp  = NTDouble.create(.001,"SwerveModule/kDriveKp",val->DriveTrain.forEachSwerveModule((m)->m.m_motorDrive.withKP(val)));
+      public static double kDriveKi  = NTDouble.create(.0, "SwerveModule/kDriveKi",val->DriveTrain.forEachSwerveModule((m)->m.m_motorDrive.withKI(val)));
+      public static double kDriveKd  = NTDouble.create(.0,"SwerveModule/kDriveKd",val->DriveTrain.forEachSwerveModule((m)->m.m_motorDrive.withKD(val)));
+      public static double kDriveKff = NTDouble.create(.001,"SwerveModule/kDriveKff",val->DriveTrain.forEachSwerveModule((m)->m.m_motorDrive.withKFF(val)));
       
       // Control Loop Gains - Steering
-
-      private static void updateSteerpidf(SwerveModule module, Double p, Double i, Double d, Double ff) {
-        module.m_motorSteer.pidf(
-          p != null ? p : kSteerKp,
-          i != null ? i : kSteerKi,
-          d != null ? d : kSteerKd,
-          ff != null ? ff : kSteerKff
-        );
-      }
-
-      public static double kSteerKp  = NTDouble.create(0.3,"SwerveModule/kSteerKp",val->DriveTrain.forEachSwerveModule((m)-> updateSteerpidf(m, val, null, null, null)));
-      public static double kSteerKi  = NTDouble.create(0, "SwerveModule/kSteerKi",val->DriveTrain.forEachSwerveModule((m)-> updateSteerpidf(m, null, val, null, null)));
-      public static double kSteerKd  = NTDouble.create(0,"SwerveModule/kSteerKd",val->DriveTrain.forEachSwerveModule((m)-> updateSteerpidf(m, null, null, val, null)));      
+      public static double kSteerKp  = NTDouble.create(0.3,"SwerveModule/kSteerKp",val->DriveTrain.forEachSwerveModule((m)->m.m_motorDrive.withKP(val)));
+      public static double kSteerKi  = NTDouble.create(0, "SwerveModule/kSteerKi",val->DriveTrain.forEachSwerveModule((m)->m.m_motorDrive.withKI(val)));
+      public static double kSteerKd  = NTDouble.create(0,"SwerveModule/kSteerKd",val->DriveTrain.forEachSwerveModule((m)->m.m_motorDrive.withKD(val)));     
       public static double kSteerKff = 0;
     }
 
