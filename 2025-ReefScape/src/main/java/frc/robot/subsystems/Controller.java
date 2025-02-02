@@ -136,14 +136,12 @@ public class Controller extends XboxController {
       /* Set shooter amp / speaker */
 
       /* Blue.onTrue(new InstantCommand(() -> { 
-        // TODO: Set amp shoot & change to that angle
         IntakeShooter.getInstance().setShooterSpeedRatio(1);
       }));
       Blue.onFalse(new InstantCommand(() -> {
         IntakeShooter.getInstance().setShooterSpeedRatio(0);
       }));
       Green.onTrue(new InstantCommand(() -> {
-        // TODO: Set speaker shoot & change to that angle
         IntakeShooter.getInstance().setShooterSpeedRatio(1);
       }));
       Green.onFalse(new InstantCommand(() -> {
@@ -199,7 +197,6 @@ public class Controller extends XboxController {
   }
 
   public void Translate() {
-    // TODO: Move shooter angle on the left joystick.
     Translation2d Lstick = new Translation2d(this.getLeftX(),-this.getLeftY());
     Lstick = VectorUtils.deadband(Lstick,0.1,1);
     forward = Lstick.getY(); // Forward is Positive consistent the FRC field coordinate system

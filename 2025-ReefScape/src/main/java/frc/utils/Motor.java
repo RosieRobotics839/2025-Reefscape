@@ -92,7 +92,7 @@ public class Motor {
                     Commands.waitUntil(() -> {
                         if(!m_calibrated){
                             nt_angleinit.set(calibration);
-                            return encoder_neo.setPosition(-(calibration)/4096.0 * (2*Math.PI)) == REVLibError.kOk;
+                            return encoder_neo.setPosition((calibration)/4096.0 * (2*Math.PI)) == REVLibError.kOk;
                         }
                         return true;
                     }),
@@ -204,8 +204,8 @@ public class Motor {
         return this;
     } 
 
-    public Motor withKP(double Kp){
-        m_Kp_0 = Kp;
+    public Motor withKP(double val){
+        m_Kp_0 = val;
         switch(motorType){
             case KRAKEN:
                 config_talon.Slot0.withKP(m_Kp_0);
