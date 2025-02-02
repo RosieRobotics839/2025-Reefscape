@@ -334,7 +334,7 @@ public class Motor {
         boolean status;
         switch (motorType) {
             case KRAKEN:
-                status = motor_talon.setControl(new VelocityVoltage(speed/velocityFactor)).isOK();
+                status = motor_talon.setControl(new VelocityVoltage(speed/(velocityFactor*60))).isOK();
                 break;
             case NEO:
                 status = controller_neo.setReference(speed, SparkMax.ControlType.kVelocity) == REVLibError.kOk;
@@ -364,7 +364,7 @@ public class Motor {
         if (!m_setupMotorDone) return 0;
         switch (motorType) {
             case KRAKEN:
-                return motor_talon.getVelocity().getValueAsDouble()/60.0 * velocityFactor; // Talon method returns rotations Per second
+                return motor_talon.getVelocity().getValueAsDouble() * velocityFactor * 60; // Talon method returns rotations Per second
             case NEO:
                 return encoder_neo.getVelocity(); // Our math is based on rotations per Minute
         }
