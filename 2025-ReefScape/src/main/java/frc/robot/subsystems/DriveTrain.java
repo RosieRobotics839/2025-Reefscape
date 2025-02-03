@@ -119,10 +119,10 @@ public class DriveTrain extends SubsystemBase {
 
   public boolean isStopped(){
     return 
-    Math.abs(frontLeft.m_encoderDrive.getVelocity()) <= DriveConstants.kStoppedRatio*DriveConstants.kAutoMaxSpeed &&
-    Math.abs(frontRight.m_encoderDrive.getVelocity()) <= DriveConstants.kStoppedRatio*kDriveTrain.DriveConstants.kAutoMaxSpeed &&
-    Math.abs(rearLeft.m_encoderDrive.getVelocity()) <=  DriveConstants.kStoppedRatio*kDriveTrain.DriveConstants.kAutoMaxSpeed &&
-    Math.abs(rearRight.m_encoderDrive.getVelocity()) <= DriveConstants.kStoppedRatio*kDriveTrain.DriveConstants.kAutoMaxSpeed;
+    Math.abs(frontLeft.m_motorDrive.getVelocity()) <= DriveConstants.kStoppedRatio*DriveConstants.kAutoMaxSpeed &&
+    Math.abs(frontRight.m_motorDrive.getVelocity()) <= DriveConstants.kStoppedRatio*kDriveTrain.DriveConstants.kAutoMaxSpeed &&
+    Math.abs(rearLeft.m_motorDrive.getVelocity()) <=  DriveConstants.kStoppedRatio*kDriveTrain.DriveConstants.kAutoMaxSpeed &&
+    Math.abs(rearRight.m_motorDrive.getVelocity()) <= DriveConstants.kStoppedRatio*kDriveTrain.DriveConstants.kAutoMaxSpeed;
   }
   public void Drive(Twist2d movement){
     m_forwardcmd = movement.dx;

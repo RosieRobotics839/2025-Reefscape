@@ -2,19 +2,34 @@
   "NetworkTables": {
     "transitory": {
       "roboRIO": {
+        "Constants": {
+          "open": true
+        },
         "Drivetrain": {
           "open": true,
           "wheel": {
+            "SwerveModule": {
+              "open": true,
+              "speedcmd2": {
+                "open": true
+              }
+            },
             "analog": {
               "open": true
             },
             "angle": {
               "open": true
             },
-            "current": {
+            "anglecmd": {
               "open": true
             },
-            "open": true
+            "open": true,
+            "speed": {
+              "open": true
+            },
+            "speedcmd": {
+              "open": true
+            }
           }
         },
         "open": true
@@ -26,12 +41,10 @@
       "/SmartDashboard/Field": "Field2d"
     }
   },
-  "NetworkTables Info": {
-    "visible": true
-  },
   "NetworkTables Settings": {
     "mode": "Client (NT4)",
-    "serverTeam": "839"
+    "serverTeam": "839",
+    "visible": false
   },
   "Plots": {
     "Plot <0>": {
@@ -48,7 +61,7 @@
             0.0,
             0.8500000238418579
           ],
-          "height": 640,
+          "height": 437,
           "series": [
             {
               "color": [
@@ -57,7 +70,7 @@
                 0.6901960968971252,
                 1.0
               ],
-              "id": "NT:/roboRIO/Drivetrain/wheel/current/frontRight"
+              "id": "NT:/roboRIO/Drivetrain/wheel/analog/frontLeft"
             },
             {
               "color": [
@@ -66,7 +79,7 @@
                 0.32156863808631897,
                 1.0
               ],
-              "id": "NT:/roboRIO/Drivetrain/wheel/current/rearRight"
+              "id": "NT:/roboRIO/Drivetrain/wheel/analog/rearLeft"
             },
             {
               "color": [
@@ -75,7 +88,7 @@
                 0.4078431725502014,
                 1.0
               ],
-              "id": "NT:/roboRIO/Drivetrain/wheel/current/frontLeft"
+              "id": "NT:/roboRIO/Drivetrain/wheel/analog/rearRight"
             },
             {
               "color": [
@@ -84,9 +97,22 @@
                 0.32156863808631897,
                 1.0
               ],
-              "id": "NT:/roboRIO/Drivetrain/wheel/current/rearLeft"
+              "id": "NT:/roboRIO/Drivetrain/wheel/analog/frontRight"
             }
           ]
+        }
+      ]
+    },
+    "Plot <1>": {
+      "plots": [
+        {
+          "backgroundColor": [
+            0.0,
+            0.0,
+            0.0,
+            0.8500000238418579
+          ],
+          "height": 416
         }
       ]
     }

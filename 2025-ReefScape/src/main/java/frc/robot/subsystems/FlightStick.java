@@ -8,20 +8,17 @@ import frc.robot.Constants.OperatorConstants;
 //import frc.robot.Constants.ShooterConstants;
 import frc.robot.Constants.kDriveTrain.DriveConstants;
 import frc.utils.VectorUtils;
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
-import edu.wpi.first.wpilibj2.command.RepeatCommand;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 
 public class FlightStick extends Joystick {
 
   public static double forward;
   public static double left;
-  public static double rotate;  
+  public static double rotate;
   public static double turboscale = 1.0;
   public double slider = 0;
 
