@@ -41,6 +41,23 @@ public final class Constants {
     public CANID_t(int abs_encoder, int drive, int steer){this.encoder = abs_encoder; this.driving = drive; this.steering = steer;}
   }
 
+  public static class ArmConstants {
+    public static int kArmCANID = 4; // Change later
+    public static double kArmStage1Ratio = 5.0 / 1.0;
+    public static double kArmMotorGearReduction = (2 * kArmStage1Ratio); // Multiplying by 2 in account of the sprocket gear
+    public static double kArmEncoderPositionFactor = (2.0 * Math.PI) / kArmMotorGearReduction; // Math needs to be checked, copy pasted.
+    public static double kArmEncoderVelocityFactor = (2.0 * Math.PI) / kArmMotorGearReduction / 60.0; // Math needs to be checked, copy pasted.
+
+    public static double kArmKp = (NTDouble.create(0, "Arm/kArmKp", (val)->kArmKp = (val)));
+    public static double kArmKi = (NTDouble.create(0, "Arm/kArmKi", (val)->kArmKi = (val)));
+    public static double kArmKd = (NTDouble.create(0, "Arm/kArmKd", (val)->kArmKd = (val)));
+    public static double kArmKff = (NTDouble.create(0, "Arm/kArmKff", (val)->kArmKff = (val)));
+  }
+
+  public static class EffectorConstants {
+    public static int kEffectorCANID = 7; // Change later
+  }
+
   public static class LEDConstants {
     public static double kMaxMotorTemp = (NTDouble.create(175.0, "LED/kMaxMotorTempF", (val)->kMaxMotorTemp = (val-32)/1.8) -32)/1.8;
     public static double kPoseResidualDist = Units.feetToMeters(NTDouble.create(2.0, "LED/kPoseResidualFeet", (val)->kPoseResidualDist = Units.feetToMeters(val)));
