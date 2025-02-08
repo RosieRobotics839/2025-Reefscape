@@ -21,6 +21,7 @@ import frc.robot.Constants.kDriveTrain.DriveConstants;
 import frc.robot.Constants.kDriveTrain.kSwerveModule;
 import frc.utils.FirstOrderLag;
 import frc.utils.Motor;
+import frc.utils.NTValues.NTDouble;
 import frc.robot.Robot;
 import frc.robot.Constants.CANID_t;
 
@@ -55,8 +56,13 @@ public class SwerveModule extends SubsystemBase {
     nt_anglecmd,
     nt_speed, nt_i, nt_analog, nt_steeri, nt_steeringOffset;
 
+  double testAnglePerSec, testAngle, testSpeed;
+
   public SwerveModule(CANID_t CANID, double angleCalibration, String name) {
    
+    NTDouble.create(0,"test/degpersec/"+name,val->this.testAnglePerSec=val);
+    NTDouble.create(0,"test/feetpersec/"+name,val->this.testSpeed=val);
+
     // Setup Network Table Publishers
     nt_angleinit = table.getDoubleTopic("angle/init/"+name).publish();
     nt_angle = table.getDoubleTopic("angle/"+name).publish();
@@ -145,6 +151,14 @@ public class SwerveModule extends SubsystemBase {
 
     double speedcmd = m_magLimiter.calculate(optimizedState.speedMetersPerSecond);
     double anglecmd = optimizedState.angle.getRadians();
+
+    // Motor test code over network tables
+    if (testAnglePerSec != 0 || testSpeed != 0){
+      testAngle = testAngle + Math.PI/180*testAnglePerSec*0.020;
+      anglecmd = testAngle;
+      speedcmd = testSpeed;
+    }
+
     nt_anglecmd.set(anglecmd);
     nt_speedcmd.set(speedcmd);
 
