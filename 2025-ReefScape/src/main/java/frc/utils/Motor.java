@@ -8,6 +8,7 @@ import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.revrobotics.REVLibError;
 import com.revrobotics.RelativeEncoder;
+import com.revrobotics.spark.ClosedLoopSlot;
 import com.revrobotics.spark.SparkBase.PersistMode;
 import com.revrobotics.spark.SparkBase.ResetMode;
 import com.revrobotics.spark.SparkClosedLoopController;
@@ -69,8 +70,9 @@ public class Motor {
     }
     public Command neoSetup(){
         return Commands.sequence(
+                    new InstantCommand(() -> motor_neo.disable()),
                     Commands.waitUntil(() -> (encoder_neo = motor_neo.getEncoder()) != null),
-                    Commands.waitUntil(() -> (motor_neo.configure(config_neo, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters)) == REVLibError.kOk),
+                    Commands.waitUntil(() -> {var status = motor_neo.configure(config_neo, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters); return status == REVLibError.kOk || status == REVLibError.kCannotPersistParametersWhileEnabled;}),
                     Commands.waitUntil(() -> {
                         if(!m_calibrated){
                             nt_angleinit.set(calibration);
@@ -225,7 +227,7 @@ public class Motor {
                 config_talon.Slot0.withKP(m_Kp_0);
                 break;
             case NEO:
-                config_neo.closedLoop.pidf(m_Kp_0,m_Ki_0,m_Kd_0,m_Kff_0);
+                config_neo.closedLoop.pidf(m_Kp_0,m_Ki_0,m_Kd_0,m_Kff_0,ClosedLoopSlot.kSlot0);
         }
         repeatSetup();
         return this;
@@ -238,7 +240,7 @@ public class Motor {
                 config_talon.Slot0.withKI(m_Ki_0);
                 break;
             case NEO:
-                config_neo.closedLoop.pidf(m_Kp_0,m_Ki_0,m_Kd_0,m_Kff_0);
+                config_neo.closedLoop.pidf(m_Kp_0,m_Ki_0,m_Kd_0,m_Kff_0,ClosedLoopSlot.kSlot0);
         }
         repeatSetup();
         return this;
@@ -250,7 +252,7 @@ public class Motor {
                 config_talon.Slot0.withKD(m_Kd_0);
                 break;
             case NEO:
-                config_neo.closedLoop.pidf(m_Kp_0,m_Ki_0,m_Kd_0,m_Kff_0);
+                config_neo.closedLoop.pidf(m_Kp_0,m_Ki_0,m_Kd_0,m_Kff_0,ClosedLoopSlot.kSlot0);
         }
         repeatSetup();
         return this;
@@ -263,7 +265,7 @@ public class Motor {
                 config_talon.Slot0.withKV(m_Kff_0);
                 break;
             case NEO:
-                config_neo.closedLoop.pidf(m_Kp_0,m_Ki_0,m_Kd_0,m_Kff_0);
+                config_neo.closedLoop.pidf(m_Kp_0,m_Ki_0,m_Kd_0,m_Kff_0,ClosedLoopSlot.kSlot0);
         }
         repeatSetup();
         return this;
