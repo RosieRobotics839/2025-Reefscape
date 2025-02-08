@@ -440,12 +440,12 @@ public final class Constants {
       public static double kDriveKp  = NTDouble.create(.3,"SwerveModule/kDriveKp",val->DriveTrain.forEachSwerveModule((m)->m.m_motorDrive.withKP(val)));
       public static double kDriveKi  = NTDouble.create(.0, "SwerveModule/kDriveKi",val->DriveTrain.forEachSwerveModule((m)->m.m_motorDrive.withKI(val)));
       public static double kDriveKd  = NTDouble.create(.0,"SwerveModule/kDriveKd",val->DriveTrain.forEachSwerveModule((m)->m.m_motorDrive.withKD(val)));
-      public static double kDriveKff = NTDouble.create(.17,"SwerveModule/kDriveKff",val->DriveTrain.forEachSwerveModule((m)->m.m_motorDrive.withKFF(val)));
+      public static double kDriveKff = NTDouble.create(.12,"SwerveModule/kDriveKff",val->DriveTrain.forEachSwerveModule((m)->m.m_motorDrive.withKFF(val)));
       
       // Control Loop Gains - Steering
-      public static double kSteerKp  = NTDouble.create(0.3,"SwerveModule/kSteerKp",val->DriveTrain.forEachSwerveModule((m)->m.m_motorDrive.withKP(val)));
-      public static double kSteerKi  = NTDouble.create(0, "SwerveModule/kSteerKi",val->DriveTrain.forEachSwerveModule((m)->m.m_motorDrive.withKI(val)));
-      public static double kSteerKd  = NTDouble.create(0,"SwerveModule/kSteerKd",val->DriveTrain.forEachSwerveModule((m)->m.m_motorDrive.withKD(val)));     
+      public static double kSteerKp  = NTDouble.create(1.0,"SwerveModule/kSteerKp",val->DriveTrain.forEachSwerveModule((m)->m.m_motorSteer.withKP(val)));
+      public static double kSteerKi  = NTDouble.create(0, "SwerveModule/kSteerKi",val->DriveTrain.forEachSwerveModule((m)->m.m_motorSteer.withKI(val)));
+      public static double kSteerKd  = NTDouble.create(0,"SwerveModule/kSteerKd",val->DriveTrain.forEachSwerveModule((m)->m.m_motorSteer.withKD(val)));     
       public static double kSteerKff = 0;
     }
 

@@ -8,6 +8,7 @@ import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.revrobotics.REVLibError;
 import com.revrobotics.RelativeEncoder;
+import com.revrobotics.spark.ClosedLoopSlot;
 import com.revrobotics.spark.SparkBase.PersistMode;
 import com.revrobotics.spark.SparkBase.ResetMode;
 import com.revrobotics.spark.SparkClosedLoopController;
@@ -61,6 +62,36 @@ public class Motor {
     nt_angleinit,
     nt_speedcmd;
 
+    public void scheduleSetup(){
+        switch (motorType){
+            case KRAKEN:
+                m_setupMotor = Commands.sequence( 
+                            Commands.waitUntil(() -> motor_talon.getConfigurator().apply(config_talon).isOK()),
+                            new InstantCommand(()-> m_setupMotorDone = true)
+                            );
+                break;
+            case NEO:
+                m_setupMotor = Commands.sequence(
+                    Commands.waitUntil(() -> (encoder_neo = motor_neo.getEncoder()) != null),
+                    Commands.waitUntil(() -> {var status = motor_neo.configure(config_neo, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters); return status == REVLibError.kOk || status == REVLibError.kCannotPersistParametersWhileEnabled;}),
+                    Commands.waitUntil(() -> {
+                        if(!m_calibrated){
+                            nt_angleinit.set(calibration);
+                            return encoder_neo.setPosition((calibration)/4096.0 * (2*Math.PI)) == REVLibError.kOk;
+                        }
+                        return true;
+                    }),
+                    new InstantCommand(()-> {m_setupMotorDone = true; m_calibrated = true;})
+                );
+                break;
+            default:
+                m_setupMotor = Commands.sequence();
+        }
+        m_setupMotorDone = false;
+        m_setupMotor.ignoringDisable(true).schedule();
+        m_setupScheduled = true;
+    }
+
     public Motor (int CANID_, MyMotorType motorType_, String name_) {
         CANID = CANID_;
         motorType = motorType_;
@@ -74,46 +105,18 @@ public class Motor {
             case KRAKEN:
                 motor_talon = new TalonFX(CANID);
                 config_talon = new TalonFXConfiguration();
-                m_setupMotor = Commands.sequence( 
-                    Commands.waitUntil(() -> motor_talon.getConfigurator().apply(config_talon).isOK()),
-                    new InstantCommand(()-> m_setupMotorDone = true)
-                    ); 
                 break;
             case NEO:
                 motor_neo = new MyCANSparkMax(CANID, MotorType.kBrushless);
                 controller_neo = motor_neo.getClosedLoopController();
                 encoder_neo = motor_neo.getEncoder();
-                config_neo = new SparkMaxConfig();
-                motor_neo.configure(config_neo, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters); 
-                
-                m_setupMotor = Commands.sequence(
-                    Commands.waitUntil(() -> (encoder_neo = motor_neo.getEncoder()) != null),
-                    Commands.waitUntil(() -> (motor_neo.configure(config_neo, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters)) == REVLibError.kOk),
-                    Commands.waitUntil(() -> {
-                        if(!m_calibrated){
-                            nt_angleinit.set(calibration);
-                            return encoder_neo.setPosition((calibration)/4096.0 * (2*Math.PI)) == REVLibError.kOk;
-                        }
-                        return true;
-                    }),
-                    new InstantCommand(()-> {m_setupMotorDone = true; m_calibrated = true;})
-                ); 
-                
+                config_neo = new SparkMaxConfig();             
                 break;
         }
     }
 
     public enum MyMotorType {
         KRAKEN, NEO
-    }
-
-    private void repeatSetup(){
-        // Used for rescheduling the motor configuration when parameters change after setup via the Motor class methods.
-        if (m_setupMotorDone){
-            m_setupMotorDone = false;
-            m_setupMotor.ignoringDisable(true).schedule();
-            m_setupScheduled = true;
-        }
     }
 
     public Motor inverted(boolean invert){
@@ -128,7 +131,7 @@ public class Motor {
                 config_neo.inverted(invert);       
                 break;
         }
-        repeatSetup();
+        if (m_setupMotorDone) scheduleSetup();
         return this;
     }
 
@@ -142,7 +145,7 @@ public class Motor {
                 config_neo.idleMode(idleMode);       
                 break;
         }
-        repeatSetup();
+        if (m_setupMotorDone) scheduleSetup();
         return this;
     } 
 
@@ -156,7 +159,7 @@ public class Motor {
                 config_neo.encoder.positionConversionFactor(_positionFactor);       
                 break;
         }
-        repeatSetup();
+        if (m_setupMotorDone) scheduleSetup();
         return this;
     } 
     public Motor velocityConversionFactor(double _velocityFactor){
@@ -169,7 +172,7 @@ public class Motor {
                 config_neo.encoder.velocityConversionFactor(_velocityFactor);       
                 break;
         }
-        repeatSetup();
+        if (m_setupMotorDone) scheduleSetup();
         return this;
     } 
 
@@ -182,13 +185,13 @@ public class Motor {
                 config_neo.smartCurrentLimit((int)stallLimit);       
                 break;
         }
-        repeatSetup();
+        if (m_setupMotorDone) scheduleSetup();
         return this;
     } 
 
     public Motor setCalibration(double calibrate){
         calibration = calibrate;
-        repeatSetup();
+        if (m_setupMotorDone) scheduleSetup();
         return this;
     }
 
@@ -201,6 +204,7 @@ public class Motor {
                 config_neo.closedLoop.feedbackSensor(sensor);     
                 break;
         }
+        if (m_setupMotorDone) scheduleSetup();
         return this;
     } 
 
@@ -211,9 +215,9 @@ public class Motor {
                 config_talon.Slot0.withKP(m_Kp_0);
                 break;
             case NEO:
-                config_neo.closedLoop.pidf(m_Kp_0,m_Ki_0,m_Kd_0,m_Kff_0);
+                config_neo.closedLoop.pidf(m_Kp_0,m_Ki_0,m_Kd_0,m_Kff_0,ClosedLoopSlot.kSlot0);
         }
-        repeatSetup();
+        if (m_setupMotorDone) scheduleSetup();
         return this;
     }
 
@@ -224,9 +228,9 @@ public class Motor {
                 config_talon.Slot0.withKI(m_Ki_0);
                 break;
             case NEO:
-                config_neo.closedLoop.pidf(m_Kp_0,m_Ki_0,m_Kd_0,m_Kff_0);
+                config_neo.closedLoop.pidf(m_Kp_0,m_Ki_0,m_Kd_0,m_Kff_0,ClosedLoopSlot.kSlot0);
         }
-        repeatSetup();
+        if (m_setupMotorDone) scheduleSetup();
         return this;
     }
     public Motor withKD(double val){
@@ -236,9 +240,9 @@ public class Motor {
                 config_talon.Slot0.withKD(m_Kd_0);
                 break;
             case NEO:
-                config_neo.closedLoop.pidf(m_Kp_0,m_Ki_0,m_Kd_0,m_Kff_0);
+                config_neo.closedLoop.pidf(m_Kp_0,m_Ki_0,m_Kd_0,m_Kff_0,ClosedLoopSlot.kSlot0);
         }
-        repeatSetup();
+        if (m_setupMotorDone) scheduleSetup();
         return this;
     }
 
@@ -249,9 +253,9 @@ public class Motor {
                 config_talon.Slot0.withKV(m_Kff_0);
                 break;
             case NEO:
-                config_neo.closedLoop.pidf(m_Kp_0,m_Ki_0,m_Kd_0,m_Kff_0);
+                config_neo.closedLoop.pidf(m_Kp_0,m_Ki_0,m_Kd_0,m_Kff_0,ClosedLoopSlot.kSlot0);
         }
-        repeatSetup();
+        if (m_setupMotorDone) scheduleSetup();
         return this;
     }
 
@@ -271,7 +275,7 @@ public class Motor {
                 config_neo.closedLoop.pidf(m_Kp_0,m_Ki_0,m_Kd_0,m_Kff_0);    
                 break;
         }
-        repeatSetup();
+        if (m_setupMotorDone) scheduleSetup();
         return this;
     } 
 
@@ -284,7 +288,7 @@ public class Motor {
                 config_neo.closedLoop.outputRange(rangeMin, rangeMax);     
                 break;
         }
-        repeatSetup();
+        if (m_setupMotorDone) scheduleSetup();
         return this;
     } 
 
@@ -297,7 +301,7 @@ public class Motor {
                 config_neo.closedLoop.iZone(zone);    
                 break;
         }
-        repeatSetup();
+        if (m_setupMotorDone) scheduleSetup();
         return this;
     } 
 
@@ -310,7 +314,7 @@ public class Motor {
                 config_neo.closedLoop.positionWrappingEnabled(enabled);    
                 break;
         }
-        repeatSetup();
+        if (m_setupMotorDone) scheduleSetup();
         return this;
     } 
 
@@ -325,7 +329,7 @@ public class Motor {
                     .positionWrappingMaxInput(max);  
                 break;
         }
-        repeatSetup();
+        if (m_setupMotorDone) scheduleSetup();
         return this;
     }     
 
@@ -393,9 +397,9 @@ public class Motor {
     }
 
     public boolean isSetupDone() {
-        if (m_setupScheduled == false && m_setupMotor != null) {
-            m_setupMotor.ignoringDisable(true).schedule();
-            m_setupScheduled = true;
+        
+        if (m_setupScheduled == false && m_setupMotorDone == false) {
+            scheduleSetup();
         }
         return m_setupMotorDone;
     }
