@@ -55,6 +55,11 @@ public final class Constants {
     public static double kArmKi = (NTDouble.create(0, "Arm/kArmKi", (val)->kArmKi = (val)));
     public static double kArmKd = (NTDouble.create(0, "Arm/kArmKd", (val)->kArmKd = (val)));
     public static double kArmKff = (NTDouble.create(0, "Arm/kArmKff", (val)->kArmKff = (val)));
+
+    // Creates Max and Min values for Arm Software Hardstop
+    public static double kAngleMax = Units.degreesToRadians(NTDouble.create(105, "Arm/kAngleMax", val -> kAngleMax = Units.degreesToRadians(val)));
+    public static double kAngleMin = Units.degreesToRadians(NTDouble.create(-4, "Arm/kAngleMin", val -> kAngleMin = Units.degreesToRadians(val)));
+
   }
 
   public static class EffectorConstants {
