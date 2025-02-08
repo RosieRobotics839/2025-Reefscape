@@ -8,6 +8,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 import java.util.stream.LongStream;
+
+import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation3d;
@@ -19,6 +21,7 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Filesystem;
 //import frc.robot.subsystems.Climber;
 import frc.robot.subsystems.DriveTrain;
+import frc.robot.subsystems.EndEffector;
 //import frc.robot.subsystems.IntakeShooter;
 import frc.robot.subsystems.Vision;
 import frc.utils.NTValues.NTBoolean;
@@ -56,6 +59,13 @@ public final class Constants {
 
   public static class EffectorConstants {
     public static int kEffectorCANID = 7; // Change later
+
+    public static double kMaxSpeed = NTDouble.create(2000, "Intake/kMaxSpeed", val->kMaxSpeed=val);
+    public static int kCANID_Intake = 8;
+    public static int kBeamBreakPin = 9;
+    public static double kBeamBreakDebounceSec = NTDouble.create(0.010, "Intake/kBeamBreakDebounceSec", val->{kBeamBreakDebounceSec=val; EndEffector.getInstance().m_beamDebouncer = new Debouncer(val, Debouncer.DebounceType.kBoth);});
+    public static boolean kIntakeIsInverted = false;
+    public static double kRetractDistance = NTDouble.create(10, "Intake/kRetractDistance", val->{kRetractDistance=val;});
   }
 
   public static class LEDConstants {
@@ -196,30 +206,6 @@ public final class Constants {
     public static final double kTrackWidth = Units.inchesToMeters(20.75);  // Distance between right and left wheels
     public static final double kWheelBase = Units.inchesToMeters(22.75);       // Distance between front and back wheels
   }
-
-  /* public static class IntakeConstants {
-    // Velocity Control PID Gains
-    public static double kIntakeRollerKp  = NTDouble.create(0.00002,"Intake/kRollerKp",val->{ kIntakeRollerKp = val; IntakeShooter.getInstance().m_pidIntake.setP(val,0);});
-    public static double kIntakeRollerKi  = NTDouble.create(0, "Intake/kRollerKi",val->{ kIntakeRollerKi = val; IntakeShooter.getInstance().m_pidIntake.setI(val,0);});
-    public static double kIntakeRollerKd  = NTDouble.create(0,"Intake/kRollerKd",val->{ kIntakeRollerKd = val; IntakeShooter.getInstance().m_pidIntake.setD(val,0);});
-    public static double kIntakeRollerKff = NTDouble.create(0.005,"Intake/kRollerKff",val ->{ kIntakeRollerKff = val; IntakeShooter.getInstance().m_pidIntake.setFF(val,0);});
-    // Position Control PID Gains
-    public static double kIntakeRollerPosKp  = NTDouble.create(8, "Intake/kRollerPosKp",val->{ kIntakeRollerPosKp = val; IntakeShooter.getInstance().m_pidIntake.setP(val,1);});
-    public static double kIntakeRollerPosKi  = NTDouble.create(0, "Intake/kRollerPosKi",val->{ kIntakeRollerPosKi = val; IntakeShooter.getInstance().m_pidIntake.setI(val,1);});
-    public static double kIntakeRollerPosKd  = NTDouble.create(0,"Intake/kRollerPosKd",val->{ kIntakeRollerPosKd = val; IntakeShooter.getInstance().m_pidIntake.setD(val,1);});
-    public static double kIntakeRollerPosKff = NTDouble.create(0,"Intake/kRollerPosKff",val ->{ kIntakeRollerPosKff = val; IntakeShooter.getInstance().m_pidIntake.setFF(val,1);});
-      
-    public static double kRollerDiameter = Units.inchesToMeters(1.375);
-    public static double kEncoderVelocityFactor = 1/5.0;
-    public static double kEncoderPositionFactor = 1/5.0*(Math.PI*kRollerDiameter);
-
-    public static double kMaxSpeed = NTDouble.create(2000, "Intake/kMaxSpeed", val->kMaxSpeed=val);
-    public static int kCANID_Intake = 8;
-    public static int kBeamBreakPin = 9;
-    public static double kBeamBreakDebounceSec = NTDouble.create(0.010, "Intake/kBeamBreakDebounceSec", val->{kBeamBreakDebounceSec=val; IntakeShooter.getInstance().m_beamDebouncer = new Debouncer(val, Debouncer.DebounceType.kBoth);});
-    public static boolean kIntakeIsInverted = false;
-    public static double kRetractDistance = NTDouble.create(10, "Intake/kRetractDistance", val->{kRetractDistance=val;});
-  } */
 
   /* public static class ShooterConstants {
     public static double kMaxSpeed = NTDouble.create(3000,"Shooter/kMaxSpeed",val->kMaxSpeed = val);

@@ -4,14 +4,18 @@ import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 
 import edu.wpi.first.wpilibj.AnalogInput;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.Constants;
 import frc.robot.Constants.CANID_t;
 import frc.robot.Constants.ArmConstants;
 import frc.robot.Robot;
 import frc.utils.Motor;
-import frc.utils.Motor.MyMotorType;
 
 public class Arm extends SubsystemBase{
+
+    private static Arm instance = new Arm(null);
+
+    public static Arm getInstance(){
+        return instance;
+    }
     
     public Motor m_motorArm;
     public AnalogInput m_analogEncoder;
@@ -32,6 +36,8 @@ public class Arm extends SubsystemBase{
             //.iZone(0.15); 
 
     }
+
+    
 
     @Override
     public void periodic() {
