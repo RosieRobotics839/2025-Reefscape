@@ -61,6 +61,26 @@ public class Motor {
     nt_angleinit,
     nt_speedcmd;
 
+    public Command krakenSetup(){
+        return Commands.sequence( 
+                    Commands.waitUntil(() -> motor_talon.getConfigurator().apply(config_talon).isOK()),
+                    new InstantCommand(()-> m_setupMotorDone = true)
+                    );
+    }
+    public Command neoSetup(){
+        return Commands.sequence(
+                    Commands.waitUntil(() -> (encoder_neo = motor_neo.getEncoder()) != null),
+                    Commands.waitUntil(() -> (motor_neo.configure(config_neo, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters)) == REVLibError.kOk),
+                    Commands.waitUntil(() -> {
+                        if(!m_calibrated){
+                            nt_angleinit.set(calibration);
+                            return encoder_neo.setPosition((calibration)/4096.0 * (2*Math.PI)) == REVLibError.kOk;
+                        }
+                        return true;
+                    }),
+                    new InstantCommand(()-> {m_setupMotorDone = true; m_calibrated = true;})
+                ); 
+    }
     public Motor (int CANID_, MyMotorType motorType_, String name_) {
         CANID = CANID_;
         motorType = motorType_;
@@ -74,10 +94,7 @@ public class Motor {
             case KRAKEN:
                 motor_talon = new TalonFX(CANID);
                 config_talon = new TalonFXConfiguration();
-                m_setupMotor = Commands.sequence( 
-                    Commands.waitUntil(() -> motor_talon.getConfigurator().apply(config_talon).isOK()),
-                    new InstantCommand(()-> m_setupMotorDone = true)
-                    ); 
+                m_setupMotor = krakenSetup();
                 break;
             case NEO:
                 motor_neo = new MyCANSparkMax(CANID, MotorType.kBrushless);
@@ -86,18 +103,7 @@ public class Motor {
                 config_neo = new SparkMaxConfig();
                 motor_neo.configure(config_neo, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters); 
                 
-                m_setupMotor = Commands.sequence(
-                    Commands.waitUntil(() -> (encoder_neo = motor_neo.getEncoder()) != null),
-                    Commands.waitUntil(() -> (motor_neo.configure(config_neo, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters)) == REVLibError.kOk),
-                    Commands.waitUntil(() -> {
-                        if(!m_calibrated){
-                            nt_angleinit.set(calibration);
-                            return encoder_neo.setPosition((calibration)/4096.0 * (2*Math.PI)) == REVLibError.kOk;
-                        }
-                        return true;
-                    }),
-                    new InstantCommand(()-> {m_setupMotorDone = true; m_calibrated = true;})
-                ); 
+                m_setupMotor = neoSetup();
                 
                 break;
         }
@@ -108,6 +114,14 @@ public class Motor {
     }
 
     private void repeatSetup(){
+        switch (motorType){
+            case KRAKEN:
+                m_setupMotor = krakenSetup();
+                break;
+            case NEO:
+                m_setupMotor = neoSetup();
+                break;
+        }
         // Used for rescheduling the motor configuration when parameters change after setup via the Motor class methods.
         if (m_setupMotorDone){
             m_setupMotorDone = false;
