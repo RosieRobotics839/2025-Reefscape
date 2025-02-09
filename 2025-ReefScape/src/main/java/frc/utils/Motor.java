@@ -25,12 +25,13 @@ import edu.wpi.first.wpilibj.AnalogInput;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 import com.revrobotics.spark.config.ClosedLoopConfig.FeedbackSensor;
 
 import frc.utils.CANSparkMax.MyCANSparkMax;
 
-public class Motor {
+public class Motor extends SubsystemBase {
 
     static NetworkTable table = NetworkTableInstance.getDefault().getTable("roboRIO/Drivetrain/wheel");
 
@@ -41,6 +42,11 @@ public class Motor {
     double velocityFactor; 
     MyMotorType motorType;
     String name;
+
+    public static class kFreeRunRPM{
+        final double NEO = 5676;
+        final double X60 = 6000;
+    }
 
     public TalonFX motor_talon;
     TalonFXConfiguration config_talon;
@@ -61,7 +67,9 @@ public class Motor {
     DoublePublisher 
     nt_angleinit,
     nt_speedcmd;
-
+    
+    private double m_simPosition, m_simSpeed;
+    
     public void scheduleSetup(){
         switch (motorType){
             case KRAKEN:
@@ -85,7 +93,7 @@ public class Motor {
                 );
                 break;
             default:
-                m_setupMotor = Commands.sequence();
+                m_setupMotor = Commands.sequence(new InstantCommand(()-> m_setupMotorDone = true));
         }
         m_setupMotorDone = false;
         m_setupMotor.ignoringDisable(true).schedule();
@@ -112,11 +120,12 @@ public class Motor {
                 encoder_neo = motor_neo.getEncoder();
                 config_neo = new SparkMaxConfig();             
                 break;
+            default:
         }
     }
 
     public enum MyMotorType {
-        KRAKEN, NEO
+        KRAKEN, NEO, SIMULATED
     }
 
     public Motor inverted(boolean invert){
@@ -130,6 +139,7 @@ public class Motor {
             case NEO:
                 config_neo.inverted(invert);       
                 break;
+            default:
         }
         if (m_setupMotorDone) scheduleSetup();
         return this;
@@ -144,6 +154,7 @@ public class Motor {
             case NEO:
                 config_neo.idleMode(idleMode);       
                 break;
+            default:
         }
         if (m_setupMotorDone) scheduleSetup();
         return this;
@@ -158,6 +169,7 @@ public class Motor {
             case NEO:
                 config_neo.encoder.positionConversionFactor(_positionFactor);       
                 break;
+            default:
         }
         if (m_setupMotorDone) scheduleSetup();
         return this;
@@ -171,6 +183,7 @@ public class Motor {
             case NEO:
                 config_neo.encoder.velocityConversionFactor(_velocityFactor);       
                 break;
+            default:
         }
         if (m_setupMotorDone) scheduleSetup();
         return this;
@@ -184,6 +197,7 @@ public class Motor {
             case NEO:
                 config_neo.smartCurrentLimit((int)stallLimit);       
                 break;
+            default:
         }
         if (m_setupMotorDone) scheduleSetup();
         return this;
@@ -203,6 +217,7 @@ public class Motor {
             case NEO:
                 config_neo.closedLoop.feedbackSensor(sensor);     
                 break;
+            default:
         }
         if (m_setupMotorDone) scheduleSetup();
         return this;
@@ -216,6 +231,7 @@ public class Motor {
                 break;
             case NEO:
                 config_neo.closedLoop.pidf(m_Kp_0,m_Ki_0,m_Kd_0,m_Kff_0,ClosedLoopSlot.kSlot0);
+            default:
         }
         if (m_setupMotorDone) scheduleSetup();
         return this;
@@ -229,6 +245,7 @@ public class Motor {
                 break;
             case NEO:
                 config_neo.closedLoop.pidf(m_Kp_0,m_Ki_0,m_Kd_0,m_Kff_0,ClosedLoopSlot.kSlot0);
+            default:
         }
         if (m_setupMotorDone) scheduleSetup();
         return this;
@@ -241,6 +258,7 @@ public class Motor {
                 break;
             case NEO:
                 config_neo.closedLoop.pidf(m_Kp_0,m_Ki_0,m_Kd_0,m_Kff_0,ClosedLoopSlot.kSlot0);
+            default:
         }
         if (m_setupMotorDone) scheduleSetup();
         return this;
@@ -254,6 +272,7 @@ public class Motor {
                 break;
             case NEO:
                 config_neo.closedLoop.pidf(m_Kp_0,m_Ki_0,m_Kd_0,m_Kff_0,ClosedLoopSlot.kSlot0);
+            default:
         }
         if (m_setupMotorDone) scheduleSetup();
         return this;
@@ -274,6 +293,7 @@ public class Motor {
             case NEO:
                 config_neo.closedLoop.pidf(m_Kp_0,m_Ki_0,m_Kd_0,m_Kff_0);    
                 break;
+            default:
         }
         if (m_setupMotorDone) scheduleSetup();
         return this;
@@ -287,6 +307,7 @@ public class Motor {
             case NEO:
                 config_neo.closedLoop.outputRange(rangeMin, rangeMax);     
                 break;
+            default:
         }
         if (m_setupMotorDone) scheduleSetup();
         return this;
@@ -300,6 +321,7 @@ public class Motor {
             case NEO:
                 config_neo.closedLoop.iZone(zone);    
                 break;
+            default:
         }
         if (m_setupMotorDone) scheduleSetup();
         return this;
@@ -313,6 +335,7 @@ public class Motor {
             case NEO:
                 config_neo.closedLoop.positionWrappingEnabled(enabled);    
                 break;
+            default:
         }
         if (m_setupMotorDone) scheduleSetup();
         return this;
@@ -328,13 +351,13 @@ public class Motor {
                     .positionWrappingMinInput(min)
                     .positionWrappingMaxInput(max);  
                 break;
+            default:
         }
         if (m_setupMotorDone) scheduleSetup();
         return this;
     }     
 
     public boolean setSpeed(double speed){
-        nt_speedcmd.set(speed/velocityFactor);
         boolean status;
         switch (motorType) {
             case KRAKEN:
@@ -344,7 +367,8 @@ public class Motor {
                 status = controller_neo.setReference(speed, SparkMax.ControlType.kVelocity) == REVLibError.kOk;
                 break;
             default:
-                status = false;
+                m_simSpeed = speed;
+                status = true;
         }
         return status;
     }
@@ -359,7 +383,9 @@ public class Motor {
                 status = controller_neo.setReference(position, SparkMax.ControlType.kPosition) == REVLibError.kOk;
                 break;
             default:
-                status = false;
+                m_simPosition = position;
+                m_simSpeed = 0;
+                status = true;
         }
         return status;
     }
@@ -371,8 +397,9 @@ public class Motor {
                 return motor_talon.getVelocity().getValueAsDouble() * velocityFactor * 60; // Talon method returns rotations Per second
             case NEO:
                 return encoder_neo.getVelocity(); // Our math is based on rotations per Minute
+            default:
+                return m_simSpeed;
         }
-        return 0.0;
     }
 
     public double getPosition(){
@@ -382,8 +409,9 @@ public class Motor {
                 return motor_talon.getPosition().getValueAsDouble() * positionFactor;
             case NEO:
                 return encoder_neo.getPosition();
+            default:
+                return m_simPosition;
         }
-        return 0.0;
     }
 
     public double getOutputCurrent(){
@@ -392,6 +420,7 @@ public class Motor {
                 break;
             case NEO:
                 return motor_neo.getOutputCurrent();
+            default:
         }
         return 0.0;
     }
@@ -404,4 +433,16 @@ public class Motor {
         return m_setupMotorDone;
     }
     
+    @Override
+    public void periodic(){
+        switch (motorType){
+            case KRAKEN:
+                break;
+            case NEO:
+                break;
+            case SIMULATED:
+                m_simPosition = m_simPosition + m_simSpeed * 0.020; // Move simulated motor over a 20ms period.
+                break;
+        }
+    };
 }

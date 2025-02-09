@@ -21,6 +21,7 @@ import edu.wpi.first.wpilibj.Filesystem;
 import frc.robot.subsystems.DriveTrain;
 //import frc.robot.subsystems.IntakeShooter;
 import frc.robot.subsystems.Vision;
+import frc.utils.Motor.MyMotorType;
 import frc.utils.NTValues.NTBoolean;
 import frc.utils.NTValues.NTDouble;
 import frc.utils.NTValues.NTInteger;
@@ -400,6 +401,8 @@ public final class Constants {
       public static CANID_t kCANID_RearLeft = new CANID_t(0, 6, 5);
       public static CANID_t kCANID_RearRight = new CANID_t(1, 14, 13);
 
+      public static MyMotorType kDriveType = MyMotorType.KRAKEN;
+      public static MyMotorType kSteerType = MyMotorType.NEO;
       
       public static double kCalibrationFrontLeft = 2487.0;
       public static double kCalibrationFrontRight = 1104.0;
@@ -412,23 +415,18 @@ public final class Constants {
 
       // Gear Ratios
       // Drive Characteristics
-      public static double kMaxFreeRunSpeed = 5676; // Specific to Rev Robotics NEO Brushless Motor
-    
       public static double kWheelDiameterMeters = Units.inchesToMeters(4);
 
       // Drive Gear Ratios in order from motor to drive wheel
       public static double kDriveStage1Ratio = 14.0 / 50.0;
       //public static double kDriveStage2Ratio = 25.0 / 19.0; // L1 MK4i Ratio Option Overall (8.14:1)
       public static double kDriveStage2Ratio = 27.0 / 17.0; // L2 MK4i Ratio Option Overall (6.75:1)
-   // public static double kDriveStage2Ratio = 28.0 / 16.0; // L3 MK4i Ratio Option Overall (6.12:1)
+      // public static double kDriveStage2Ratio = 28.0 / 16.0; // L3 MK4i Ratio Option Overall (6.12:1)
       public static double kDriveStage3Ratio = 15.0 / 45.0;
       public static double kDriveMotorGearReduction = 1/(kDriveStage1Ratio * kDriveStage2Ratio * kDriveStage3Ratio);
 
       // Steering Gear Ratio
       public static double kSteerMotorGearReduction = 150.0/7.0;
-      //public static double kSteerMotorStage1Ratio = 14.0/50.0;
-      //public static double kSteerMotorStage2Ratio = 14.0/60.0;
-      //public static double kSteerMotorGearReduction = kSteerMotorStage1Ratio*kSteerMotorStage2Ratio;
 
       // Encoder Scaling Factors
       public static double kDriveEncoderPositionFactor = (kWheelDiameterMeters * Math.PI) / kDriveMotorGearReduction; //(kWheelDiameterMeters * Math.PI) / kDriveMotorGearReduction;
@@ -437,13 +435,13 @@ public final class Constants {
       public static double kSteerEncoderVelocityFactor = (2.0 * Math.PI) / kSteerMotorGearReduction / 60.0;
 
       // Control Loop Gains - Drive
-      public static double kDriveKp  = NTDouble.create(.3,"SwerveModule/kDriveKp",val->DriveTrain.forEachSwerveModule((m)->m.m_motorDrive.withKP(val)));
+      public static double kDriveKp  = NTDouble.create(switch(kDriveType){case KRAKEN->0.3; case NEO->0.2; default-> 0;},"SwerveModule/kDriveKp",val->DriveTrain.forEachSwerveModule((m)->m.m_motorDrive.withKP(val)));
       public static double kDriveKi  = NTDouble.create(.0, "SwerveModule/kDriveKi",val->DriveTrain.forEachSwerveModule((m)->m.m_motorDrive.withKI(val)));
       public static double kDriveKd  = NTDouble.create(.0,"SwerveModule/kDriveKd",val->DriveTrain.forEachSwerveModule((m)->m.m_motorDrive.withKD(val)));
-      public static double kDriveKff = NTDouble.create(.12,"SwerveModule/kDriveKff",val->DriveTrain.forEachSwerveModule((m)->m.m_motorDrive.withKFF(val)));
+      public static double kDriveKff = NTDouble.create(switch(kDriveType){case KRAKEN->0.12; case NEO->0.3; default-> 0;},"SwerveModule/kDriveKff",val->DriveTrain.forEachSwerveModule((m)->m.m_motorDrive.withKFF(val)));
       
       // Control Loop Gains - Steering
-      public static double kSteerKp  = NTDouble.create(1.0,"SwerveModule/kSteerKp",val->DriveTrain.forEachSwerveModule((m)->m.m_motorSteer.withKP(val)));
+      public static double kSteerKp  = NTDouble.create(switch(kDriveType){case KRAKEN->1.0; case NEO->0.3; default-> 0;},"SwerveModule/kSteerKp",val->DriveTrain.forEachSwerveModule((m)->m.m_motorSteer.withKP(val)));
       public static double kSteerKi  = NTDouble.create(0, "SwerveModule/kSteerKi",val->DriveTrain.forEachSwerveModule((m)->m.m_motorSteer.withKI(val)));
       public static double kSteerKd  = NTDouble.create(0,"SwerveModule/kSteerKd",val->DriveTrain.forEachSwerveModule((m)->m.m_motorSteer.withKD(val)));     
       public static double kSteerKff = 0;

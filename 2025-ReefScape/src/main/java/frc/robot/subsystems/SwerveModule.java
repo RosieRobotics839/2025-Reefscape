@@ -4,7 +4,6 @@
 
 package frc.robot.subsystems;
 
-import com.revrobotics.sim.SparkMaxSim;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.ClosedLoopConfig.FeedbackSensor;
 import edu.wpi.first.networktables.DoublePublisher;
@@ -16,7 +15,6 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
-import edu.wpi.first.math.system.plant.DCMotor;
 import frc.robot.Constants.kDriveTrain.DriveConstants;
 import frc.robot.Constants.kDriveTrain.kSwerveModule;
 import frc.utils.FirstOrderLag;
@@ -75,11 +73,7 @@ public class SwerveModule extends SubsystemBase {
     nt_steeringOffset = table.getDoubleTopic("angle/steeringOffset/"+name).publish();
 
     /* Define drive motor controller. */
-    m_motorDrive = new Motor(CANID.driving, Motor.MyMotorType.KRAKEN, name+"_driving");
-
-    // m_controllerDrive = m_motorDrive.getClosedLoopController();
-
-    m_motorDrive
+    m_motorDrive = new Motor(CANID.driving, kSwerveModule.kDriveType, name+"_driving")
         .inverted(false)
         .idleMode(IdleMode.kBrake)
         .smartCurrentLimit((int)kSwerveModule.kDrivingMotorCurrentLimit)
@@ -97,11 +91,7 @@ public class SwerveModule extends SubsystemBase {
     nt_steeringOffset.set(m_steeringOffset);
     
     /* Define steer motor controller. */
-    m_motorSteer = new Motor(CANID.steering, Motor.MyMotorType.NEO, name+"_steering"); //new MyCANSparkMax(CANID.steering, MotorType.kBrushless);
-    
-    // m_controllerSteer  = m_motorSteer.getClosedLoopController();
-
-    m_motorSteer
+    m_motorSteer = new Motor(CANID.steering, kSwerveModule.kSteerType, name+"_steering")
       .inverted(true)
       .idleMode(IdleMode.kBrake)
       .smartCurrentLimit((int)kSwerveModule.kSteeringMotorCurrentLimit)
@@ -173,15 +163,6 @@ public class SwerveModule extends SubsystemBase {
       nt_steeri.set(m_motorSteer.getOutputCurrent());
     }
     nt_analog.set(m_analogEncoder.getValue());
-  }
-  
-  static DCMotor m_simMotorDrive = new DCMotor(12, 2.6, 130.0, 2.70, 5676.0/60.0*2.0*Math.PI, 1);
-  static DCMotor m_simMotorSteer = new DCMotor(12, 2.6, 130.0, 2.70, 5676.0/60.0*2.0*Math.PI, 1);
-  static SparkMaxSim m_simDrive;
-  static SparkMaxSim m_simSteer;
-  public void simulationInit(){
-    m_simDrive = new SparkMaxSim(m_motorDrive.motor_neo, m_simMotorDrive);
-    m_simSteer = new SparkMaxSim(m_motorSteer.motor_neo, m_simMotorSteer);
   }
 
   public void simulationPeriodic(){
