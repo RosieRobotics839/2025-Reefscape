@@ -27,7 +27,7 @@ public class Gyro extends SubsystemBase {
   private double lastSimYawRad = 0;
   private double simYaw = 0;
 
-  private static Pigeon2 pidgey = new Pigeon2(GyroConstants.kCANID_Pigeon, "rio");
+  private static Pigeon2 pidgey = new Pigeon2(GyroConstants.kCANID, "rio");
   private static Pigeon2SimState simstate = new Pigeon2SimState(pidgey);
 
   private static Gyro gyro = new Gyro(); 
@@ -44,9 +44,11 @@ public class Gyro extends SubsystemBase {
 
   // Constructor Function on init, set gyro yaw to zero.
   public Gyro() {
-    pidgey.getConfigurator().apply(new Pigeon2Configuration());
-    pidgey.getYaw().setUpdateFrequency(100);
-    pidgey.setYaw(0);
+    if (GyroConstants.kEnabled){
+      pidgey.getConfigurator().apply(new Pigeon2Configuration());
+      pidgey.getYaw().setUpdateFrequency(100);
+      pidgey.setYaw(0);
+    }
   } 
 
   double [] initypr = {0,0,0};
@@ -70,6 +72,10 @@ public class Gyro extends SubsystemBase {
 
   @Override
   public void periodic() {
+    if (!GyroConstants.kEnabled){
+      return;
+    }
+
     // If there is a hardware fault, attempt to reset the gyro every 5 seconds
     m_lastReset = Math.max(0, m_lastReset-0.02);
     if (pidgey.getFault_Hardware().getValue() && m_lastReset == 0){
@@ -111,6 +117,10 @@ public class Gyro extends SubsystemBase {
   }
 
   public double [] getypr(){
+    if (!GyroConstants.kEnabled){
+      return new double[]{0, 0, 0};
+    }
+
     // read sensor data from Pigeon2
     if (Robot.isSimulation()){
       double simyawrad = PoseEstimator.getInstance().m_sim_actualPose.getRotation().getRadians();
@@ -157,8 +167,11 @@ public class Gyro extends SubsystemBase {
   }
 
   public boolean getStatus() {
-    // getFault_Hardware() returns False if the hardware is good
-    boolean GyroGood = !pidgey.getFault_Hardware().getValue();
+    boolean GyroGood = false;
+    if (GyroConstants.kEnabled){
+        // getFault_Hardware() returns False if the hardware is good
+        GyroGood = !pidgey.getFault_Hardware().getValue();
+    }
    
     return GyroGood;
   }

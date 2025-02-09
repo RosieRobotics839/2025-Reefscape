@@ -95,8 +95,9 @@ public final class Constants {
   }
 
   public static class GyroConstants{
+    public static boolean kEnabled = true;
+    public static int kCANID = 50;
     public static double kVisionCorrectionMaxRate = Units.degreesToRadians(NTDouble.create(40,"Gyro/kVisionCorrectionMaxRate",val->kVisionCorrectionMaxRate=Units.degreesToRadians(val)));
-    public static int kCANID_Pigeon = 50;
   }
 
   public static class PoseConstants{
