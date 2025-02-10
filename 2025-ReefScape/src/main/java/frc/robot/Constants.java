@@ -42,6 +42,15 @@ public final class Constants {
     public CANID_t(int abs_encoder, int drive, int steer){this.encoder = abs_encoder; this.driving = drive; this.steering = steer;}
   }
 
+  public static class MotorDefaults {
+    public static double Kp = 0.15;
+    public static double Ki = 0;
+    public static double Kd = 0;
+    public static double Kff = 0.1;
+    public static double currentLimit = 5;
+    public static boolean inverted = false;
+  }
+  
   public static class LEDConstants {
     public static double kMaxMotorTemp = (NTDouble.create(175.0, "LED/kMaxMotorTempF", (val)->kMaxMotorTemp = (val-32)/1.8) -32)/1.8;
     public static double kPoseResidualDist = Units.feetToMeters(NTDouble.create(2.0, "LED/kPoseResidualFeet", (val)->kPoseResidualDist = Units.feetToMeters(val)));

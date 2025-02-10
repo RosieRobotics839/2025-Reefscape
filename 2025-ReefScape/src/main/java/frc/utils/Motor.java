@@ -29,12 +29,15 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 import com.revrobotics.spark.config.ClosedLoopConfig.FeedbackSensor;
 
+import frc.robot.Constants.MotorDefaults;
 import frc.utils.CANSparkMax.MyCANSparkMax;
+import frc.utils.NTValues.NTBoolean;
+import frc.utils.NTValues.NTDouble;
 
 public class Motor extends SubsystemBase {
 
     static NetworkTable table = NetworkTableInstance.getDefault().getTable("roboRIO/Drivetrain/wheel");
-
+    static NetworkTable testbus = NetworkTableInstance.getDefault().getTable("roboRIO/TestBus");
     Command m_setupMotor;
 
     int CANID;
@@ -62,11 +65,16 @@ public class Motor extends SubsystemBase {
     int m_steeringOffset;
     boolean m_setupScheduled = false;
 
+    double m_testSpeed;
+    double m_testPosition;
+
     public double m_Kp_0, m_Ki_0, m_Kd_0, m_Kff_0;
 
     DoublePublisher 
     nt_angleinit,
-    nt_speedcmd;
+    nt_speedcmd,
+    nt_testspeed,
+    nt_testposition;
     
     private double m_simPosition, m_simSpeed;
     
@@ -109,6 +117,17 @@ public class Motor extends SubsystemBase {
         nt_angleinit = table.getDoubleTopic("angle/init/"+name).publish();
         nt_speedcmd = table.getDoubleTopic("motor/speedcmd/"+name).publish();
 
+        if (motorType_ != MyMotorType.SIMULATED){
+            NTBoolean.create(MotorDefaults.inverted,testbus,"motors/"+name+"/inverted",(val)->inverted(val));
+            NTDouble.create(MotorDefaults.currentLimit,testbus,"motors/"+name+"/currentLimit",(val)->smartCurrentLimit(val));
+            NTDouble.create(0,testbus,"motors/"+name+"/speed",(val)->setSpeed(val));
+            NTDouble.create(0,testbus, "motors/"+name+"/position", (val)->setPosition(val));
+            NTDouble.create(MotorDefaults.Kp,testbus,"motors/"+name+"/KP",(val)->withKP(val));
+            NTDouble.create(MotorDefaults.Ki,testbus,"motors/"+name+"/KI",(val)->withKI(val));
+            NTDouble.create(MotorDefaults.Kd,testbus,"motors/"+name+"/KD",(val)->withKD(val));
+            NTDouble.create(MotorDefaults.Kff,testbus, "motors/"+name+"/KFF", (val)->withKFF(val));
+        }
+
         switch (motorType){   
             case KRAKEN:
                 motor_talon = new TalonFX(CANID);
@@ -122,6 +141,9 @@ public class Motor extends SubsystemBase {
                 break;
             default:
         }
+        
+        this.withKP(0.15)
+            .withKFF(0.10);
     }
 
     public enum MyMotorType {
@@ -192,7 +214,9 @@ public class Motor extends SubsystemBase {
     public Motor smartCurrentLimit(double stallLimit){
         switch (motorType) {
             case KRAKEN:
-                config_talon.withCurrentLimits(config_talon.CurrentLimits.withSupplyCurrentLimit(stallLimit));
+                config_talon.CurrentLimits
+                    .withStatorCurrentLimit(stallLimit)
+                    .withStatorCurrentLimitEnable(true);
                 break;
             case NEO:
                 config_neo.smartCurrentLimit((int)stallLimit);       
@@ -426,23 +450,25 @@ public class Motor extends SubsystemBase {
     }
 
     public boolean isSetupDone() {
-        
-        if (m_setupScheduled == false && m_setupMotorDone == false) {
-            scheduleSetup();
-        }
         return m_setupMotorDone;
     }
     
     @Override
     public void periodic(){
-        switch (motorType){
-            case KRAKEN:
-                break;
-            case NEO:
-                break;
-            case SIMULATED:
-                m_simPosition = m_simPosition + m_simSpeed * 0.020; // Move simulated motor over a 20ms period.
-                break;
+        if (m_setupScheduled == false && m_setupMotorDone == false) {
+            scheduleSetup();
+        }
+        if (m_setupMotorDone){
+            switch (motorType){
+                case KRAKEN:
+                    break;
+                case NEO:
+                    break;
+                case SIMULATED:
+                    
+                    m_simPosition = m_simPosition + m_simSpeed * 0.020; // Move simulated motor over a 20ms period.
+                    break;
+            }
         }
     };
 }
