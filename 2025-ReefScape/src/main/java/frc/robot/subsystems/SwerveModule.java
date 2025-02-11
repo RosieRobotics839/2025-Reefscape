@@ -26,6 +26,7 @@ import frc.robot.Constants.CANID_t;
 public class SwerveModule extends SubsystemBase {
 
   static NetworkTable table = NetworkTableInstance.getDefault().getTable("roboRIO/Drivetrain/wheel");
+  static NetworkTable testtable = NetworkTableInstance.getDefault().getTable("roboRIO/Test");
 
   //public MyCANSparkMax m_motorDrive, m_motorSteer;
   //public RelativeEncoder m_encoderDrive, m_encoderSteer;
@@ -58,8 +59,8 @@ public class SwerveModule extends SubsystemBase {
 
   public SwerveModule(CANID_t CANID, double angleCalibration, String name) {
    
-    NTDouble.create(0,"test/degpersec/"+name,val->this.testAnglePerSec=val);
-    NTDouble.create(0,"test/feetpersec/"+name,val->this.testSpeed=val);
+    NTDouble.create(0,testtable,"SwerveModule/"+name+"/degpersec",val->this.testAnglePerSec=val);
+    NTDouble.create(0,testtable,"SwerveModule/"+name+"/feetpersec",val->this.testSpeed=val);
 
     // Setup Network Table Publishers
     nt_angleinit = table.getDoubleTopic("angle/init/"+name).publish();

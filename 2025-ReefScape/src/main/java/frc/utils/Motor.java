@@ -37,7 +37,7 @@ import frc.utils.NTValues.NTDouble;
 public class Motor extends SubsystemBase {
 
     static NetworkTable table = NetworkTableInstance.getDefault().getTable("roboRIO/Drivetrain/wheel");
-    static NetworkTable testbus = NetworkTableInstance.getDefault().getTable("roboRIO/TestBus");
+    static NetworkTable testtable = NetworkTableInstance.getDefault().getTable("roboRIO/Test");
     Command m_setupMotor;
 
     int CANID;
@@ -118,14 +118,14 @@ public class Motor extends SubsystemBase {
         nt_speedcmd = table.getDoubleTopic("motor/speedcmd/"+name).publish();
 
         if (motorType_ != MyMotorType.SIMULATED){
-            NTBoolean.create(MotorDefaults.inverted,testbus,"motors/"+name+"/inverted",(val)->inverted(val));
-            NTDouble.create(MotorDefaults.currentLimit,testbus,"motors/"+name+"/currentLimit",(val)->smartCurrentLimit(val));
-            NTDouble.create(0,testbus,"motors/"+name+"/speed",(val)->setSpeed(val));
-            NTDouble.create(0,testbus, "motors/"+name+"/position", (val)->setPosition(val));
-            NTDouble.create(MotorDefaults.Kp,testbus,"motors/"+name+"/KP",(val)->withKP(val));
-            NTDouble.create(MotorDefaults.Ki,testbus,"motors/"+name+"/KI",(val)->withKI(val));
-            NTDouble.create(MotorDefaults.Kd,testbus,"motors/"+name+"/KD",(val)->withKD(val));
-            NTDouble.create(MotorDefaults.Kff,testbus, "motors/"+name+"/KFF", (val)->withKFF(val));
+            NTDouble.create(0.0,testtable,"motors/"+name+"/speed",(val)->{m_testSpeed=val; m_testPosition = 0;});
+            NTDouble.create(0.0,testtable,"motors/"+name+"/position",(val)->{m_testPosition=val; m_testSpeed = 0;});
+            NTBoolean.create(MotorDefaults.inverted,testtable,"motors/"+name+"/inverted",(val)->inverted(val));
+            NTDouble.create(MotorDefaults.currentLimit,testtable,"motors/"+name+"/currentLimit",(val)->smartCurrentLimit(val));
+            NTDouble.create(MotorDefaults.Kp,testtable,"motors/"+name+"/KP",(val)->withKP(val));
+            NTDouble.create(MotorDefaults.Ki,testtable,"motors/"+name+"/KI",(val)->withKI(val));
+            NTDouble.create(MotorDefaults.Kd,testtable,"motors/"+name+"/KD",(val)->withKD(val));
+            NTDouble.create(MotorDefaults.Kff,testtable, "motors/"+name+"/KFF", (val)->withKFF(val));
         }
 
         switch (motorType){   
@@ -382,6 +382,14 @@ public class Motor extends SubsystemBase {
     }     
 
     public boolean setSpeed(double speed){
+        // If motor testing is active, ignore external request.
+        if (m_testSpeed != 0 || m_testPosition !=0){
+            return true;
+        }
+        return _setSpeed(speed);
+    }
+
+    protected boolean _setSpeed(double speed){
         boolean status;
         switch (motorType) {
             case KRAKEN:
@@ -398,6 +406,14 @@ public class Motor extends SubsystemBase {
     }
 
     public boolean setPosition(double position){
+        // If motor testing is active, ignore external request.
+        if (m_testSpeed != 0 || m_testPosition !=0){
+            return true;
+        }
+        return _setPosition(position);
+    }
+
+    protected boolean _setPosition(double position){
         boolean status;
         switch (motorType) {
             case KRAKEN:
@@ -459,16 +475,23 @@ public class Motor extends SubsystemBase {
             scheduleSetup();
         }
         if (m_setupMotorDone){
+            if (m_testSpeed != 0){
+                _setSpeed(m_testSpeed);
+            } else if (m_testPosition !=0){
+                _setPosition(m_testPosition);
+            }
+
             switch (motorType){
                 case KRAKEN:
                     break;
                 case NEO:
                     break;
                 case SIMULATED:
-                    
-                    m_simPosition = m_simPosition + m_simSpeed * 0.020; // Move simulated motor over a 20ms period.
+                    if (m_testPosition == 0){
+                        m_simPosition = m_simPosition + m_simSpeed * 0.020; // Move simulated motor over a 20ms period.
+                    }
                     break;
             }
         }
-    };
+    }
 }
