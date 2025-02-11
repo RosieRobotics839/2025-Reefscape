@@ -7,6 +7,7 @@ package frc.robot.subsystems;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Optional;
 
 import org.photonvision.EstimatedRobotPose;
@@ -17,6 +18,8 @@ import org.photonvision.simulation.PhotonCameraSim;
 import org.photonvision.simulation.SimCameraProperties;
 import org.photonvision.simulation.VisionSystemSim;
 import org.photonvision.simulation.VisionTargetSim;
+import org.photonvision.targeting.PhotonPipelineResult;
+import org.photonvision.targeting.PhotonTrackedTarget;
 
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.math.geometry.Pose3d;
@@ -42,14 +45,10 @@ public class Vision extends SubsystemBase {
   NetworkTableInstance ntinst = NetworkTableInstance.getDefault();
   NetworkTable table = ntinst.getTable("roboRIO/Vision");
   NetworkTable pixytable = ntinst.getTable("PIXY");
+  
+  NTCamResult nt_posefront = new NTCamResult(table, "poseFront");
+  NTCamResult nt_poserear = new NTCamResult(table, "poseRear");
 
-  DoublePublisher nt_pose_x = table.getDoubleTopic("pose/x").publish();
-  DoublePublisher nt_pose_y = table.getDoubleTopic("pose/y").publish();
-  DoublePublisher nt_pose_t = table.getDoubleTopic("pose/t").publish();
-  DoublePublisher nt_ambiguity = table.getDoubleTopic("pose/ambiguity").publish();
-  DoublePublisher nt_numtargets = table.getDoubleTopic("numtargets").publish();
-  DoublePublisher nt_timestamp = table.getDoubleTopic("pose/timestamp").publish();
-  IntegerPublisher nt_besttarget = table.getIntegerTopic("pose/bestTarget").publish();
   public AprilTagFieldLayout aprilTagFieldLayout;
 
   static public PhotonCamera cam1, cam2;
@@ -74,7 +73,6 @@ public class Vision extends SubsystemBase {
     
     cam1 = new PhotonCamera(VisionConstants.frontCamera.kCameraName);
     cam2 = new PhotonCamera(VisionConstants.rearCamera.kCameraName);
-
 
     cam1.setPipelineIndex(VisionConstants.kPipelineIndex);
     cam2.setPipelineIndex(VisionConstants.kPipelineIndex);
@@ -109,69 +107,59 @@ public class Vision extends SubsystemBase {
     }
   }
 
+  /**
+   * Executes code to process the last camera result from Photonvision that contains targets from a PhotonCamera and returns the CamResult
+   * 
+   * @param camera PhotonCamera to process
+   * @param poseEst PhotonPoseEstimator to update
+   */
+  private CamResult processCamera(PhotonCamera camera, final PhotonPoseEstimator poseEst){
+    int numTargets = 0;
+    Optional<PhotonTrackedTarget> bestTarget = Optional.empty();
+    Optional<EstimatedRobotPose> robotPose = Optional.empty();
+
+    var results = camera.getAllUnreadResults();
+    ListIterator<PhotonPipelineResult> res_iter = results.listIterator(results.size());
+
+    while (res_iter.hasPrevious()){
+      // get latest camera result
+      PhotonPipelineResult result = res_iter.previous(); 
+     
+      if (result.hasTargets()) {
+        numTargets = result.targets.size();
+        bestTarget = Optional.of(result.getBestTarget());
+
+        robotPose = poseEst.update(
+          result,
+          camera.getCameraMatrix(),
+          camera.getDistCoeffs()
+        );
+
+        double ambiguity = result.getBestTarget().getPoseAmbiguity();
+        if (ambiguity >=0 && ambiguity < VisionConstants.kMaxAmbiguity){
+          PoseEstimator.getInstance().addVisionMeasurement(robotPose,result.metadata.getCaptureTimestampMicros());
+        }
+      }
+    }
+    return new CamResult(numTargets,bestTarget,robotPose);
+  }
+
+  @SuppressWarnings("unused")
   @Override
   public void periodic() {
+    // TODO: Remove return statement
     if (true) return;
     // This method will be called once per scheduler run
-    @SuppressWarnings("unused")
-    var res = cam1.getLatestResult();
 
-    if (res.hasTargets()) {
-      
-      photonPoseEstimatorFront.setReferencePose(PoseEstimator.getInstance().m_finalPose3d);
-      // In photonlib v2025, update call now needs to include camera matrix and distortion coefficients
-      Optional<EstimatedRobotPose> robotPose = photonPoseEstimatorFront.update(
-        res,
-        cam1.getCameraMatrix(),
-        cam1.getDistCoeffs()
-      );
-      
-      nt_ambiguity.set(res.getBestTarget().getPoseAmbiguity());
-      if (robotPose.isPresent()){
-        Pose3d camPose = robotPose.get().estimatedPose;
-        nt_timestamp.set(robotPose.get().timestampSeconds);
-        nt_pose_x.set(camPose.getX());
-        nt_pose_y.set(camPose.getY());
-        nt_pose_t.set(camPose.getRotation().toRotation2d().getRadians());
-        if (res.getBestTarget().getPoseAmbiguity() < VisionConstants.kMaxAmbiguity){
-          double latency_ms = Math.max(0,Math.min(VisionConstants.kMaxLatencyCompensationMillis, res.getLatencyMillis()));
-          PoseEstimator.getInstance().addVisionMeasurement(robotPose, VisionConstants.kExtraLatencyMillis + latency_ms);
-        }
-      }
+    photonPoseEstimatorFront.setReferencePose(PoseEstimator.getInstance().m_finalPose3d);
+    photonPoseEstimatorRear.setReferencePose(PoseEstimator.getInstance().m_finalPose3d);
 
-      nt_besttarget.set(res.getBestTarget().getFiducialId());
-    }
-    m_numTargets = res.targets.size();
-
-    res = cam2.getLatestResult();
-
-    if (res.hasTargets()) {
-      
-      photonPoseEstimatorRear.setReferencePose(PoseEstimator.getInstance().m_finalPose3d);
-      // In photonlib v2025, update call now needs to include camera matrix and distortion coefficients
-      Optional<EstimatedRobotPose> robotPose = photonPoseEstimatorRear.update(
-        res,
-        cam2.getCameraMatrix(),
-        cam2.getDistCoeffs()
-      );
-      
-      nt_ambiguity.set(res.getBestTarget().getPoseAmbiguity());
-      if (robotPose.isPresent()){
-        Pose3d camPose = robotPose.get().estimatedPose;
-        nt_timestamp.set(robotPose.get().timestampSeconds);
-        nt_pose_x.set(camPose.getX());
-        nt_pose_y.set(camPose.getY());
-        nt_pose_t.set(camPose.getRotation().toRotation2d().getRadians());
-        if (res.getBestTarget().getPoseAmbiguity() < VisionConstants.kMaxAmbiguity){
-          PoseEstimator.getInstance().addVisionMeasurement(robotPose, VisionConstants.kExtraLatencyMillis + res.getLatencyMillis());
-        }
-      }
-
-      nt_besttarget.set(res.getBestTarget().getFiducialId());
-    }
-    m_numTargets += res.targets.size();
-    nt_numtargets.set(m_numTargets);
-
+    var cam1result = processCamera(cam1, photonPoseEstimatorFront);
+    var cam2result = processCamera(cam2, photonPoseEstimatorRear);
+    
+    nt_posefront.set(cam1result);
+    nt_poserear.set(cam2result);
+    
     // Run the periodic function for the Pixy Camera
     pixyPeriodic();
   }
@@ -301,5 +289,43 @@ public class Vision extends SubsystemBase {
 
   public void unlockTarget(){
     targetIsLocked = false;
+  }
+
+
+  /**
+   * A class to hold information from a processed camera target
+   */
+  class CamResult {
+    int numTargets;
+    Optional<PhotonTrackedTarget> bestTarget;
+    Optional<EstimatedRobotPose> pose;
+    public CamResult(int numTargets, Optional<PhotonTrackedTarget> bestTarget, Optional<EstimatedRobotPose> pose){this.numTargets=numTargets; this.bestTarget=bestTarget; this.pose = pose;}
+  };
+
+  class NTCamResult {
+    DoublePublisher nt_pose_x, nt_pose_y, nt_pose_t, nt_ambiguity, nt_timestamp;
+    IntegerPublisher nt_besttarget, nt_targets;
+    NTCamResult (NetworkTable _table, String _name){
+      nt_pose_x = _table.getDoubleTopic(_name+"/x").publish();
+      nt_pose_y = _table.getDoubleTopic(_name+"/y").publish();
+      nt_pose_t = _table.getDoubleTopic(_name+"/t").publish();
+      nt_ambiguity = _table.getDoubleTopic(_name+"/ambiguity").publish();
+      nt_besttarget = _table.getIntegerTopic(_name+"/bestTarget").publish();
+      nt_targets = _table.getIntegerTopic(_name+"/targets").publish();
+      nt_timestamp = _table.getDoubleTopic(_name+"/timestamp").publish();
+    }
+    public void set(CamResult result){
+      nt_targets.set(result.numTargets);
+      if (result.pose.isPresent()){
+        nt_pose_x.set(result.pose.get().estimatedPose.getX());
+        nt_pose_y.set(result.pose.get().estimatedPose.getY());
+        nt_pose_t.set(result.pose.get().estimatedPose.getRotation().toRotation2d().getRadians());
+        nt_timestamp.set(result.pose.get().timestampSeconds);
+      }
+      if (result.bestTarget.isPresent()){
+        nt_besttarget.set(result.bestTarget.get().getFiducialId());
+        nt_ambiguity.set(result.bestTarget.get().getPoseAmbiguity());
+      }
+    }
   }
 }

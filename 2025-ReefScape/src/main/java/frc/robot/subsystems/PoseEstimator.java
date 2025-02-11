@@ -18,6 +18,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Robot;
 import frc.robot.Constants.PoseConstants;
+import frc.robot.Constants.VisionConstants;
 import frc.robot.Constants.kDriveTrain;
 import frc.utils.VectorUtils;
 import edu.wpi.first.networktables.DoubleArrayPublisher;
@@ -55,7 +56,6 @@ public class PoseEstimator extends SubsystemBase {
   private Pose2d m_predictedPose = new Pose2d();
   private Pose2d m_tempPose = new Pose2d();
   public Pose3d m_finalPose3d = new Pose3d();
-  public double m_lastTime;
 
   public Rotation2d m_visionTheta = new Rotation2d();
   private Pose3d m_visionPose3d;
@@ -87,14 +87,23 @@ public class PoseEstimator extends SubsystemBase {
     SmartDashboard.putData("Field", m_field);
   }
 
-  public void addVisionMeasurement(Optional<EstimatedRobotPose> observedPose, double latency_ms){
+  public void addVisionMeasurement(Optional<EstimatedRobotPose> observedPose, double ts_micros){
     if (observedPose.isPresent()){
       m_visionPose3d = observedPose.get().estimatedPose;
       m_visionTimestamp = observedPose.get().timestampSeconds;
 
       m_visionPose2d = new Pose2d(m_visionPose3d.getX(), m_visionPose3d.getY(), m_visionPose3d.getRotation().toRotation2d());
-      double timescale = latency_ms/20.0;
-      Twist2d m_latencyCompensation = new Twist2d(m_predictedTwist.dx*timescale, m_predictedTwist.dy*timescale, m_predictedTwist.dtheta*timescale);
+      
+      /* time since image capture in seconds, protected from crazy values */
+      double m_latency = Math.max(0,Math.min(VisionConstants.kMaxLatencyCompensationMillis,(RobotController.getFPGATime() - ts_micros)/1000.0))/1000.0; 
+
+      /* execution rate of PoseEstimator periodic() in seconds [20 ms = 0.020 seconds] */
+      double timeStep = 0.020; 
+      
+      // Calculate what extra motion happened in the time it took from the image to be captured, processed by the co-processor, transmitted and processed by the roboRio to this point.
+      Twist2d m_latencyCompensation = new Twist2d(m_predictedTwist.dx/timeStep*m_latency, m_predictedTwist.dy/timeStep*m_latency, m_predictedTwist.dtheta/timeStep*m_latency);
+
+      // Add the extra motion from the latency compensation to the vision pose estimate
       m_visionPose2d = m_visionPose2d.exp(m_latencyCompensation);
     }
   }
