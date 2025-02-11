@@ -25,15 +25,19 @@ import edu.wpi.first.wpilibj.AnalogInput;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 import com.revrobotics.spark.config.ClosedLoopConfig.FeedbackSensor;
 
+import frc.robot.Constants.MotorDefaults;
 import frc.utils.CANSparkMax.MyCANSparkMax;
+import frc.utils.NTValues.NTBoolean;
+import frc.utils.NTValues.NTDouble;
 
-public class Motor {
+public class Motor extends SubsystemBase {
 
     static NetworkTable table = NetworkTableInstance.getDefault().getTable("roboRIO/Drivetrain/wheel");
-
+    static NetworkTable testtable = NetworkTableInstance.getDefault().getTable("roboRIO/Test");
     Command m_setupMotor;
 
     int CANID;
@@ -41,6 +45,11 @@ public class Motor {
     double velocityFactor; 
     MyMotorType motorType;
     String name;
+
+    public static class kFreeRunRPM{
+        final double NEO = 5676;
+        final double X60 = 6000;
+    }
 
     public TalonFX motor_talon;
     TalonFXConfiguration config_talon;
@@ -56,12 +65,19 @@ public class Motor {
     int m_steeringOffset;
     boolean m_setupScheduled = false;
 
+    double m_testSpeed;
+    double m_testPosition;
+
     public double m_Kp_0, m_Ki_0, m_Kd_0, m_Kff_0;
 
     DoublePublisher 
     nt_angleinit,
-    nt_speedcmd;
-
+    nt_speedcmd,
+    nt_testspeed,
+    nt_testposition;
+    
+    private double m_simPosition, m_simSpeed;
+    
     public void scheduleSetup(){
         switch (motorType){
             case KRAKEN:
@@ -85,7 +101,7 @@ public class Motor {
                 );
                 break;
             default:
-                m_setupMotor = Commands.sequence();
+                m_setupMotor = Commands.sequence(new InstantCommand(()-> m_setupMotorDone = true));
         }
         m_setupMotorDone = false;
         m_setupMotor.ignoringDisable(true).schedule();
@@ -101,6 +117,17 @@ public class Motor {
         nt_angleinit = table.getDoubleTopic("angle/init/"+name).publish();
         nt_speedcmd = table.getDoubleTopic("motor/speedcmd/"+name).publish();
 
+        if (motorType_ != MyMotorType.SIMULATED){
+            NTDouble.create(0.0,testtable,"motors/"+name+"/speed",(val)->{m_testSpeed=val; m_testPosition = 0;});
+            NTDouble.create(0.0,testtable,"motors/"+name+"/position",(val)->{m_testPosition=val; m_testSpeed = 0;});
+            NTBoolean.create(MotorDefaults.inverted,testtable,"motors/"+name+"/inverted",(val)->inverted(val));
+            NTDouble.create(MotorDefaults.currentLimit,testtable,"motors/"+name+"/currentLimit",(val)->smartCurrentLimit(val));
+            NTDouble.create(MotorDefaults.Kp,testtable,"motors/"+name+"/KP",(val)->withKP(val));
+            NTDouble.create(MotorDefaults.Ki,testtable,"motors/"+name+"/KI",(val)->withKI(val));
+            NTDouble.create(MotorDefaults.Kd,testtable,"motors/"+name+"/KD",(val)->withKD(val));
+            NTDouble.create(MotorDefaults.Kff,testtable, "motors/"+name+"/KFF", (val)->withKFF(val));
+        }
+
         switch (motorType){   
             case KRAKEN:
                 motor_talon = new TalonFX(CANID);
@@ -112,11 +139,15 @@ public class Motor {
                 encoder_neo = motor_neo.getEncoder();
                 config_neo = new SparkMaxConfig();             
                 break;
+            default:
         }
+        
+        this.withKP(0.15)
+            .withKFF(0.10);
     }
 
     public enum MyMotorType {
-        KRAKEN, NEO
+        KRAKEN, NEO, SIMULATED
     }
 
     public Motor inverted(boolean invert){
@@ -130,6 +161,7 @@ public class Motor {
             case NEO:
                 config_neo.inverted(invert);       
                 break;
+            default:
         }
         if (m_setupMotorDone) scheduleSetup();
         return this;
@@ -144,6 +176,7 @@ public class Motor {
             case NEO:
                 config_neo.idleMode(idleMode);       
                 break;
+            default:
         }
         if (m_setupMotorDone) scheduleSetup();
         return this;
@@ -158,6 +191,7 @@ public class Motor {
             case NEO:
                 config_neo.encoder.positionConversionFactor(_positionFactor);       
                 break;
+            default:
         }
         if (m_setupMotorDone) scheduleSetup();
         return this;
@@ -171,6 +205,7 @@ public class Motor {
             case NEO:
                 config_neo.encoder.velocityConversionFactor(_velocityFactor);       
                 break;
+            default:
         }
         if (m_setupMotorDone) scheduleSetup();
         return this;
@@ -179,11 +214,14 @@ public class Motor {
     public Motor smartCurrentLimit(double stallLimit){
         switch (motorType) {
             case KRAKEN:
-                config_talon.withCurrentLimits(config_talon.CurrentLimits.withSupplyCurrentLimit(stallLimit));
+                config_talon.CurrentLimits
+                    .withStatorCurrentLimit(stallLimit)
+                    .withStatorCurrentLimitEnable(true);
                 break;
             case NEO:
                 config_neo.smartCurrentLimit((int)stallLimit);       
                 break;
+            default:
         }
         if (m_setupMotorDone) scheduleSetup();
         return this;
@@ -203,6 +241,7 @@ public class Motor {
             case NEO:
                 config_neo.closedLoop.feedbackSensor(sensor);     
                 break;
+            default:
         }
         if (m_setupMotorDone) scheduleSetup();
         return this;
@@ -216,6 +255,7 @@ public class Motor {
                 break;
             case NEO:
                 config_neo.closedLoop.pidf(m_Kp_0,m_Ki_0,m_Kd_0,m_Kff_0,ClosedLoopSlot.kSlot0);
+            default:
         }
         if (m_setupMotorDone) scheduleSetup();
         return this;
@@ -229,6 +269,7 @@ public class Motor {
                 break;
             case NEO:
                 config_neo.closedLoop.pidf(m_Kp_0,m_Ki_0,m_Kd_0,m_Kff_0,ClosedLoopSlot.kSlot0);
+            default:
         }
         if (m_setupMotorDone) scheduleSetup();
         return this;
@@ -241,6 +282,7 @@ public class Motor {
                 break;
             case NEO:
                 config_neo.closedLoop.pidf(m_Kp_0,m_Ki_0,m_Kd_0,m_Kff_0,ClosedLoopSlot.kSlot0);
+            default:
         }
         if (m_setupMotorDone) scheduleSetup();
         return this;
@@ -254,6 +296,7 @@ public class Motor {
                 break;
             case NEO:
                 config_neo.closedLoop.pidf(m_Kp_0,m_Ki_0,m_Kd_0,m_Kff_0,ClosedLoopSlot.kSlot0);
+            default:
         }
         if (m_setupMotorDone) scheduleSetup();
         return this;
@@ -274,6 +317,7 @@ public class Motor {
             case NEO:
                 config_neo.closedLoop.pidf(m_Kp_0,m_Ki_0,m_Kd_0,m_Kff_0);    
                 break;
+            default:
         }
         if (m_setupMotorDone) scheduleSetup();
         return this;
@@ -287,6 +331,7 @@ public class Motor {
             case NEO:
                 config_neo.closedLoop.outputRange(rangeMin, rangeMax);     
                 break;
+            default:
         }
         if (m_setupMotorDone) scheduleSetup();
         return this;
@@ -300,6 +345,7 @@ public class Motor {
             case NEO:
                 config_neo.closedLoop.iZone(zone);    
                 break;
+            default:
         }
         if (m_setupMotorDone) scheduleSetup();
         return this;
@@ -313,6 +359,7 @@ public class Motor {
             case NEO:
                 config_neo.closedLoop.positionWrappingEnabled(enabled);    
                 break;
+            default:
         }
         if (m_setupMotorDone) scheduleSetup();
         return this;
@@ -328,13 +375,21 @@ public class Motor {
                     .positionWrappingMinInput(min)
                     .positionWrappingMaxInput(max);  
                 break;
+            default:
         }
         if (m_setupMotorDone) scheduleSetup();
         return this;
     }     
 
     public boolean setSpeed(double speed){
-        nt_speedcmd.set(speed/velocityFactor);
+        // If motor testing is active, ignore external request.
+        if (m_testSpeed != 0 || m_testPosition !=0){
+            return true;
+        }
+        return _setSpeed(speed);
+    }
+
+    protected boolean _setSpeed(double speed){
         boolean status;
         switch (motorType) {
             case KRAKEN:
@@ -344,12 +399,21 @@ public class Motor {
                 status = controller_neo.setReference(speed, SparkMax.ControlType.kVelocity) == REVLibError.kOk;
                 break;
             default:
-                status = false;
+                m_simSpeed = speed;
+                status = true;
         }
         return status;
     }
 
     public boolean setPosition(double position){
+        // If motor testing is active, ignore external request.
+        if (m_testSpeed != 0 || m_testPosition !=0){
+            return true;
+        }
+        return _setPosition(position);
+    }
+
+    protected boolean _setPosition(double position){
         boolean status;
         switch (motorType) {
             case KRAKEN:
@@ -359,7 +423,9 @@ public class Motor {
                 status = controller_neo.setReference(position, SparkMax.ControlType.kPosition) == REVLibError.kOk;
                 break;
             default:
-                status = false;
+                m_simPosition = position;
+                m_simSpeed = 0;
+                status = true;
         }
         return status;
     }
@@ -371,8 +437,9 @@ public class Motor {
                 return motor_talon.getVelocity().getValueAsDouble() * velocityFactor * 60; // Talon method returns rotations Per second
             case NEO:
                 return encoder_neo.getVelocity(); // Our math is based on rotations per Minute
+            default:
+                return m_simSpeed;
         }
-        return 0.0;
     }
 
     public double getPosition(){
@@ -382,8 +449,9 @@ public class Motor {
                 return motor_talon.getPosition().getValueAsDouble() * positionFactor;
             case NEO:
                 return encoder_neo.getPosition();
+            default:
+                return m_simPosition;
         }
-        return 0.0;
     }
 
     public double getOutputCurrent(){
@@ -392,16 +460,38 @@ public class Motor {
                 break;
             case NEO:
                 return motor_neo.getOutputCurrent();
+            default:
         }
         return 0.0;
     }
 
     public boolean isSetupDone() {
-        
-        if (m_setupScheduled == false && m_setupMotorDone == false) {
-            scheduleSetup();
-        }
         return m_setupMotorDone;
     }
     
+    @Override
+    public void periodic(){
+        if (m_setupScheduled == false && m_setupMotorDone == false) {
+            scheduleSetup();
+        }
+        if (m_setupMotorDone){
+            if (m_testSpeed != 0){
+                _setSpeed(m_testSpeed);
+            } else if (m_testPosition !=0){
+                _setPosition(m_testPosition);
+            }
+
+            switch (motorType){
+                case KRAKEN:
+                    break;
+                case NEO:
+                    break;
+                case SIMULATED:
+                    if (m_testPosition == 0){
+                        m_simPosition = m_simPosition + m_simSpeed * 0.020; // Move simulated motor over a 20ms period.
+                    }
+                    break;
+            }
+        }
+    }
 }

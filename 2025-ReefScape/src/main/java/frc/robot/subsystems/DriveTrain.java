@@ -248,13 +248,6 @@ public class DriveTrain extends SubsystemBase {
     return m_targetHeading;
   }
 
-  public void simulationInit(){
-    frontLeft.simulationInit();
-    frontRight.simulationInit();
-    rearLeft.simulationInit();
-    rearRight.simulationInit();
-  }
-  
   Boolean m_motorSetupDone = false;
   boolean testBool = true;
   @Override
