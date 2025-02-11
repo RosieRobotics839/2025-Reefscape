@@ -1,6 +1,7 @@
 package frc.utils;
 
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.StatusCode;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.controls.VelocityVoltage;
@@ -74,6 +75,7 @@ public class Motor {
             case KRAKEN:
                 motor_talon = new TalonFX(CANID);
                 config_talon = new TalonFXConfiguration();
+                
                 m_setupMotor = Commands.sequence( 
                     Commands.waitUntil(() -> motor_talon.getConfigurator().apply(config_talon).isOK()),
                     new InstantCommand(()-> m_setupMotorDone = true)

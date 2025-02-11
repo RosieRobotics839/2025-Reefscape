@@ -11,6 +11,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.CANID_t;
 import frc.robot.Constants.ArmConstants;
 import frc.robot.Robot;
+import frc.utils.CalibrationMap;
 import frc.utils.Motor;
 
 public class Arm extends SubsystemBase{
@@ -22,8 +23,10 @@ public class Arm extends SubsystemBase{
     }
     
     public Motor m_motorArm;
-    public AnalogInput m_analogEncoder;
+    public AnalogInput m_armAnalogEncoder;
     boolean m_setupArmDone = false;
+    double m_armOffset = 0; //change later
+    double m_newArmOffset = 0;
 
     public void setArmAngle(double radians) {
         if (!m_setupArmDone) return;
@@ -34,7 +37,9 @@ public class Arm extends SubsystemBase{
 
     public Arm(CANID_t CANID) {
 
-        m_analogEncoder = new AnalogInput(CANID.encoder);
+        m_armAnalogEncoder = new AnalogInput(CANID.encoder);
+
+        CalibrationMap m_armCalibrationMap = new CalibrationMap(ArmConstants.kArmCalibrationX, ArmConstants.kArmCalibrationY);
         
         m_motorArm = new Motor(ArmConstants.kArmCANID, Motor.MyMotorType.KRAKEN, "arm");
 
@@ -44,27 +49,24 @@ public class Arm extends SubsystemBase{
             .positionConversionFactor((ArmConstants.kArmEncoderPositionFactor))
             .velocityConversionFactor(ArmConstants.kArmEncoderVelocityFactor)
             //.feedbackSensor(FeedbackSensor.kPrimaryEncoder)
+            .setCalibration(m_newArmOffset)
             .pidf(ArmConstants.kArmKp, ArmConstants.kArmKi, ArmConstants.kArmKd, ArmConstants.kArmKff);
             //.outputRange(-1,1);
             //.iZone(0.15);
 
-            /* Command m_setupArm = Commands.sequence(
-                // Motor setup (ensure the motor is restored to factory defaults)
-                Commands.waitUntil(() -> m_motorArm.restoreFactoryDefaults() == REVLibError.kOk),
-            
-                // Encoder setup for position tracking
-                Commands.waitUntil(() -> {m_armEncoder = m_motorArm.getEncoder();
-                        return m_armEncoder != null;}),
-            
-                // Calibrate encoders and offset for min/max position
-                Commands.waitUntil(() -> {m_armOffset = m_armAnalogEncoder.getValue(); return m_armOffset > m_armCalibrationMap.xmin() && m_armOffset < m_armCalibrationMap.xmax();}),
-                Commands.waitUntil(() -> m_armEncoder.setPosition(m_armCalibrationMap.get(m_armOffset)) == REVLibError.kOk),
-            
-                // Mark the setup as done
-                new InstantCommand(() -> m_setupArmDone = true)
-                ); */
-        
+        m_armAnalogEncoder = new AnalogInput(CANID.encoder);
+        m_armOffset = m_armAnalogEncoder.getValue();
+        if (m_armOffset > m_armCalibrationMap.xmin() && m_armOffset < m_armCalibrationMap.xmax()) {
+            m_armOffset = m_newArmOffset;
         }
+            
+                /* // Encoder setup for position tracking
+                Commands.waitUntil(() -> {m_armEncoder = m_motorArm.getEncoder();
+                        return m_armEncoder != null;});
+
+                Commands.waitUntil(() -> m_armEncoder.setPosition(m_armCalibrationMap.get(m_armOffset)) == REVLibError.kOk); */
+        
+        } 
 
         @Override
         public void periodic() {}

@@ -60,6 +60,9 @@ public final class Constants {
     public static double kAngleMax = Units.degreesToRadians(NTDouble.create(105, "Arm/kAngleMax", val -> kAngleMax = Units.degreesToRadians(val)));
     public static double kAngleMin = Units.degreesToRadians(NTDouble.create(-4, "Arm/kAngleMin", val -> kAngleMin = Units.degreesToRadians(val)));
 
+    public static double [] kArmCalibrationX = new double[]{638, 1137,  1372, 1654,  1959, 2172, 2404, 2462, 2482}; //analog values (100% Wrong, need to be adjusted to fit arm constraints)
+    public static double [] kArmCalibrationY = new double[]{131, 105,   90,   70,    45,   25,    0, -6.0, -8.0}; // degrees (100% Wrong, need to be asjusted to fit arm constraints)
+
   }
 
   public static class EffectorConstants {
