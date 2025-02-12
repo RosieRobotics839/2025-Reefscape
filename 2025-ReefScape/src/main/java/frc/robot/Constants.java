@@ -19,6 +19,7 @@ import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Filesystem;
+import frc.robot.subsystems.Arm;
 //import frc.robot.subsystems.Climber;
 import frc.robot.subsystems.DriveTrain;
 import frc.robot.subsystems.EndEffector;
@@ -45,7 +46,8 @@ public final class Constants {
   }
 
   public static class ArmConstants {
-    public static int kArmCANID = 4; // Change later
+    public static int kArmCANID = 0; // TODO: Change later
+    public static int kAnalogInputID = 4;
     public static double kArmStage1Ratio = 5.0 / 1.0;
     public static double kArmMotorGearReduction = (2 * kArmStage1Ratio); // Multiplying by 2 in account of the sprocket gear
     public static double kArmEncoderPositionFactor = (2.0 * Math.PI) / kArmMotorGearReduction; // Math needs to be checked, copy pasted.
@@ -60,9 +62,11 @@ public final class Constants {
     public static double kAngleMax = Units.degreesToRadians(NTDouble.create(105, "Arm/kAngleMax", val -> kAngleMax = Units.degreesToRadians(val)));
     public static double kAngleMin = Units.degreesToRadians(NTDouble.create(-4, "Arm/kAngleMin", val -> kAngleMin = Units.degreesToRadians(val)));
 
+    // TODO: Change values of Calibration Maps.
     public static double [] kArmCalibrationX = new double[]{638, 1137,  1372, 1654,  1959, 2172, 2404, 2462, 2482}; //analog values (100% Wrong, need to be adjusted to fit arm constraints)
     public static double [] kArmCalibrationY = new double[]{131, 105,   90,   70,    45,   25,    0, -6.0, -8.0}; // degrees (100% Wrong, need to be asjusted to fit arm constraints)
 
+    public static double kArmMotorCurrentLimit = (NTDouble.create(5, "Arm/kCurrentLimit", (val) ->Arm.getInstance().m_motorArm.smartCurrentLimit(val)));
   }
 
   public static class EffectorConstants {
