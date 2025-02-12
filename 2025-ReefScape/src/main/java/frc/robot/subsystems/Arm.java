@@ -40,11 +40,10 @@ public class Arm extends SubsystemBase{
             m_newArmOffset = m_armOffset;
             }
 
-        m_motorArm = new Motor(ArmConstants.kArmCANID, Motor.MyMotorType.KRAKEN, "arm")
+        m_motorArm = new Motor(ArmConstants.kArmCANID, ArmConstants.kMotorType, "arm")
             .smartCurrentLimit((int)ArmConstants.kArmMotorCurrentLimit)
             .inverted(true)
             .positionConversionFactor((ArmConstants.kArmEncoderPositionFactor))
-            .velocityConversionFactor(ArmConstants.kArmEncoderVelocityFactor)
             .setCalibration(m_newArmOffset)
             .pidf(ArmConstants.kArmKp, ArmConstants.kArmKi, ArmConstants.kArmKd, ArmConstants.kArmKff);
 
