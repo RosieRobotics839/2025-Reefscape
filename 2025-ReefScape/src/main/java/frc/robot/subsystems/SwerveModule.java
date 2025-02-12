@@ -4,7 +4,6 @@
 
 package frc.robot.subsystems;
 
-import com.revrobotics.sim.SparkMaxSim;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.ClosedLoopConfig.FeedbackSensor;
 import edu.wpi.first.networktables.DoublePublisher;
@@ -16,17 +15,18 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
-import edu.wpi.first.math.system.plant.DCMotor;
 import frc.robot.Constants.kDriveTrain.DriveConstants;
 import frc.robot.Constants.kDriveTrain.kSwerveModule;
 import frc.utils.FirstOrderLag;
 import frc.utils.Motor;
+import frc.utils.NTValues.NTDouble;
 import frc.robot.Robot;
 import frc.robot.Constants.CANID_t;
 
 public class SwerveModule extends SubsystemBase {
 
   static NetworkTable table = NetworkTableInstance.getDefault().getTable("roboRIO/Drivetrain/wheel");
+  static NetworkTable testtable = NetworkTableInstance.getDefault().getTable("roboRIO/Test");
 
   //public MyCANSparkMax m_motorDrive, m_motorSteer;
   //public RelativeEncoder m_encoderDrive, m_encoderSteer;
@@ -55,8 +55,13 @@ public class SwerveModule extends SubsystemBase {
     nt_anglecmd,
     nt_speed, nt_i, nt_analog, nt_steeri, nt_steeringOffset;
 
+  double testAnglePerSec, testAngle, testSpeed;
+
   public SwerveModule(CANID_t CANID, double angleCalibration, String name) {
    
+    NTDouble.create(0,testtable,"SwerveModule/"+name+"/degpersec",val->this.testAnglePerSec=val);
+    NTDouble.create(0,testtable,"SwerveModule/"+name+"/feetpersec",val->this.testSpeed=val);
+
     // Setup Network Table Publishers
     nt_angleinit = table.getDoubleTopic("angle/init/"+name).publish();
     nt_angle = table.getDoubleTopic("angle/"+name).publish();
@@ -69,11 +74,7 @@ public class SwerveModule extends SubsystemBase {
     nt_steeringOffset = table.getDoubleTopic("angle/steeringOffset/"+name).publish();
 
     /* Define drive motor controller. */
-    m_motorDrive = new Motor(CANID.driving, Motor.MyMotorType.KRAKEN, name+"_driving");
-
-    // m_controllerDrive = m_motorDrive.getClosedLoopController();
-
-    m_motorDrive
+    m_motorDrive = new Motor(CANID.driving, kSwerveModule.kDriveType, name+"_driving")
         .inverted(false)
         .idleMode(IdleMode.kBrake)
         .smartCurrentLimit((int)kSwerveModule.kDrivingMotorCurrentLimit)
@@ -91,11 +92,7 @@ public class SwerveModule extends SubsystemBase {
     nt_steeringOffset.set(m_steeringOffset);
     
     /* Define steer motor controller. */
-    m_motorSteer = new Motor(CANID.steering, Motor.MyMotorType.NEO, name+"_steering"); //new MyCANSparkMax(CANID.steering, MotorType.kBrushless);
-    
-    // m_controllerSteer  = m_motorSteer.getClosedLoopController();
-
-    m_motorSteer
+    m_motorSteer = new Motor(CANID.steering, kSwerveModule.kSteerType, name+"_steering")
       .inverted(true)
       .idleMode(IdleMode.kBrake)
       .smartCurrentLimit((int)kSwerveModule.kSteeringMotorCurrentLimit)
@@ -145,6 +142,14 @@ public class SwerveModule extends SubsystemBase {
 
     double speedcmd = m_magLimiter.calculate(optimizedState.speedMetersPerSecond);
     double anglecmd = optimizedState.angle.getRadians();
+
+    // Motor test code over network tables
+    if (testAnglePerSec != 0 || testSpeed != 0){
+      testAngle = testAngle + Math.PI/180*testAnglePerSec*0.020;
+      anglecmd = testAngle;
+      speedcmd = testSpeed;
+    }
+
     nt_anglecmd.set(anglecmd);
     nt_speedcmd.set(speedcmd);
 
@@ -159,15 +164,6 @@ public class SwerveModule extends SubsystemBase {
       nt_steeri.set(m_motorSteer.getOutputCurrent());
     }
     nt_analog.set(m_analogEncoder.getValue());
-  }
-  
-  static DCMotor m_simMotorDrive = new DCMotor(12, 2.6, 130.0, 2.70, 5676.0/60.0*2.0*Math.PI, 1);
-  static DCMotor m_simMotorSteer = new DCMotor(12, 2.6, 130.0, 2.70, 5676.0/60.0*2.0*Math.PI, 1);
-  static SparkMaxSim m_simDrive;
-  static SparkMaxSim m_simSteer;
-  public void simulationInit(){
-    m_simDrive = new SparkMaxSim(m_motorDrive.motor_neo, m_simMotorDrive);
-    m_simSteer = new SparkMaxSim(m_motorSteer.motor_neo, m_simMotorSteer);
   }
 
   public void simulationPeriodic(){
