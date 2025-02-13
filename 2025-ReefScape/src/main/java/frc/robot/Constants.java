@@ -46,8 +46,8 @@ public final class Constants {
   public static class ElevatorConstants {
 
     public static MyMotorType kMotorType = MyMotorType.KRAKEN;
-    public static int kEleLeftCANID = 7;
-    public static int kEleRightCANID = 8;
+    public static int kEleLeftCANID = 11;
+    public static int kEleRightCANID = 12;
 
     public static int klimitSwitchChanel;
 
