@@ -22,22 +22,28 @@ public class EndEffector extends SubsystemBase {
     }
     
     public Motor m_motorEffector;
-    boolean speedStatus = false;
+
+    private boolean m_beamBroken = false;
+    public Debouncer m_beamDebouncer = new Debouncer(EffectorConstants.kBeamBreakDebounceSec, Debouncer.DebounceType.kBoth);
 
     NetworkTable testtable = NetworkTableInstance.getDefault().getTable("roboRIO/CAUTION/TestInput");
 
+    public boolean hasGamePiece(){
+      return m_beamBroken;
+    }
+
+    Command coralCommand = Commands.sequence(
+      Commands.waitUntil(() -> {return m_motorEffector.setSpeed(EffectorConstants.kEffectorSpeed);}),
+      Commands.waitUntil(() -> {
+        if(!hasGamePiece()){
+          return hasGamePiece();
+        }
+        return !hasGamePiece();
+      }),
+      Commands.waitUntil(() -> {return m_motorEffector.setSpeed(0);})
+    );
+
     public EndEffector(int CANID) {
-
-      Command coralCommand = Commands.sequence(
-        Commands.waitUntil(() -> {
-          if(m_beamBroken){
-              m_motorEffector.setSpeed(EffectorConstants.kEffectorSpeed); 
-
-              return true; 
-          }
-          return false;
-        })
-      );
 
       m_motorEffector = new Motor(Constants.EffectorConstants.kEffectorCANID, Motor.MyMotorType.NEO, "effector")
           .smartCurrentLimit((int)EffectorConstants.kEffectorMotorCurrentLimit)
@@ -47,10 +53,7 @@ public class EndEffector extends SubsystemBase {
     }
 
     public DigitalInput m_beamBreak = new DigitalInput(EffectorConstants.kBeamBreakPin);
-    public NTBoolean m_beamBreakTestSensor = (Robot.isReal() ? null : new NTBoolean(true, testtable, "Intake/BeamBreakTestInput", (val)->{}));
-
-    private boolean m_beamBroken = false;
-    public Debouncer m_beamDebouncer = new Debouncer(EffectorConstants.kBeamBreakDebounceSec, Debouncer.DebounceType.kBoth); //erroring because of code below VVV
+    public NTBoolean m_beamBreakTestSensor = (Robot.isReal() ? null : new NTBoolean(true, testtable, "Effector/BeamBreakTestInput", (val)->{}));
 
     @Override
     public void periodic() {
