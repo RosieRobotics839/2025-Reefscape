@@ -12,7 +12,7 @@ import frc.robot.Robot;
 import frc.utils.Motor;
 import frc.utils.NTValues.NTBoolean;
 
-public class EndEffector extends SubsystemBase{
+public class EndEffector extends SubsystemBase {
 
     private static EndEffector instance = new EndEffector(EffectorConstants.kEffectorCANID);
 
@@ -22,6 +22,7 @@ public class EndEffector extends SubsystemBase{
     
     public Motor m_motorEffector;
     Command coralCommand;
+    boolean speedStatus = false;
 
     NetworkTable testtable = NetworkTableInstance.getDefault().getTable("roboRIO/CAUTION/TestInput");
 
@@ -37,14 +38,18 @@ public class EndEffector extends SubsystemBase{
     public NTBoolean m_beamBreakTestSensor = (Robot.isReal() ? null : new NTBoolean(true, testtable, "Intake/BeamBreakTestInput", (val)->{}));
 
     private boolean m_beamBroken = false;
-    public Debouncer m_beamDebouncer = new Debouncer(EffectorConstants.kBeamBreakDebounceSec, Debouncer.DebounceType.kBoth);
+    public Debouncer m_beamDebouncer = new Debouncer(EffectorConstants.kBeamBreakDebounceSec, Debouncer.DebounceType.kBoth); //erroring because of code below VVV
 
     coralCommand = Commands.sequence(
-      Commands.waitUntil(() -> {
-            m_motorEffector.setSpeed(EffectorConstants.kEffectorSpeed);
-        }
-      )
-    );
+                Commands.waitUntil(() -> {
+                  if(m_beamBroken){
+                      boolean speedStatus = m_motorEffector.setSpeed(EffectorConstants.kEffectorSpeed); //speedStatus makes sure lambda matches the expected return type
+
+                      return speedStatus; //experimenting
+                  }
+                  return false; //experimenting
+                })
+              );
 
     @Override
     public void periodic() {
@@ -64,4 +69,4 @@ public class EndEffector extends SubsystemBase{
             }
         }
     }
-}
+  }
