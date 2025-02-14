@@ -73,7 +73,11 @@ public final class Constants {
   }
 
   public static class EffectorConstants {
-    public static int kEffectorCANID = 7; // Change later
+    public static int kEffectorCANID = 7;
+    public static double kEffectorStage1Ratio = 5.0 / 1.0; //Starting with a 5:1 Gear Ratio.
+    public static double kEffectorMotorGearReduction = kEffectorStage1Ratio;
+    public static double kEffectorEncoderPositionFactor = (2.0 * Math.PI) / kEffectorMotorGearReduction;
+    public static double kEffectorSpeed = 0; //Change once we can test
 
     public static double kMaxSpeed = NTDouble.create(2000, "Intake/kMaxSpeed", val->kMaxSpeed=val);
     public static int kCANID_Intake = 8;
@@ -81,6 +85,13 @@ public final class Constants {
     public static double kBeamBreakDebounceSec = NTDouble.create(0.010, "Intake/kBeamBreakDebounceSec", val->{kBeamBreakDebounceSec=val; EndEffector.getInstance().m_beamDebouncer = new Debouncer(val, Debouncer.DebounceType.kBoth);});
     public static boolean kIntakeIsInverted = false;
     public static double kRetractDistance = NTDouble.create(10, "Intake/kRetractDistance", val->{kRetractDistance=val;});
+
+    public static double kEffectorMotorCurrentLimit = (NTDouble.create(5, "Effector/kCurrentLimit", (val) ->EndEffector.getInstance().m_motorEffector.smartCurrentLimit(val)));
+
+    public static double kEffectorKp = (NTDouble.create(0, "Effector/kEffectorKp", (val)->kEffectorKp = (val)));
+    public static double kEffectorKi = (NTDouble.create(0, "Effector/kEffectorKi", (val)->kEffectorKi = (val)));
+    public static double kEffectorKd = (NTDouble.create(0, "Effector/kEffectorKd", (val)->kEffectorKd = (val)));
+    public static double kEffectorKff = (NTDouble.create(0, "Effector/kEffectorKff", (val)->kEffectorKff = (val)));
   }
 
   public static class MotorDefaults {
