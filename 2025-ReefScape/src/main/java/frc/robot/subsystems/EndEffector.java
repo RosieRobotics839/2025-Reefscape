@@ -5,6 +5,7 @@ import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import frc.robot.Constants.EffectorConstants;
@@ -21,12 +22,23 @@ public class EndEffector extends SubsystemBase {
     }
     
     public Motor m_motorEffector;
-    Command coralCommand;
     boolean speedStatus = false;
 
     NetworkTable testtable = NetworkTableInstance.getDefault().getTable("roboRIO/CAUTION/TestInput");
 
     public EndEffector(int CANID) {
+
+      Command coralCommand = Commands.sequence(
+        Commands.waitUntil(() -> {
+          if(m_beamBroken){
+              m_motorEffector.setSpeed(EffectorConstants.kEffectorSpeed); 
+
+              return true; 
+          }
+          return false;
+        })
+      );
+
       m_motorEffector = new Motor(Constants.EffectorConstants.kEffectorCANID, Motor.MyMotorType.NEO, "effector")
           .smartCurrentLimit((int)EffectorConstants.kEffectorMotorCurrentLimit)
           .inverted(true)
@@ -39,17 +51,6 @@ public class EndEffector extends SubsystemBase {
 
     private boolean m_beamBroken = false;
     public Debouncer m_beamDebouncer = new Debouncer(EffectorConstants.kBeamBreakDebounceSec, Debouncer.DebounceType.kBoth); //erroring because of code below VVV
-
-    coralCommand = Commands.sequence(
-                Commands.waitUntil(() -> {
-                  if(m_beamBroken){
-                      boolean speedStatus = m_motorEffector.setSpeed(EffectorConstants.kEffectorSpeed); //speedStatus makes sure lambda matches the expected return type
-
-                      return speedStatus; //experimenting
-                  }
-                  return false; //experimenting
-                })
-              );
 
     @Override
     public void periodic() {
