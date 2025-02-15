@@ -59,8 +59,8 @@ public final class Constants {
     public static double kLeftElevatorMotorCurrentLimit = (NTDouble.create(5, "Elevator/kLeftCurrentLimit", (val) ->Elevator.getInstance().m_EleMotorLeft.smartCurrentLimit(val)));
     public static double kRightElevatorMotorCurrentLimit = (NTDouble.create(5, "Elevator/kRightCurrentLimit", (val) ->Elevator.getInstance().m_EleMotorRight.smartCurrentLimit(val)));
 
-    // Values in inches that the elevator should be raised from the bottom to to score different heights of coral and algea
-    // These likely need to be tested and adjusted
+    // Values in inches that the elevator should be raised from the bottom to score different heights of coral and algea
+    // These need to be tested and adjusted
     public static double kMaxHeightInch = (NTDouble.create(28, "Elevator/MaxHeightInch", (val)->kMaxHeightInch = (val)));; // 16.6 Rotations of the Axle
     public static double kHeight3Inch = (NTDouble.create(16, "Elevator/Height3Inch", (val)->kHeight3Inch = (val)));
     public static double kHeight2Inch = (NTDouble.create(8, "Elevator/Height2Inch", (val)->kHeight2Inch = (val)));

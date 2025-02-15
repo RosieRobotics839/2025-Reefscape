@@ -1,16 +1,38 @@
 package frc.robot.subsystems;
 
+import edu.wpi.first.networktables.DoublePublisher;
+import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.DigitalInput;
+import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.ElevatorConstants;
 import frc.utils.Motor;
 
-public class Elevator {
+public class Elevator extends SubsystemBase {
+
+    static NetworkTable table = NetworkTableInstance.getDefault().getTable("roboRIO/Elevator");
+    DoublePublisher nt_currentHeight, nt_targetHeight;
 
     private static Elevator instance = new Elevator();
+    private double m_targetHeight = ElevatorConstants.kMinHeightInch;
+    private double m_currentHeight = ElevatorConstants.kMinHeightInch;
 
     public static Elevator getInstance(){
         return instance;
+    }
+
+    public static enum Position {
+        MAX(ElevatorConstants.kMaxHeightInch),
+        HEIGHT3(ElevatorConstants.kHeight3Inch),
+        HEIGHT2(ElevatorConstants.kHeight2Inch),
+        HEIGHT1(ElevatorConstants.kHeight1Inch),
+        MIN(ElevatorConstants.kMinHeightInch);
+
+        public final double height;
+        Position(double height) {
+            this.height = height;
+        }
     }
 
     public Motor m_EleMotorLeft;
@@ -18,17 +40,35 @@ public class Elevator {
     boolean setupElevator = false;
 
     DigitalInput limitSwitch = new DigitalInput(ElevatorConstants.klimitSwitchChanel);
-    Trigger limitTrigger = new Trigger(() -> limitSwitch.get()); 
+    Trigger limitTrigger = new Trigger(() -> limitSwitch.get());
 
-    public double getElevatorHeight(){
-        return 0.0;
+    public void setPosition(Position position) {
+        setElevatorHeight(position.height);
     }
 
-    public void setElevatorHeight(double target){
+    public double getElevatorHeight() {
+        return m_currentHeight;
+    }
 
+    public void setElevatorHeight(double targetHeightInches){
+        // ensure target height is within allowed range
+        m_targetHeight = Math.min(Math.max(targetHeightInches, ElevatorConstants.kMinHeightInch), ElevatorConstants.kMaxHeightInch);
+
+        // Convert inches to motor rotations and set position
+        double targetRotations = m_targetHeight / (2 * Math.PI); // We need to adjust this conversion factor to elevator motor gearing
+        m_EleMotorLeft.setPosition(targetRotations);
+
+    }
+
+    // Check if elevator is at target position
+    public boolean isAtPosition() {
+        return Math.abs(m_currentHeight - m_targetHeight) < 0.5; // 0.5 inch tolerance
     }
 
     public Elevator (){
+
+        nt_currentHeight = table.getDoubleTopic("currentHeight").publish();
+        nt_targetHeight = table.getDoubleTopic("targetHeight").publish();
         
         m_EleMotorLeft = new Motor(ElevatorConstants.kEleLeftCANID, ElevatorConstants.kMotorType, "eleLeft")
             .inverted(false)
@@ -41,5 +81,24 @@ public class Elevator {
             .pidf(ElevatorConstants.kElevatorKp, ElevatorConstants.kElevatorKi, ElevatorConstants.kElevatorKd, ElevatorConstants.kElevatorKff)
             .setFollowerMode(ElevatorConstants.kEleLeftCANID, false); // not sure if we need to invert motor second time, test this
 
+    }
+
+    @Override
+    public void periodic() {
+
+        nt_currentHeight.set(m_currentHeight);
+        nt_targetHeight.set(m_targetHeight);
+
+        // Update current height from encoder position, we only need to check the leader motor
+        if (m_EleMotorLeft.isSetupDone()) {
+            m_currentHeight = m_EleMotorLeft.getPosition() * (2 * Math.PI); // Convert motor rotations to inches
+        }
+
+        // Stop at limit
+        if (limitSwitch.get()) {
+            m_currentHeight = ElevatorConstants.kMinHeightInch;
+            m_EleMotorLeft.setPosition(0); // Reset encoder at bottom limit
+            m_EleMotorRight.setPosition(0);
+        }
     }
 }
