@@ -73,11 +73,13 @@ public final class Constants {
   }
 
   public static class EffectorConstants {
-    public static int kEffectorCANID = 7;
+    public static MyMotorType kMotorType = MyMotorType.NEO;
+    public static int kEffectorCANID = 7; //Change later
     public static double kEffectorStage1Ratio = 5.0 / 1.0; //Starting with a 5:1 Gear Ratio.
     public static double kEffectorMotorGearReduction = kEffectorStage1Ratio;
     public static double kEffectorEncoderPositionFactor = (2.0 * Math.PI) / kEffectorMotorGearReduction;
     public static double kEffectorSpeed = 0; //Change once we can test
+    public static double kAlgaeMotorRevolutions = 5;
 
     public static double kMaxSpeed = NTDouble.create(2000, "Intake/kMaxSpeed", val->kMaxSpeed=val);
     public static int kCANID_Intake = 8;

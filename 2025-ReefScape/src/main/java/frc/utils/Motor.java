@@ -160,7 +160,7 @@ public class Motor extends SubsystemBase {
                 config_talon.withMotorOutput(config_talon.MotorOutput.withInverted(value));
                 break;
             case NEO:
-                config_neo.inverted(invert);       
+                config_neo.inverted(invert);  
                 break;
             default:
         }
@@ -429,6 +429,10 @@ public class Motor extends SubsystemBase {
                 status = true;
         }
         return status;
+    }
+
+    public boolean setRelativePosition(double position){
+        return setPosition(getPosition() + position);
     }
 
     public double getVelocity(){
