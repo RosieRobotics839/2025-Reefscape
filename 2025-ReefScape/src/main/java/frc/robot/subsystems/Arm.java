@@ -1,6 +1,8 @@
 package frc.robot.subsystems;
 
 import edu.wpi.first.wpilibj.AnalogInput;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.ArmConstants;
 import frc.utils.CalibrationMap;
@@ -29,6 +31,33 @@ public class Arm extends SubsystemBase{
         target = Math.max(ArmConstants.kAngleMin, Math.min(ArmConstants.kAngleMax, target));
         m_motorArm.setPosition(target);
     }
+
+    public boolean scoringTrough(){
+        return false; //add when bboard is ready so we can determine status based off of stage dial.
+    }
+
+    public boolean scoringLevels2or3(){
+        return false; //add when bboard is ready so we can determine status based off of stage dial.
+    }
+
+    public boolean scoringLevel4(){
+        return false; //add when bboard is ready so we can determine status based off of stage dial.
+    }
+
+    Command ArmPositionCommand = Commands.sequence(
+        Commands.waitUntil(() -> {
+            if (scoringTrough()){
+                m_motorArm.setPosition(ArmConstants.kArmAngleTrough);
+                return true;
+            } else if (scoringLevels2or3()){
+                m_motorArm.setPosition(ArmConstants.kArmAngleLevel2or3);
+                return true;
+            } else if (scoringLevel4()){
+                m_motorArm.setPosition(ArmConstants.kArmAngleLevel4);
+                return true;
+            }
+            return false;
+        }));
 
     public Arm(int CANID, int analogID) {
 
