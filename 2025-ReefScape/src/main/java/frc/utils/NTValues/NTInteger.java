@@ -20,8 +20,6 @@ public class NTInteger {
     
     public boolean resetOnRecv = false;
 
-    private boolean m_ignore = false;
-
     public static Integer create(Integer defaultValue, String name, IntConsumer lambda){
         NTInteger instance = new NTInteger(defaultValue, table, name, lambda);
         return instance.get();
@@ -40,21 +38,17 @@ public class NTInteger {
         // add a listener to only value changes on the Y subscriber
         _table.addListener(
             name,
-            EnumSet.of(NetworkTableEvent.Kind.kValueAll),
+            EnumSet.of(NetworkTableEvent.Kind.kValueRemote),
             (table,key,event)-> {
-                if (!m_ignore){
-                    lambda.accept((int)event.valueData.value.getInteger());
-                    if (resetOnRecv){
-                        publisher.set(defaultValue);
-                    }
-                } else {
-                    m_ignore = false;
+                lambda.accept((int)event.valueData.value.getInteger());
+                if (resetOnRecv){
+                    publisher.set(defaultValue);
                 }
-            });
+            }
+        );
     }
 
     public void set(Integer val){
-        m_ignore = true;
         publisher.set(val);
     }
 

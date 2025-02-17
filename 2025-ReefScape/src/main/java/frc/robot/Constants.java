@@ -21,6 +21,7 @@ import edu.wpi.first.wpilibj.Filesystem;
 import frc.robot.subsystems.DriveTrain;
 //import frc.robot.subsystems.IntakeShooter;
 import frc.robot.subsystems.Vision;
+import frc.utils.Motor;
 import frc.utils.Motor.MyMotorType;
 import frc.utils.NTValues.NTBoolean;
 import frc.utils.NTValues.NTDouble;
@@ -43,12 +44,22 @@ public final class Constants {
   }
 
   public static class MotorDefaults {
-    public static double Kp = 0.15;
-    public static double Ki = 0;
-    public static double Kd = 0;
-    public static double Kff = 0.1;
-    public static double currentLimit = 5;
-    public static boolean inverted = false;
+    public static Motor.Gains kGainPosition = new Motor.Gains(1.2,0,0.25,0);
+    public static Motor.Gains kGainSpeed = new Motor.Gains(0.2,0.0,0.0,0.115);
+    public static Motor.Gains kGainAux1 = new Motor.Gains(0,0,0,0);
+    public static Motor.Gains kGainAux2 = new Motor.Gains(0,0,0,0);
+
+    public static double kOutputRange = 0.2;
+    public static double kCurrentLimit = 5;
+    public static boolean kInverted = false;
+    public static Boolean kIdleBrake = false;
+  
+    // If motor rotations per second less than kSlowThreshold, switches to position control for precise slow speed movement.
+    public static double kSlowThreshold = NTDouble.create(2.5, "MotorDefault/kSlowThreshold", (val)->kSlowThreshold = val);
+    public static double kSlowHysteresis = NTDouble.create(.2, "MotorDefault/kSlowHysteresis", (val)->kSlowHysteresis = val);
+    public static double kSlowTransitionExtraSpin = NTDouble.create(.7,"MotorDfault/kSlowTransExtraspin",(val)->kSlowTransitionExtraSpin=val);
+
+    public static double kPositionGainRatio = kGainPosition.Kp/kGainSpeed.Kp; // For SLOWSPEED control
   }
   
   public static class LEDConstants {
@@ -420,8 +431,8 @@ public final class Constants {
       public static double kCalibrationRearRight = 3949.0;
 
       // Maximum Current Limits
-      public static double kDrivingMotorCurrentLimit = NTDouble.create(40,"SwerveModule/kDrivingMotorCurrentLimit",val->DriveTrain.forEachSwerveModule((m)->{m.m_motorDrive.smartCurrentLimit((int)val);}));
-      public static double kSteeringMotorCurrentLimit = NTDouble.create(5,"SwerveModule/kSteeringMotorCurrentLimit",val->DriveTrain.forEachSwerveModule((m)->{m.m_motorSteer.smartCurrentLimit((int)val);}));
+      public static double kDrivingMotorCurrentLimit = NTDouble.create(40,"SwerveModule/kDrivingMotorCurrentLimit",val->DriveTrain.forEachSwerveModule((m)->{m.m_motorDrive.withStatorLimit((int)val);}));
+      public static double kSteeringMotorCurrentLimit = NTDouble.create(5,"SwerveModule/kSteeringMotorCurrentLimit",val->DriveTrain.forEachSwerveModule((m)->{m.m_motorSteer.withStatorLimit((int)val);}));
 
       // Gear Ratios
       // Drive Characteristics
@@ -438,22 +449,16 @@ public final class Constants {
       // Steering Gear Ratio
       public static double kSteerMotorGearReduction = 150.0/7.0;
 
-      // Encoder Scaling Factors
-      public static double kDriveEncoderPositionFactor = (kWheelDiameterMeters * Math.PI) / kDriveMotorGearReduction; //(kWheelDiameterMeters * Math.PI) / kDriveMotorGearReduction;
-      public static double kDriveEncoderVelocityFactor = (kWheelDiameterMeters * Math.PI) / kDriveMotorGearReduction / 60.0;
-      public static double kSteerEncoderPositionFactor = (2.0 * Math.PI) / kSteerMotorGearReduction;
-      public static double kSteerEncoderVelocityFactor = (2.0 * Math.PI) / kSteerMotorGearReduction / 60.0;
-
       // Control Loop Gains - Drive
-      public static double kDriveKp  = NTDouble.create(switch(kDriveType){case KRAKEN->0.3; case NEO->0.2; default-> 0;},"SwerveModule/kDriveKp",val->DriveTrain.forEachSwerveModule((m)->m.m_motorDrive.withKP(val)));
-      public static double kDriveKi  = NTDouble.create(.0, "SwerveModule/kDriveKi",val->DriveTrain.forEachSwerveModule((m)->m.m_motorDrive.withKI(val)));
-      public static double kDriveKd  = NTDouble.create(.0,"SwerveModule/kDriveKd",val->DriveTrain.forEachSwerveModule((m)->m.m_motorDrive.withKD(val)));
-      public static double kDriveKff = NTDouble.create(switch(kDriveType){case KRAKEN->0.12; case NEO->0.3; default-> 0;},"SwerveModule/kDriveKff",val->DriveTrain.forEachSwerveModule((m)->m.m_motorDrive.withKFF(val)));
+      public static double kDriveKp  = NTDouble.create(switch(kDriveType){case KRAKEN->1.1; case NEO->0.064; default-> 0;},"SwerveModule/kDriveKp",val->DriveTrain.forEachSwerveModule((m)->m.m_motorDrive.withKP(val,Motor.GainSlot.SPEED)));
+      public static double kDriveKi  = NTDouble.create(.0, "SwerveModule/kDriveKi",val->DriveTrain.forEachSwerveModule((m)->m.m_motorDrive.withKI(val, Motor.GainSlot.SPEED)));
+      public static double kDriveKd  = NTDouble.create(.0,"SwerveModule/kDriveKd",val->DriveTrain.forEachSwerveModule((m)->m.m_motorDrive.withKD(val, Motor.GainSlot.SPEED)));
+      public static double kDriveKff = NTDouble.create(switch(kDriveType){case KRAKEN->.76; case NEO->0.096; default-> 0;},"SwerveModule/kDriveKff",val->DriveTrain.forEachSwerveModule((m)->m.m_motorDrive.withKFF(val, Motor.GainSlot.SPEED)));
       
       // Control Loop Gains - Steering
-      public static double kSteerKp  = NTDouble.create(switch(kDriveType){case KRAKEN->1.0; case NEO->0.3; default-> 0;},"SwerveModule/kSteerKp",val->DriveTrain.forEachSwerveModule((m)->m.m_motorSteer.withKP(val)));
-      public static double kSteerKi  = NTDouble.create(0, "SwerveModule/kSteerKi",val->DriveTrain.forEachSwerveModule((m)->m.m_motorSteer.withKI(val)));
-      public static double kSteerKd  = NTDouble.create(0,"SwerveModule/kSteerKd",val->DriveTrain.forEachSwerveModule((m)->m.m_motorSteer.withKD(val)));     
+      public static double kSteerKp  = NTDouble.create(switch(kDriveType){case KRAKEN->3.14; case NEO->1.88; default-> 0;},"SwerveModule/kSteerKp",val->DriveTrain.forEachSwerveModule((m)->m.m_motorSteer.withKP(val, Motor.GainSlot.POSITION)));
+      public static double kSteerKi  = NTDouble.create(0, "SwerveModule/kSteerKi",val->DriveTrain.forEachSwerveModule((m)->m.m_motorSteer.withKI(val, Motor.GainSlot.POSITION)));
+      public static double kSteerKd  = NTDouble.create(0,"SwerveModule/kSteerKd",val->DriveTrain.forEachSwerveModule((m)->m.m_motorSteer.withKD(val, Motor.GainSlot.POSITION)));     
       public static double kSteerKff = 0;
     }
 
