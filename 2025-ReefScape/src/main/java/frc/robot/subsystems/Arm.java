@@ -1,5 +1,4 @@
 package frc.robot.subsystems;
-
 import edu.wpi.first.wpilibj.AnalogInput;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -7,6 +6,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.ArmConstants;
 import frc.utils.CalibrationMap;
 import frc.utils.Motor;
+import frc.robot.Constants.GameConstants;
 
 public class Arm extends SubsystemBase{
 
@@ -18,9 +18,16 @@ public class Arm extends SubsystemBase{
     
     public Motor m_motorArm;
     public AnalogInput m_armAnalogEncoder;
-    boolean m_setupArmDone = false;
+    public double m_currentAngle;
+    public double m_angleTarget;
     double m_armOffset = 0; //change later
     double m_newArmOffset = 0;
+    private boolean m_atScorePosition = false;
+    boolean m_setupArmDone = false;
+    boolean scoringTrough = false;
+    boolean scoringLevels2or3 = false;
+    boolean scoringLevel4 = false;
+    GameConstants.ScoreLevel m_scoreReefLevel;
 
     /**
      * This function sets the Arm Angle to be within the target bounds of the minimum and maximum values which are being defined in Constants.
@@ -30,34 +37,31 @@ public class Arm extends SubsystemBase{
         if (!m_setupArmDone) return;
         target = Math.max(ArmConstants.kAngleMin, Math.min(ArmConstants.kAngleMax, target));
         m_motorArm.setPosition(target);
+        m_angleTarget = target;
     }
 
-    public boolean scoringTrough(){
-        return false; //add when bboard is ready so we can determine status based off of stage dial.
-    }
-
-    public boolean scoringLevels2or3(){
-        return false; //add when bboard is ready so we can determine status based off of stage dial.
-    }
-
-    public boolean scoringLevel4(){
-        return false; //add when bboard is ready so we can determine status based off of stage dial.
+    public Boolean atScorePosition(){
+      return m_atScorePosition;
     }
 
     Command ArmPositionCommand = Commands.sequence(
         Commands.waitUntil(() -> {
-            if (scoringTrough()){
-                m_motorArm.setPosition(ArmConstants.kArmAngleTrough);
-                return true;
-            } else if (scoringLevels2or3()){
-                m_motorArm.setPosition(ArmConstants.kArmAngleLevel2or3);
-                return true;
-            } else if (scoringLevel4()){
-                m_motorArm.setPosition(ArmConstants.kArmAngleLevel4);
-                return true;
+            switch(m_scoreReefLevel){
+                case TROUGH:
+                    m_angleTarget = ArmConstants.kTargetAngleTrough;
+                    return m_motorArm.setPosition(ArmConstants.kTargetAngleTrough);
+                case LEVEL2:
+                case LEVEL3:
+                    m_angleTarget = ArmConstants.kTargetAngleLevels2or3;
+                    return m_motorArm.setPosition(ArmConstants.kTargetAngleLevels2or3);
+                case LEVEL4:
+                    m_angleTarget = ArmConstants.kTargetAngleLevel4;
+                    return m_motorArm.setPosition(ArmConstants.kTargetAngleLevel4);
             }
             return false;
-        }));
+        }),
+        Commands.waitUntil(() -> {return atScorePosition();})
+    );
 
     public Arm(int CANID, int analogID) {
 
@@ -80,6 +84,14 @@ public class Arm extends SubsystemBase{
 
         @Override
         public void periodic() {
-            
+        
+        if (m_motorArm.isSetupDone()){
+            m_currentAngle = m_motorArm.getPosition();
+        }
+
+          if ((Math.abs(m_angleTarget - m_currentAngle)) < ArmConstants.kAngleTolerance){
+            m_atScorePosition = true;
+          }  
+
         }
 }

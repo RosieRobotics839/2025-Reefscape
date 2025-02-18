@@ -46,6 +46,12 @@ public final class Constants {
     public CANID_t(int abs_encoder, int drive, int steer){this.encoder = abs_encoder; this.driving = drive; this.steering = steer;}
   }
 
+  public static class GameConstants {
+
+    public enum ScoreLevel{
+      TROUGH, LEVEL2, LEVEL3, LEVEL4
+    }
+  }
   public static class ArmConstants {
 
     public static MyMotorType kMotorType = MyMotorType.KRAKEN;
@@ -66,15 +72,16 @@ public final class Constants {
     public static double kAngleMin = Units.degreesToRadians(NTDouble.create(-3, "Arm/kAngleMin", val -> kAngleMin = Units.degreesToRadians(val)));
 
     // TODO: Change once angles are settled on.
-    public static double kArmAngleTrough = 0;
-    public static double kArmAngleLevel2or3 = 0;
-    public static double kArmAngleLevel4 = 0;
+    public static double kTargetAngleTrough = 0;
+    public static double kTargetAngleLevels2or3 = 0;
+    public static double kTargetAngleLevel4 = 0;
 
     // TODO: Change values of Calibration Maps.
     public static double [] kArmCalibrationX = new double[]{638, 1137,  1372, 1654,  1959, 2172, 2404, 2462, 2482}; //analog values (100% Wrong, need to be adjusted to fit arm constraints)
     public static double [] kArmCalibrationY = new double[]{131, 105,   90,   70,    45,   25,    0, -6.0, -8.0}; // degrees (100% Wrong, need to be asjusted to fit arm constraints)
 
     public static double kArmMotorCurrentLimit = (NTDouble.create(5, "Arm/kCurrentLimit", (val) ->Arm.getInstance().m_motorArm.smartCurrentLimit(val)));
+    public static double kAngleTolerance = Units.degreesToRadians(NTDouble.create(5, "Arm/kAngleTolerance", val -> kAngleTolerance = Units.degreesToRadians(val)));
   }
 
   public static class EffectorConstants {
