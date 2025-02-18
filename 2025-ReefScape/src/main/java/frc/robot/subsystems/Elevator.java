@@ -62,7 +62,7 @@ public class Elevator extends SubsystemBase {
 
     // Check if elevator is at target position
     public boolean isAtPosition() {
-        return Math.abs(m_currentHeight - m_targetHeight) < 0.5; // 0.5 inch tolerance
+        return Math.abs(m_currentHeight - m_targetHeight) < ElevatorConstants.kElevatorTolerance; 
     }
 
     public Elevator (){

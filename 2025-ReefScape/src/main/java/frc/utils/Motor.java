@@ -412,6 +412,8 @@ public class Motor extends SubsystemBase {
                 motor_talon.setControl(new Follower(leaderMotorCANID, inverted)).isOK();
                 break;
             case NEO:
+                config_neo.follow(leaderMotorCANID, inverted); 
+                if (m_setupMotorDone) scheduleSetup();
                 break;
             default:
         }
