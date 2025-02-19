@@ -17,6 +17,8 @@ import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkBaseConfig;
 import com.revrobotics.spark.config.SparkMaxConfig;
 
+import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
@@ -64,12 +66,17 @@ public class Motor extends SubsystemBase {
     int m_steeringOffset;
     boolean m_enabSlowSpeed;
     boolean m_setupScheduled = false;
+
+    double m_maxPositiveSpeed = Double.POSITIVE_INFINITY;
+    double m_maxNegativeSpeed = Double.NEGATIVE_INFINITY;
+    SlewRateLimiter m_positionlimiter = new SlewRateLimiter(m_maxPositiveSpeed, m_maxNegativeSpeed, 0);
     
     double m_gearReduction;
     double m_speedTarget;
     double m_positionTarget;
     boolean m_lowspeedreverse;
-    ControlType m_controlType = ControlType.SPEED;
+    ControlType m_controlType = ControlType.NONE;
+    GainSlot m_gainslot = GainSlot.POSITION;
 
     double m_testSpeed;
     double m_testPosition;
@@ -222,7 +229,7 @@ public class Motor extends SubsystemBase {
     }
 
     public enum ControlType {
-        POSITION, SPEED, SLOWSPEED;
+        NONE, POSITION, SPEED, SLOWSPEED;
     }
 
     public Motor inverted(boolean invert){
@@ -396,6 +403,22 @@ public class Motor extends SubsystemBase {
         withOutputRange(min, max, GainSlot.SPEED);
         return this;
     }
+    
+    /**
+     * Sets a speed limit for the motor with symmetric positive and negative values
+     * @param speed "Mechanism rotations per second limit"
+     * @return Motor instance for chaining methods
+     */
+    public Motor withSpeedLimit(double speed){withSpeedLimit(speed, -speed); return this;}
+
+    public Motor withSpeedLimit(double positive, double negative){
+        m_maxPositiveSpeed = positive;
+        m_maxNegativeSpeed = negative;
+        
+        // Create position limiter with the allowed travel distance at speed over 20 milliseconds.
+        m_positionlimiter = new SlewRateLimiter(positive*0.020, negative*0.020, getPosition());
+        return this;
+    }
 
     public Motor withOutputRange(double min, double max, GainSlot slot){ // cant find
         switch (motorType) {
@@ -464,6 +487,10 @@ public class Motor extends SubsystemBase {
     }
 
     protected boolean _setSpeed(double speed, GainSlot slot){
+
+        // Limit speed to our speed limits;
+        speed = MathUtil.clamp(speed,m_maxNegativeSpeed,m_maxPositiveSpeed);
+
         // Check if we should be in SLOWSPEED control mode which uses position control for slow speeds.
         if (m_enabSlowSpeed && Math.abs(speed*m_gearReduction) <= MotorDefaults.kSlowThreshold){
             // Compare to last speed target to see if we've reversed direction
@@ -490,6 +517,7 @@ public class Motor extends SubsystemBase {
     protected boolean _setTargetSpeed(double speed, GainSlot slot){
         boolean status;
 
+        m_gainslot = slot;
         m_speedTarget = speed;
         switch (motorType) {
             case KRAKEN:
@@ -505,25 +533,44 @@ public class Motor extends SubsystemBase {
         return status;
     }
 
-    public boolean setPosition(double position){return setPosition(position, GainSlot.POSITION);}
-    public boolean setPosition(double position, GainSlot slot){
+    public void setPosition(double position){setPosition(position, GainSlot.POSITION);}
+    public void setPosition(double position, GainSlot slot){
         // If motor testing is active, ignore external request.
         if (m_testEnable == true){
-            return true;
+            return;
         }
-        return _setPosition(position, slot);
+        _setPosition(position, slot);
     }
 
-    public boolean setRelativePosition(double position){
-        return setPosition(getPosition()+position);
+    public void setRelativePosition(double position){
+        setPosition(getPosition()+position);
     }
 
-    protected boolean _setPosition(double position, GainSlot slot){
+    /**
+     * This method takes in a position request and a GainSlot to use, it limits the position request to be within the speed limited allowed range
+     * @param position
+     * @param slot
+     * @return
+     */
+    protected void _setPosition(double position, GainSlot slot){
+        if (m_controlType != ControlType.POSITION){
+            // Transitioning into position control, reset our position control speed limiter.
+            m_positionlimiter.reset(getPosition());
+        }
         m_controlType = ControlType.POSITION;
         m_speedTarget = 0;
-        return _setTargetPosition(position, slot);
+        m_positionTarget = position;
+        m_gainslot = slot;
     }
 
+    /**
+     * This is the method that sends the actual request to the motor controller. It's called by the SLOWSPEED control in periodic as well as the protected method _setPosition().
+     * <p>
+     * There is no request limiting in this function and should be only called where you need direct motor commands to be send.
+     * @param position
+     * @param slot
+     * @return
+     */
     protected boolean _setTargetPosition(double position, GainSlot slot){
         boolean status;
         m_positionTarget = position;
@@ -620,20 +667,32 @@ public class Motor extends SubsystemBase {
         }
 
         if (DriverStation.isDisabled()){
-          if (Math.abs(m_speedTarget*m_gearReduction) < MotorDefaults.kSlowThreshold || m_controlType == ControlType.SLOWSPEED){
+            m_controlType = ControlType.NONE;
+            m_speedTarget = 0;
             m_positionTarget = getPosition();
-          }
+            m_positionlimiter.reset(getPosition());
+            setSpeed(0);
         } else {
+            // Are we in SLOWSPEED mode, where we use should use position control instead of velocity?
             if (m_controlType == ControlType.SLOWSPEED){
+                // Let's first check if the position target makes sense compared to the current position (to avoid some crazy high speed jump in position).
                 double m_posdiff = m_positionTarget-getPosition();
                 if (Math.abs(m_posdiff) > 1/m_gearReduction){
+                    // If the target position is more than 1 motor (not mechanism) rotation from the target we need to transition
+                    // from velocity to position control, so update the position target to just ahead of the direction we are turning.
                     m_positionTarget = getPosition() + Math.signum(m_speedTarget)*MotorDefaults.kSlowTransitionExtraSpin/m_gearReduction;
                 }
                 if (m_lowspeedreverse){
+                    // If we're reversing direction, make a small jump across the hysteresis band of the motor to avoid stopping for a moment.
                     m_lowspeedreverse = false;
                     m_positionTarget += Math.signum(m_speedTarget)*MotorDefaults.kSlowHysteresis/m_gearReduction;
                 }
                 _setTargetPosition(m_positionTarget + m_speedTarget * 0.020, GainSlot.POSITION);
+            }
+
+            if (m_controlType == ControlType.POSITION){
+                double posRequest = m_positionlimiter.calculate(m_positionTarget);
+                _setTargetPosition(posRequest, m_gainslot);
             }
         }
         nt_controltype.set(m_controlType.ordinal());
