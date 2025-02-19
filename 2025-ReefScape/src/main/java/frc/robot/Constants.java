@@ -66,6 +66,8 @@ public final class Constants {
     public static double kHeight2Inch = (NTDouble.create(8, "Elevator/Height2Inch", (val)->kHeight2Inch = (val)));
     public static double kHeight1Inch = (NTDouble.create(1, "Elevator/Height1Inch", (val)->kHeight1Inch = (val)));
     public static double kMinHeightInch = (NTDouble.create(0, "Elevator/MinHeightInch", (val)->kMinHeightInch = (val)));
+
+    public static double kElevatorTolerance = 0.5;
   }
 
   public static class MotorDefaults {

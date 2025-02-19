@@ -8,6 +8,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.ElevatorConstants;
 import frc.utils.Motor;
+import frc.utils.Motor.MyMotorType;
 
 public class Elevator extends SubsystemBase {
 
@@ -15,12 +16,12 @@ public class Elevator extends SubsystemBase {
     DoublePublisher nt_currentHeight, nt_targetHeight;
 
     private static Elevator instance = new Elevator();
-    private double m_targetHeight = ElevatorConstants.kMinHeightInch;
-    private double m_currentHeight = ElevatorConstants.kMinHeightInch;
-
     public static Elevator getInstance(){
         return instance;
     }
+
+    private double m_targetHeight = ElevatorConstants.kMinHeightInch;
+    private double m_currentHeight = ElevatorConstants.kMinHeightInch;
 
     public static enum Position {
         MAX(ElevatorConstants.kMaxHeightInch),
