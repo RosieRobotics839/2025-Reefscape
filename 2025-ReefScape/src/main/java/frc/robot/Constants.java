@@ -107,7 +107,7 @@ public final class Constants {
     public static double kEffectorKi = (NTDouble.create(0, "Effector/kEffectorKi", (val)->kEffectorKi = (val)));
     public static double kEffectorKd = (NTDouble.create(0, "Effector/kEffectorKd", (val)->kEffectorKd = (val)));
     public static double kEffectorKff = (NTDouble.create(0, "Effector/kEffectorKff", (val)->kEffectorKff = (val)));
-
+  }
   public static class ElevatorConstants {
 
     public static MyMotorType kMotorType = MyMotorType.KRAKEN;
