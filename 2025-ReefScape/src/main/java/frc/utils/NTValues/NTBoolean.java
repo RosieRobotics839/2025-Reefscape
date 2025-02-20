@@ -20,8 +20,6 @@ public class NTBoolean {
     
     public boolean resetOnRecv = false;
 
-    private boolean m_ignore = false;
-
     public static Boolean create(Boolean defaultValue, String name, BooleanConsumer lambda){
         NTBoolean instance = new NTBoolean(defaultValue, table, name, lambda);
         return instance.get();
@@ -40,21 +38,17 @@ public class NTBoolean {
         // add a listener to only value changes on the Y subscriber
         _table.addListener(
             name,
-            EnumSet.of(NetworkTableEvent.Kind.kValueAll),
+            EnumSet.of(NetworkTableEvent.Kind.kValueRemote),
             (table,key,event)-> {
-                if (!m_ignore){
                     lambda.accept(event.valueData.value.getBoolean());
                     if (resetOnRecv){
                         set(defaultValue);
                     }
-                } else {
-                  m_ignore = false;
-                }
-            });
+            }
+        );
     }
 
     public void set(Boolean val){
-        m_ignore = true;
         publisher.set(val);
     }
 

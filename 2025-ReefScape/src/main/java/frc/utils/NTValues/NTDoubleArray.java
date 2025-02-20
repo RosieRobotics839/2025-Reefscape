@@ -20,8 +20,6 @@ public class NTDoubleArray {
 
     public boolean resetOnRecv = false;
 
-    private boolean m_ignore = false;
-
     public static double [] create(double [] defaultValue, String name, Consumer<double []> lambda){
         NTDoubleArray instance = new NTDoubleArray(defaultValue, table, name, lambda);
         return instance.get();
@@ -40,21 +38,17 @@ public class NTDoubleArray {
         // add a listener to only value changes on the Y subscriber
         _table.addListener(
             name,
-            EnumSet.of(NetworkTableEvent.Kind.kValueAll),
+            EnumSet.of(NetworkTableEvent.Kind.kValueRemote),
             (t,k,e)-> {
-                if (!m_ignore){
-                    lambda.accept(e.valueData.value.getDoubleArray());
-                    if (resetOnRecv){
-                        set(defaultValue);
-                    }
-                } else {
-                    m_ignore = false;
+                lambda.accept(e.valueData.value.getDoubleArray());
+                if (resetOnRecv){
+                    set(defaultValue);
                 }
-            });
+            }
+        );
     }
 
     public void set(double [] val){
-        m_ignore = true;
         publisher.set(val);
     }
 

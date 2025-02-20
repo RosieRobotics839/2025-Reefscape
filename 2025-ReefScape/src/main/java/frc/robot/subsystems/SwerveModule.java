@@ -4,7 +4,6 @@
 
 package frc.robot.subsystems;
 
-import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.ClosedLoopConfig.FeedbackSensor;
 import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.NetworkTable;
@@ -15,26 +14,18 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.math.util.Units;
 import frc.robot.Constants.kDriveTrain.DriveConstants;
 import frc.robot.Constants.kDriveTrain.kSwerveModule;
 import frc.utils.FirstOrderLag;
 import frc.utils.Motor;
 import frc.utils.NTValues.NTDouble;
-import frc.robot.Robot;
 import frc.robot.Constants.CANID_t;
 
 public class SwerveModule extends SubsystemBase {
 
   static NetworkTable table = NetworkTableInstance.getDefault().getTable("roboRIO/Drivetrain/wheel");
   static NetworkTable testtable = NetworkTableInstance.getDefault().getTable("roboRIO/Test");
-
-  //public MyCANSparkMax m_motorDrive, m_motorSteer;
-  //public RelativeEncoder m_encoderDrive, m_encoderSteer;
-  //public SparkMaxConfig m_pidDrive = new SparkMaxConfig(); 
-  //public SparkMaxConfig m_pidSteer = new SparkMaxConfig();
-
-  //SparkClosedLoopController m_controllerDrive;
-  //SparkClosedLoopController m_controllerSteer;
 
   public Motor m_motorDrive, m_motorSteer;
 
@@ -76,14 +67,13 @@ public class SwerveModule extends SubsystemBase {
     /* Define drive motor controller. */
     m_motorDrive = new Motor(CANID.driving, kSwerveModule.kDriveType, name+"_driving")
         .inverted(false)
-        .idleMode(IdleMode.kBrake)
-        .smartCurrentLimit((int)kSwerveModule.kDrivingMotorCurrentLimit)
-        .positionConversionFactor((Robot.isSimulation() ? 60: kSwerveModule.kDriveEncoderPositionFactor))
-        .velocityConversionFactor(kSwerveModule.kDriveEncoderVelocityFactor)
+        .idleBrake(true)
+        .withStatorLimit((int)kSwerveModule.kDrivingMotorCurrentLimit)
+        .withGearRatio(kSwerveModule.kDriveMotorGearReduction)
         .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
-        .pidf(kSwerveModule.kDriveKp, kSwerveModule.kDriveKi, kSwerveModule.kDriveKd, kSwerveModule.kDriveKff)
-        .outputRange(-1,1)
-        .iZone(0.15); 
+        .pidf(kSwerveModule.kDriveKp, kSwerveModule.kDriveKi, kSwerveModule.kDriveKd, kSwerveModule.kDriveKff, Motor.GainSlot.SPEED)
+        .withOutputRange(-1,1)
+        .withIZone(0.15); 
 
     /* Define steer analog encoder and store calibration value */
     m_analogEncoder = new AnalogInput(CANID.encoder);
@@ -94,15 +84,14 @@ public class SwerveModule extends SubsystemBase {
     /* Define steer motor controller. */
     m_motorSteer = new Motor(CANID.steering, kSwerveModule.kSteerType, name+"_steering")
       .inverted(true)
-      .idleMode(IdleMode.kBrake)
-      .smartCurrentLimit((int)kSwerveModule.kSteeringMotorCurrentLimit)
-      .positionConversionFactor(kSwerveModule.kSteerEncoderPositionFactor)
+      .idleBrake(true)
+      .withStatorLimit((int)kSwerveModule.kSteeringMotorCurrentLimit)
+      .withGearRatio(kSwerveModule.kSteerMotorGearReduction)
       .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
-      .pidf(kSwerveModule.kSteerKp, kSwerveModule.kSteerKi, kSwerveModule.kSteerKd, kSwerveModule.kSteerKff)
-      .outputRange(-1,1)
-      .iZone(0.05)
+      .pidf(kSwerveModule.kSteerKp, kSwerveModule.kSteerKi, kSwerveModule.kSteerKd, kSwerveModule.kSteerKff, Motor.GainSlot.POSITION)
+      .withOutputRange(-1,1)
+      .withIZone(0.05)
       .positionWrappingEnabled(true)
-      .positionWrappingConfig(-Math.PI, Math.PI)
       .setCalibration(m_steeringOffset - angleCalibration);
 
     setState(optimizedState);
@@ -110,28 +99,28 @@ public class SwerveModule extends SubsystemBase {
 
   public SwerveModuleState getState() {
     // Returns the velocity of the swerve drive wheel and angle
-    return new SwerveModuleState(m_motorDrive.getVelocity(),
-        new Rotation2d(m_motorSteer.getPosition()));
+    return new SwerveModuleState(m_motorDrive.getVelocity() * (kSwerveModule.kWheelDiameterMeters * Math.PI),
+        new Rotation2d(2.0 * Math.PI * m_motorSteer.getPosition()));
   }
  
+  public SwerveModulePosition getPosition() {
+    // Returns the position of the swerve module wheel and angle
+    return new SwerveModulePosition(m_motorDrive.getPosition() * (kSwerveModule.kWheelDiameterMeters * Math.PI),
+        new Rotation2d(2.0 * Math.PI * m_motorSteer.getPosition()));
+  }
+
   public void setSpeed(double speedMetersPerSecond){
     if (!m_setupDriveDone) return;
     optimizedState.speedMetersPerSecond = speedMetersPerSecond;
-    m_motorDrive.setSpeed(speedMetersPerSecond);
+    double speedRotationPerSec = speedMetersPerSecond / (kSwerveModule.kWheelDiameterMeters * Math.PI);
+    m_motorDrive.setSpeed(speedRotationPerSec);
   }
 
   public void setState(SwerveModuleState targetState) {
     if (!m_setupDriveDone || !m_setupSteerDone) return;
     // Sets the target state of the swerve drive equal to the input state
-    targetState.optimize(new Rotation2d(m_motorSteer.getPosition()));
+    targetState.optimize(new Rotation2d(2.0 * Math.PI * m_motorSteer.getPosition()));
     optimizedState = targetState;
-  }
-  public SwerveModulePosition getPosition() {
-    // Returns the position of the swerve module wheel and angle
-    double angle;
-    angle = m_motorSteer.getPosition();
-    return new SwerveModulePosition(m_motorDrive.getPosition(),
-        new Rotation2d(angle));
   }
 
   @Override
@@ -154,12 +143,14 @@ public class SwerveModule extends SubsystemBase {
     nt_speedcmd.set(speedcmd);
 
     if ( m_setupDriveDone &&  m_setupSteerDone){
-      m_motorDrive.setSpeed(speedcmd);
-      m_motorSteer.setPosition(anglecmd);
+      // Set motor speed in rotations per second
+      m_motorDrive.setSpeed(speedcmd/(Math.PI * kSwerveModule.kWheelDiameterMeters));
+      // Set motor position in rotations of wheel;
+      m_motorSteer.setPosition(anglecmd/(2.0*Math.PI));
 
       // This method will be called once per scheduler run
-      nt_angle.set(m_motorSteer.getPosition());
-      nt_speed.set(m_motorDrive.getVelocity());
+      nt_angle.set(m_motorSteer.getPosition()*360); // Send data in degrees over network tables
+      nt_speed.set(m_motorDrive.getVelocity()*(Math.PI * Units.metersToInches(kSwerveModule.kWheelDiameterMeters))); // Send data in ft/s over network tables
       nt_i.set(m_motorDrive.getOutputCurrent());
       nt_steeri.set(m_motorSteer.getOutputCurrent());
     }
