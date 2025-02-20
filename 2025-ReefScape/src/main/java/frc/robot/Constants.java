@@ -23,6 +23,7 @@ import frc.robot.subsystems.Arm;
 //import frc.robot.subsystems.Climber;
 import frc.robot.subsystems.DriveTrain;
 import frc.robot.subsystems.EndEffector;
+import frc.robot.subsystems.Elevator;
 //import frc.robot.subsystems.IntakeShooter;
 import frc.robot.subsystems.Vision;
 import frc.utils.Motor.MyMotorType;
@@ -106,6 +107,32 @@ public final class Constants {
     public static double kEffectorKi = (NTDouble.create(0, "Effector/kEffectorKi", (val)->kEffectorKi = (val)));
     public static double kEffectorKd = (NTDouble.create(0, "Effector/kEffectorKd", (val)->kEffectorKd = (val)));
     public static double kEffectorKff = (NTDouble.create(0, "Effector/kEffectorKff", (val)->kEffectorKff = (val)));
+
+  public static class ElevatorConstants {
+
+    public static MyMotorType kMotorType = MyMotorType.KRAKEN;
+    public static int kEleLeftCANID = 11;
+    public static int kEleRightCANID = 12;
+
+    public static int klimitSwitchChanel;
+
+    public static double kElevatorKp = (NTDouble.create(0, "Elevator/kElevatorKp", (val)->kElevatorKp = (val)));
+    public static double kElevatorKi = (NTDouble.create(0, "Elevator/kElevatorKi", (val)->kElevatorKi = (val)));
+    public static double kElevatorKd = (NTDouble.create(0, "Elevator/kElevatorKd", (val)->kElevatorKd = (val)));
+    public static double kElevatorKff = (NTDouble.create(0, "Elevator/kElevatorKff", (val)->kElevatorKff = (val)));
+
+    public static double kLeftElevatorMotorCurrentLimit = (NTDouble.create(5, "Elevator/kLeftCurrentLimit", (val) ->Elevator.getInstance().m_EleMotorLeft.smartCurrentLimit(val)));
+    public static double kRightElevatorMotorCurrentLimit = (NTDouble.create(5, "Elevator/kRightCurrentLimit", (val) ->Elevator.getInstance().m_EleMotorRight.smartCurrentLimit(val)));
+
+    // Values in inches that the elevator should be raised from the bottom to score different heights of coral and algea
+    // These need to be tested and adjusted
+    public static double kMaxHeightInch = (NTDouble.create(27.5, "Elevator/MaxHeightInch", (val)->kMaxHeightInch = (val)));; // 16.6 Rotations of the Axle
+    public static double kHeight3Inch = (NTDouble.create(16, "Elevator/Height3Inch", (val)->kHeight3Inch = (val)));
+    public static double kHeight2Inch = (NTDouble.create(8, "Elevator/Height2Inch", (val)->kHeight2Inch = (val)));
+    public static double kHeight1Inch = (NTDouble.create(1, "Elevator/Height1Inch", (val)->kHeight1Inch = (val)));
+    public static double kMinHeightInch = (NTDouble.create(0, "Elevator/MinHeightInch", (val)->kMinHeightInch = (val)));
+
+    public static double kElevatorTolerance = 0.5;
   }
 
   public static class MotorDefaults {

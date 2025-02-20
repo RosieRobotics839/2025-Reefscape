@@ -4,6 +4,7 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.controls.VelocityVoltage;
+import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.revrobotics.REVLibError;
@@ -404,6 +405,20 @@ public class Motor extends SubsystemBase {
                 status = true;
         }
         return status;
+    }
+
+    public Motor setFollowerMode(int leaderMotorCANID, boolean inverted){
+        switch (motorType) {
+            case KRAKEN:
+                motor_talon.setControl(new Follower(leaderMotorCANID, inverted)).isOK();
+                break;
+            case NEO:
+                config_neo.follow(leaderMotorCANID, inverted); 
+                if (m_setupMotorDone) scheduleSetup();
+                break;
+            default:
+        }
+        return this;
     }
 
     public boolean setPosition(double position){
