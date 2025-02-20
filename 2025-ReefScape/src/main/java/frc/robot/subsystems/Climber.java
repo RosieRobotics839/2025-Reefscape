@@ -23,7 +23,6 @@ public class Climber extends SubsystemBase{
 
     public Motor m_motorClimber;
     public AnalogInput m_climberAnalogEncoder;
-    public boolean atTargetAngle;
     public int m_climberOffset;
     public int m_newClimberOffset;
 
@@ -70,7 +69,7 @@ public class Climber extends SubsystemBase{
         m_motorClimber = new Motor(ClimberConstants.kClimberCANID, ClimberConstants.kMotorType, "climber")
             .smartCurrentLimit((int)ClimberConstants.kClimberMotorCurrentLimit)
             .inverted(true)
-            .positionConversionFactor((ClimberConstants.kGearRatio))
+            .positionConversionFactor((ClimberConstants.kClimberGearRatio))
             .setCalibration(m_newClimberOffset)
             .pidf(ClimberConstants.kClimberKp, ClimberConstants.kClimberKi, ClimberConstants.kClimberKd, ClimberConstants.kClimberKff);
 

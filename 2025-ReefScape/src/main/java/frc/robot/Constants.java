@@ -17,10 +17,10 @@ import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Filesystem;
-import frc.robot.Constants.CANID_t;
 import frc.robot.subsystems.Climber;
 //import frc.robot.subsystems.Climber;
 import frc.robot.subsystems.DriveTrain;
+import frc.robot.subsystems.Funnel;
 //import frc.robot.subsystems.IntakeShooter;
 import frc.robot.subsystems.Vision;
 import frc.utils.Motor.MyMotorType;
@@ -91,6 +91,26 @@ public final class Constants {
     public static double kBrightness = NTDouble.create(0.1, "LED/kBrightness", (val)->kBrightness=val);
     public static double kFlashTime = NTDouble.create(0.5, "LED/kFlashTime", (val)->kFlashTime=val);
   
+  }
+
+  public static class FunnelConstants {
+
+    public static MyMotorType kMotorType = MyMotorType.NEO;
+    public static int kFunnelCANID = 5; // TODO: change
+
+    public static double kFunnelKp = (NTDouble.create(0, "Funnel/kFunnelKp", (val) ->kFunnelKp = (val)));
+    public static double kFunnelKi = (NTDouble.create(0,"Funnel/kFunnelKi", (val) ->kFunnelKi = (val)));
+    public static double kFunnelKd = (NTDouble.create(0, "Funnel/kFunnelKd", (val) ->kFunnelKd = (val)));
+    public static double kFunnelKff = (NTDouble.create(0, "Funnel/kFunnelKff", (val) ->kFunnelKff = (val)));
+
+    public static double kFunnelUp = 0; // Change once we can test
+    public static double kFunnelDown = 0; // Change once we can test
+
+    public static int kFunnelMotorCurrentLimit = (int)NTDouble.create(50,"Funnel/kCurrentLimit",(val) ->Funnel.getInstance().m_motorFunnel.smartCurrentLimit(val));
+    public static double kFunnelAngleTolerance = Units.degreesToRadians(NTDouble.create(3, "Funnel/kFunnelAngleTolerance", val -> kFunnelAngleTolerance = Units.degreesToRadians(val)));
+
+    public static double kFunnelGearRatio = 3;
+
   }
 
   public static class OperatorConstants {
@@ -215,8 +235,7 @@ public final class Constants {
     public static double [] kClimberCalibrationX = new double[]{0, 0, 0, 0, 0, 0, 0, 0, 0}; //analog values 
     public static double [] kClimberCalibrationY = new double[]{0, 0, 0, 0, 0, 0, 0, 0, 0}; // degrees 
     
-    public static double kSpoolDiameter = Units.inchesToMeters(1);
-    public static double kGearRatio = 125;
+    public static double kClimberGearRatio = 125;
 
     public static double kMaxSpeed = Units.inchesToMeters(NTDouble.create(6, "Climber/kMaxSpeed", val -> kMaxSpeed = Units.inchesToMeters(val)));
   }
