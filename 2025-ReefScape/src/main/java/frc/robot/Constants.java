@@ -450,11 +450,11 @@ public final class Constants {
 
       // Drive Gear Ratios in order from motor to drive wheel
       public static double kDriveStage1Ratio = 14.0 / 50.0;
-      //public static double kDriveStage2Ratio = 25.0 / 19.0; // L1 MK4i Ratio Option Overall (8.14:1)
-      public static double kDriveStage2Ratio = 27.0 / 17.0; // L2 MK4i Ratio Option Overall (6.75:1)
-      // public static double kDriveStage2Ratio = 28.0 / 16.0; // L3 MK4i Ratio Option Overall (6.12:1)
+      public static double kDriveStage2RatioL1 = 25.0 / 19.0; // L1 MK4i Ratio Option Overall (8.14:1)
+      public static double kDriveStage2RatioL2 = 27.0 / 17.0; // L2 MK4i Ratio Option Overall (6.75:1)
+      public static double kDriveStage2RatioL3 = 28.0 / 16.0; // L3 MK4i Ratio Option Overall (6.12:1)
       public static double kDriveStage3Ratio = 15.0 / 45.0;
-      public static double kDriveMotorGearReduction = 1/(kDriveStage1Ratio * kDriveStage2Ratio * kDriveStage3Ratio);
+      public static double kDriveMotorGearReduction = 1/(kDriveStage1Ratio * (kDriveType == MyMotorType.NEO ? kDriveStage2RatioL1 : kDriveStage2RatioL2) * kDriveStage3Ratio);
 
       // Steering Gear Ratio
       public static double kSteerMotorGearReduction = 150.0/7.0;
