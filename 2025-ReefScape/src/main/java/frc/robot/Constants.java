@@ -435,10 +435,10 @@ public final class Constants {
       public static MyMotorType kDriveType = MyMotorType.KRAKEN;
       public static MyMotorType kSteerType = MyMotorType.NEO;
       
-      public static double kCalibrationFrontLeft = 2487.0;
-      public static double kCalibrationFrontRight = 1104.0;
-      public static double kCalibrationRearLeft = 823.0;
-      public static double kCalibrationRearRight = 3949.0;
+      public static double kCalibrationFrontLeft = (kDriveType == MyMotorType.KRAKEN ? 2487.0 : 1502.0);
+      public static double kCalibrationFrontRight = (kDriveType == MyMotorType.KRAKEN ? 1104.0 : 2455.0);
+      public static double kCalibrationRearLeft = (kDriveType == MyMotorType.KRAKEN ? 823.0 : 3634.0);
+      public static double kCalibrationRearRight = (kDriveType == MyMotorType.KRAKEN ? 3949.0 : 2011.0);
 
       // Maximum Current Limits
       public static double kDrivingMotorCurrentLimit = NTDouble.create(40,"SwerveModule/kDrivingMotorCurrentLimit",val->DriveTrain.forEachSwerveModule((m)->{m.m_motorDrive.withStatorLimit((int)val);}));

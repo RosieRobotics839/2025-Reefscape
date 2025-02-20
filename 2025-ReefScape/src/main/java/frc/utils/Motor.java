@@ -490,7 +490,8 @@ public class Motor extends SubsystemBase {
                 config_talon.ClosedLoopGeneral.withContinuousWrap(enabled); 
                 break;
             case NEO:
-                config_neo.closedLoop.positionWrappingEnabled(enabled);    
+                config_neo.closedLoop.positionWrappingInputRange(-0.5, 0.5);
+                config_neo.closedLoop.positionWrappingEnabled(enabled);  
                 break;
             default:
         }
