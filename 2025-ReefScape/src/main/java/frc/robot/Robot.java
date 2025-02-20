@@ -14,9 +14,11 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.Constants.AutoConstants;
 import frc.robot.subsystems.Arm;
 import frc.robot.subsystems.Autonomous;
+import frc.robot.subsystems.Climber;
 import frc.robot.subsystems.DriveTrain;
 import frc.robot.subsystems.EndEffector;
 import frc.robot.subsystems.FlightStick;
+import frc.robot.subsystems.Funnel;
 import frc.robot.subsystems.Gyro;
 import frc.robot.subsystems.PathPlanning;
 import frc.robot.subsystems.Vision;
@@ -40,6 +42,8 @@ public class Robot extends TimedRobot {
   public Autonomous m_autonomous = Autonomous.getInstance();
   public EndEffector m_endeffector = EndEffector.getInstance();
   public Arm m_arm = Arm.getInstance();
+  public Climber m_climber = Climber.getInstance();
+  public Funnel m_funnel = Funnel.getInstance();
 
   Alliance myAlliance = Alliance.Red;
 
