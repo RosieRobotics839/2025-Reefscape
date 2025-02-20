@@ -74,7 +74,7 @@ public final class Constants {
 
     // TODO: Change once angles are settled on.
     public static double kTargetAngleTrough = 0;
-    public static double kTargetAngleLevels2or3 = 0;
+    public static double kTargetAngleLevelMiddle = 0;
     public static double kTargetAngleLevel4 = 0;
 
     // TODO: Change values of Calibration Maps.

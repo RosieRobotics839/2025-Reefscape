@@ -22,48 +22,35 @@ public class Elevator extends SubsystemBase {
         return instance;
     }
 
+    public Motor m_EleMotorLeft;
+    public Motor m_EleMotorRight;
+    boolean setupElevator = false;
     private double m_targetHeight = ElevatorConstants.kMinHeightInch;
     private double m_currentHeight = ElevatorConstants.kMinHeightInch;
     GameConstants.ScoreLevel m_scoreReefLevel;
-
-    public static enum Position {
-        LEVEL4(ElevatorConstants.kMaxHeightInch),
-        LEVEL3(ElevatorConstants.kHeight3Inch),
-        LEVEL2(ElevatorConstants.kHeight2Inch),
-        TROUGH(ElevatorConstants.kHeight1Inch),
-        MIN(ElevatorConstants.kMinHeightInch);
-
-        public final double height;
-        Position(double height) {
-            this.height = height;
-        }
-    }
 
     Command ElevatorCommand = Commands.sequence(
         Commands.waitUntil(() -> {
             switch(m_scoreReefLevel){
                 case TROUGH:
-
+                    return m_EleMotorLeft.setPosition(ElevatorConstants.kHeight1Inch);
                 case LEVEL2:
-
+                    return m_EleMotorLeft.setPosition(ElevatorConstants.kHeight2Inch);
                 case LEVEL3:
-
+                    return m_EleMotorLeft.setPosition(ElevatorConstants.kHeight3Inch);
                 case LEVEL4:
+                    return m_EleMotorLeft.setPosition(ElevatorConstants.kMaxHeightInch);
             }
             return false;
         }),
         Commands.waitUntil(() -> {return isAtPosition();})
     );
 
-    public Motor m_EleMotorLeft;
-    public Motor m_EleMotorRight;
-    boolean setupElevator = false;
-
     DigitalInput limitSwitch = new DigitalInput(ElevatorConstants.klimitSwitchChanel);
     Trigger limitTrigger = new Trigger(() -> limitSwitch.get());
 
-    public void setPosition(Position position) {
-        setElevatorHeight(position.height);
+    public void setPosition(Double position) {
+        setElevatorHeight(position);
     }
 
     public double getElevatorHeight() {

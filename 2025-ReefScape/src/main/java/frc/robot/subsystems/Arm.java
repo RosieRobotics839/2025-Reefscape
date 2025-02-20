@@ -27,7 +27,6 @@ public class Arm extends SubsystemBase{
     public double m_angleTarget;
     double m_armOffset = 0; //change later
     double m_newArmOffset = 0;
-    private boolean m_atScorePosition = false;
     boolean m_setupArmDone = false;
     boolean scoringTrough = false;
     boolean scoringLevels2or3 = false;
@@ -48,22 +47,20 @@ public class Arm extends SubsystemBase{
         m_angleTarget = target;
     }
 
+    // Checking to see if we are at the score position.
     public Boolean atScorePosition(){
-      return m_atScorePosition;
+        return Math.abs(m_currentAngle - m_angleTarget) < ArmConstants.kArmAngleTolerance; 
     }
 
     Command ArmPositionCommand = Commands.sequence(
         Commands.waitUntil(() -> {
             switch(m_scoreReefLevel){
                 case TROUGH:
-                    m_angleTarget = ArmConstants.kTargetAngleTrough;
                     return m_motorArm.setPosition(ArmConstants.kTargetAngleTrough);
                 case LEVEL2:
                 case LEVEL3:
-                    m_angleTarget = ArmConstants.kTargetAngleLevels2or3;
-                    return m_motorArm.setPosition(ArmConstants.kTargetAngleLevels2or3);
+                    return m_motorArm.setPosition(ArmConstants.kTargetAngleLevelMiddle);
                 case LEVEL4:
-                    m_angleTarget = ArmConstants.kTargetAngleLevel4;
                     return m_motorArm.setPosition(ArmConstants.kTargetAngleLevel4);
             }
             return false;
@@ -91,18 +88,14 @@ public class Arm extends SubsystemBase{
             .setCalibration(m_newArmOffset)
             .pidf(ArmConstants.kArmKp, ArmConstants.kArmKi, ArmConstants.kArmKd, ArmConstants.kArmKff);
 
-        } 
+    } 
 
-        @Override
-        public void periodic() {
+    @Override
+    public void periodic() {
         
+        // Update current Angle from encoder position
         if (m_motorArm.isSetupDone()){
             m_currentAngle = m_motorArm.getPosition();
         }
-
-          if ((Math.abs(m_angleTarget - m_currentAngle)) < ArmConstants.kArmAngleTolerance){
-            m_atScorePosition = true;
-          }  
-
-        }
+    }
 }
