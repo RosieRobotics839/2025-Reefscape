@@ -77,11 +77,11 @@ public final class Constants {
     public static double kTargetAngleLevel4 = 0;
 
     // TODO: Change values of Calibration Maps.
-    public static double [] kArmCalibrationX = new double[]{638, 1137,  1372, 1654,  1959, 2172, 2404, 2462, 2482}; //analog values (100% Wrong, need to be adjusted to fit arm constraints)
-    public static double [] kArmCalibrationY = new double[]{131, 105,   90,   70,    45,   25,    0, -6.0, -8.0}; // degrees (100% Wrong, need to be asjusted to fit arm constraints)
+    public static double [] kArmCalibrationX = new double[]{0, 0, 0, 0, 0, 0, 0, 0, 0}; //analog values
+    public static double [] kArmCalibrationY = new double[]{0, 0, 0, 0, 0, 0, 0, 0, 0}; // degrees
 
     public static double kArmMotorCurrentLimit = (NTDouble.create(5, "Arm/kCurrentLimit", (val) ->Arm.getInstance().m_motorArm.smartCurrentLimit(val)));
-    public static double kAngleTolerance = Units.degreesToRadians(NTDouble.create(5, "Arm/kAngleTolerance", val -> kAngleTolerance = Units.degreesToRadians(val)));
+    public static double kArmAngleTolerance = Units.degreesToRadians(NTDouble.create(5, "Arm/kArmAngleTolerance", val -> kArmAngleTolerance = Units.degreesToRadians(val)));
   }
 
   public static class EffectorConstants {

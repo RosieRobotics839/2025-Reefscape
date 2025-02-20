@@ -1,4 +1,7 @@
 package frc.robot.subsystems;
+import edu.wpi.first.networktables.DoublePublisher;
+import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.AnalogInput;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -15,6 +18,8 @@ public class Arm extends SubsystemBase{
     public static Arm getInstance(){
         return instance;
     }
+
+    static NetworkTable table = NetworkTableInstance.getDefault().getTable("roboRIO/Arm/table");
     
     public Motor m_motorArm;
     public AnalogInput m_armAnalogEncoder;
@@ -28,6 +33,9 @@ public class Arm extends SubsystemBase{
     boolean scoringLevels2or3 = false;
     boolean scoringLevel4 = false;
     GameConstants.ScoreLevel m_scoreReefLevel;
+
+    DoublePublisher
+    nt_armOffset;
 
     /**
      * This function sets the Arm Angle to be within the target bounds of the minimum and maximum values which are being defined in Constants.
@@ -65,10 +73,13 @@ public class Arm extends SubsystemBase{
 
     public Arm(int CANID, int analogID) {
 
+        nt_armOffset = table.getDoubleTopic("angle/armOffset").publish();
+
         CalibrationMap m_armCalibrationMap = new CalibrationMap(ArmConstants.kArmCalibrationX, ArmConstants.kArmCalibrationY);
         
         m_armAnalogEncoder = new AnalogInput(analogID);
         m_armOffset = m_armAnalogEncoder.getValue();
+        nt_armOffset.set(m_armOffset);
         if (m_armOffset > m_armCalibrationMap.xmin() && m_armOffset < m_armCalibrationMap.xmax()) {
             m_newArmOffset = m_armOffset;
             }
@@ -89,7 +100,7 @@ public class Arm extends SubsystemBase{
             m_currentAngle = m_motorArm.getPosition();
         }
 
-          if ((Math.abs(m_angleTarget - m_currentAngle)) < ArmConstants.kAngleTolerance){
+          if ((Math.abs(m_angleTarget - m_currentAngle)) < ArmConstants.kArmAngleTolerance){
             m_atScorePosition = true;
           }  
 
