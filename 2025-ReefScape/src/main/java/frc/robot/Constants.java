@@ -44,12 +44,23 @@ public final class Constants {
   }
 
   public static class MotorDefaults {
-    public static Motor.Gains kGainPosition = new Motor.Gains(1.2,0,0.25,0);
-    public static Motor.Gains kGainSpeed = new Motor.Gains(0.2,0.0,0.0,0.115);
-    public static Motor.Gains kGainAux1 = new Motor.Gains(0,0,0,0);
-    public static Motor.Gains kGainAux2 = new Motor.Gains(0,0,0,0);
+    public static class Kraken {
+      public static Motor.Gains kGainPosition = new Motor.Gains(1.2,2.0,0,0);
+      public static Motor.Gains kGainSpeed = new Motor.Gains(0.2,0.0,0.0,0.115);
+      public static Motor.Gains kGainAux1 = new Motor.Gains(0,0,0,0);
+      public static Motor.Gains kGainAux2 = new Motor.Gains(0,0,0,0);
+      public static double kPositionGainRatio = kGainPosition.Kp/kGainSpeed.Kp; // For SLOWSPEED control
+    }
+    public static class NEO {
+      public static Motor.Gains kGainPosition = new Motor.Gains(.05,0.00024,0,0);
+      public static Motor.Gains kGainSpeed = new Motor.Gains(0.015,0.0,0.0,0.01100);
+      public static Motor.Gains kGainAux1 = new Motor.Gains(0,0,0,0);
+      public static Motor.Gains kGainAux2 = new Motor.Gains(0,0,0,0);
+      public static double kPositionGainRatio = kGainPosition.Kp/kGainSpeed.Kp; // For SLOWSPEED control
+    }
 
-    public static double kOutputRange = 0.2;
+    public static double kOutputRange = 1;
+    public static double iZone = 0.2;
     public static double kCurrentLimit = 5;
     public static boolean kInverted = false;
     public static Boolean kIdleBrake = false;
@@ -59,7 +70,6 @@ public final class Constants {
     public static double kSlowHysteresis = NTDouble.create(.2, "MotorDefault/kSlowHysteresis", (val)->kSlowHysteresis = val);
     public static double kSlowTransitionExtraSpin = NTDouble.create(.7,"MotorDfault/kSlowTransExtraspin",(val)->kSlowTransitionExtraSpin=val);
 
-    public static double kPositionGainRatio = kGainPosition.Kp/kGainSpeed.Kp; // For SLOWSPEED control
   }
   
   public static class LEDConstants {

@@ -118,6 +118,10 @@ public class Motor extends SubsystemBase {
     nt_speed,
     nt_current,
     nt_curLimit,
+    nt_izone,
+    nt_speedLim,
+    nt_speedLimPos,
+    nt_speedLimNeg,
     nt_Kp,
     nt_Ki,
     nt_Kd,
@@ -127,8 +131,7 @@ public class Motor extends SubsystemBase {
     private double m_simPosition, m_simSpeed;
     
     public void scheduleSetup(){
-
-        if (!m_appliedVelocityGains && ! m_appliedVelocityGains){
+        if (!m_appliedVelocityGains && !m_appliedPositionGains){
             // Set default motor gains
             for (int i=3; i>=0; i--){
                 this.pidf(m_gains[i].scale(m_gearReduction), GainSlot.values()[i]);
@@ -136,7 +139,7 @@ public class Motor extends SubsystemBase {
         } else
         if (m_appliedVelocityGains && !m_appliedPositionGains){
             // If only velocity gains were applied
-            pidf(new Gains(m_gains[GainSlot.SPEED.ordinal()].Kp * MotorDefaults.kPositionGainRatio, 0, 0, 0), GainSlot.POSITION);
+            pidf(new Gains(m_gains[GainSlot.SPEED.ordinal()].Kp * MotorDefaults.NEO.kPositionGainRatio, 0, 0, 0), GainSlot.POSITION);
         }
 
         switch (motorType){
@@ -184,6 +187,10 @@ public class Motor extends SubsystemBase {
         nt_testPosition = new NTDouble(0.0,testtable,"motors/"+name+"/testpos",(val)->{if (m_testEnable) _setPosition(val, GainSlot.POSITION); else nt_testPosition.set(0);});
         nt_position     = new NTDouble(0.0,testtable,"motors/"+name+"/position",(val)->{var t = getPosition(); if (m_testEnable) setEncoderPosition(val); else nt_position.set(t);});
         nt_speed        = new NTDouble(0.0,testtable,"motors/"+name+"/speed",(val)->{});
+        nt_izone        = new NTDouble(1.0,testtable,"motors/"+name+"/izone",(val)->withIZone(val));
+        nt_speedLim     = new NTDouble(0.0,testtable,"motors/"+name+"/speedlim/maxboth",(val)->{if (val >= 0) withSpeedLimit(val,-val);});
+        nt_speedLimPos  = new NTDouble(0.0,testtable,"motors/"+name+"/speedlim/maxpos",(val)->{if (val >= 0) withSpeedLimit(val,m_maxNegativeSpeed); else nt_speedLimPos.set(m_maxPositiveSpeed);});
+        nt_speedLimNeg  = new NTDouble(0.0,testtable,"motors/"+name+"/speedlim/maxneg",(val)->{if (val <= 0) withSpeedLimit(m_maxPositiveSpeed,val); else nt_speedLimNeg.set(m_maxNegativeSpeed);});
         nt_inverted     = new NTBoolean(MotorDefaults.kInverted,testtable,"motors/"+name+"/inverted",(val)->inverted(val));
         nt_idleBrake    = new NTBoolean(MotorDefaults.kIdleBrake, testtable,"motors/"+name+"/idlebrake",(val)->idleBrake(val));
         nt_outputRange  = new NTDouble(MotorDefaults.kOutputRange, testtable,"motors/"+name+"/outrange",(val)->withOutputRange(-val,val));
@@ -200,22 +207,31 @@ public class Motor extends SubsystemBase {
             case KRAKEN:
                 motor_talon = new TalonFX(CANID);
                 config_talon = new TalonFXConfiguration();
+                m_gains[0] = new Gains(MotorDefaults.Kraken.kGainPosition);
+                m_gains[1] = new Gains(MotorDefaults.Kraken.kGainSpeed);
+                m_gains[2] = new Gains(MotorDefaults.Kraken.kGainAux1);
+                m_gains[3] = new Gains(MotorDefaults.Kraken.kGainAux2);
                 break;
             case NEO:
                 motor_neo = new MyCANSparkMax(CANID, MotorType.kBrushless);
                 controller_neo = motor_neo.getClosedLoopController();
                 encoder_neo = motor_neo.getEncoder();
-                config_neo = new SparkMaxConfig();             
+                config_neo = new SparkMaxConfig();
+                m_gains[0] = new Gains(MotorDefaults.NEO.kGainPosition);
+                m_gains[1] = new Gains(MotorDefaults.NEO.kGainSpeed);
+                m_gains[2] = new Gains(MotorDefaults.NEO.kGainAux1);
+                m_gains[3] = new Gains(MotorDefaults.NEO.kGainAux2);           
                 break;
             default:
+                m_gains[0] = new Gains(MotorDefaults.NEO.kGainPosition);
+                m_gains[1] = new Gains(MotorDefaults.NEO.kGainSpeed);
+                m_gains[2] = new Gains(MotorDefaults.NEO.kGainAux1);
+                m_gains[3] = new Gains(MotorDefaults.NEO.kGainAux2);   
         }
 
         withGearRatio(1.0);
-        
-        m_gains[0] = new Gains(MotorDefaults.kGainPosition);
-        m_gains[1] = new Gains(MotorDefaults.kGainSpeed);
-        m_gains[2] = new Gains(MotorDefaults.kGainAux1);
-        m_gains[3] = new Gains(MotorDefaults.kGainAux2);
+        withIZone(MotorDefaults.iZone);
+        withSpeedLimit(Double.POSITIVE_INFINITY, Double.NEGATIVE_INFINITY);
 
         m_inConstructor = false;
     }
@@ -409,21 +425,24 @@ public class Motor extends SubsystemBase {
      * @param speed "Mechanism rotations per second limit"
      * @return Motor instance for chaining methods
      */
-    public Motor withSpeedLimit(double speed){withSpeedLimit(speed, -speed); return this;}
+    public Motor withSpeedLimit(double speed){withSpeedLimit(speed, -speed); nt_speedLim.set(speed); return this;}
 
     public Motor withSpeedLimit(double positive, double negative){
         m_maxPositiveSpeed = positive;
         m_maxNegativeSpeed = negative;
+        nt_speedLimNeg.set(negative);
+        nt_speedLimPos.set(positive);
         
         // Create position limiter with the allowed travel distance at speed over 20 milliseconds.
-        m_positionlimiter = new SlewRateLimiter(positive*0.020, negative*0.020, getPosition());
+        m_positionlimiter = new SlewRateLimiter(positive, negative, getPosition());
         return this;
     }
 
     public Motor withOutputRange(double min, double max, GainSlot slot){ // cant find
+        nt_outputRange.set(max);
         switch (motorType) {
             case KRAKEN:
-
+                // TODO: Do we need something here?
                 break;
             case NEO:
                 config_neo.closedLoop.outputRange(min, max, ClosedLoopSlot.values()[slot.ordinal()]);     
@@ -434,12 +453,14 @@ public class Motor extends SubsystemBase {
         return this;
     } 
 
-    public Motor withIZone(double zone){ //
+    public Motor withIZone(double zone){
+        nt_izone.set(zone);
         switch (motorType) {
             case KRAKEN:
-                /*  Phoenix 6 automatically prevents integral windup in closed-loop controls. As a result, the
+                /*  Phoenix 6 "automatically" prevents integral windup in closed-loop controls. As a result, the
                     Integral Zone and Max Integral Accumulator configs are no longer necessary and have been
                     removed. (https://v6.docs.ctr-electronics.com/_/downloads/en/stable/pdf/ Section 5.6.8)
+                    It doesn't work very well though, an integrator max limit would be nice, but they removed it...
                 */
                 break;
             case NEO:
@@ -477,6 +498,20 @@ public class Motor extends SubsystemBase {
         return this;
     } 
 
+    public void stopMotor(){
+        m_speedTarget = 0;
+        switch (motorType) {
+            case KRAKEN:
+                motor_talon.stopMotor();
+                break;
+            case NEO:
+                motor_neo.stopMotor();
+                break;
+            default:
+                m_simSpeed = 0;
+        }
+    }
+    
     public boolean setSpeed(double speed){return setSpeed(speed, GainSlot.SPEED);} // Default GainSlot
     public boolean setSpeed(double speed, GainSlot slot){
         // If motor testing is active, ignore external request.
@@ -573,7 +608,6 @@ public class Motor extends SubsystemBase {
      */
     protected boolean _setTargetPosition(double position, GainSlot slot){
         boolean status;
-        m_positionTarget = position;
         switch (motorType) {
             case KRAKEN:
                 status = motor_talon.setControl(new PositionVoltage(position).withSlot(slot.ordinal())).isOK();
@@ -671,7 +705,7 @@ public class Motor extends SubsystemBase {
             m_speedTarget = 0;
             m_positionTarget = getPosition();
             m_positionlimiter.reset(getPosition());
-            setSpeed(0);
+            stopMotor();
         } else {
             // Are we in SLOWSPEED mode, where we use should use position control instead of velocity?
             if (m_controlType == ControlType.SLOWSPEED){
@@ -687,10 +721,10 @@ public class Motor extends SubsystemBase {
                     m_lowspeedreverse = false;
                     m_positionTarget += Math.signum(m_speedTarget)*MotorDefaults.kSlowHysteresis/m_gearReduction;
                 }
-                _setTargetPosition(m_positionTarget + m_speedTarget * 0.020, GainSlot.POSITION);
+                m_positionTarget += m_speedTarget * 0.020;
+                _setTargetPosition(m_positionTarget, GainSlot.POSITION);
             }
-
-            if (m_controlType == ControlType.POSITION){
+            else if (m_controlType == ControlType.POSITION){
                 double posRequest = m_positionlimiter.calculate(m_positionTarget);
                 _setTargetPosition(posRequest, m_gainslot);
             }
