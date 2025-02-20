@@ -4,6 +4,8 @@ import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.DigitalInput;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.ElevatorConstants;
@@ -24,10 +26,10 @@ public class Elevator extends SubsystemBase {
     private double m_currentHeight = ElevatorConstants.kMinHeightInch;
 
     public static enum Position {
-        MAX(ElevatorConstants.kMaxHeightInch),
-        HEIGHT3(ElevatorConstants.kHeight3Inch),
-        HEIGHT2(ElevatorConstants.kHeight2Inch),
-        HEIGHT1(ElevatorConstants.kHeight1Inch),
+        LEVEL4(ElevatorConstants.kMaxHeightInch),
+        LEVEL3(ElevatorConstants.kHeight3Inch),
+        LEVEL2(ElevatorConstants.kHeight2Inch),
+        TROUGH(ElevatorConstants.kHeight1Inch),
         MIN(ElevatorConstants.kMinHeightInch);
 
         public final double height;
@@ -36,9 +38,26 @@ public class Elevator extends SubsystemBase {
         }
     }
 
+    Command ElevatorCommand = Commands.sequence(
+        Commands.waitUntil(() -> {
+            switch(m_scoreReefLevel){
+                case TROUGH:
+
+                case LEVEL2:
+
+                case LEVEL3:
+
+                case LEVEL4:
+            }
+            return false;
+        }),
+        Commands.waitUntil(() -> {return isAtPosition();})
+    );
+
     public Motor m_EleMotorLeft;
     public Motor m_EleMotorRight;
     boolean setupElevator = false;
+    GameConstants.ScoreLevel m_scoreReefLevel;
 
     DigitalInput limitSwitch = new DigitalInput(ElevatorConstants.klimitSwitchChanel);
     Trigger limitTrigger = new Trigger(() -> limitSwitch.get());

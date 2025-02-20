@@ -61,7 +61,7 @@ public final class Constants {
 
     // Values in inches that the elevator should be raised from the bottom to score different heights of coral and algea
     // These need to be tested and adjusted
-    public static double kMaxHeightInch = (NTDouble.create(28, "Elevator/MaxHeightInch", (val)->kMaxHeightInch = (val)));; // 16.6 Rotations of the Axle
+    public static double kMaxHeightInch = (NTDouble.create(27.5, "Elevator/MaxHeightInch", (val)->kMaxHeightInch = (val)));; // 16.6 Rotations of the Axle
     public static double kHeight3Inch = (NTDouble.create(16, "Elevator/Height3Inch", (val)->kHeight3Inch = (val)));
     public static double kHeight2Inch = (NTDouble.create(8, "Elevator/Height2Inch", (val)->kHeight2Inch = (val)));
     public static double kHeight1Inch = (NTDouble.create(1, "Elevator/Height1Inch", (val)->kHeight1Inch = (val)));
