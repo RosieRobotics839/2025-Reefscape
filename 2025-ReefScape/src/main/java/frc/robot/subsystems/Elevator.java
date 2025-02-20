@@ -11,7 +11,6 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.ElevatorConstants;
 import frc.robot.Constants.GameConstants;
 import frc.utils.Motor;
-import frc.utils.Motor.MyMotorType;
 
 public class Elevator extends SubsystemBase {
 
@@ -25,6 +24,7 @@ public class Elevator extends SubsystemBase {
 
     private double m_targetHeight = ElevatorConstants.kMinHeightInch;
     private double m_currentHeight = ElevatorConstants.kMinHeightInch;
+    GameConstants.ScoreLevel m_scoreReefLevel;
 
     public static enum Position {
         LEVEL4(ElevatorConstants.kMaxHeightInch),
@@ -58,7 +58,6 @@ public class Elevator extends SubsystemBase {
     public Motor m_EleMotorLeft;
     public Motor m_EleMotorRight;
     boolean setupElevator = false;
-    GameConstants.ScoreLevel m_scoreReefLevel;
 
     DigitalInput limitSwitch = new DigitalInput(ElevatorConstants.klimitSwitchChanel);
     Trigger limitTrigger = new Trigger(() -> limitSwitch.get());

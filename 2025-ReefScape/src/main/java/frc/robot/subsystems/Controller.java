@@ -4,11 +4,9 @@
 
 package frc.robot.subsystems;
 
-import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
-import edu.wpi.first.wpilibj2.command.RepeatCommand;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.button.POVButton;
 import frc.utils.VectorUtils;
@@ -16,10 +14,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
-import frc.robot.Constants.ClimberConstants;
-//import frc.robot.Constants.ShooterConstants;
 import frc.robot.Constants.kDriveTrain.DriveConstants;
-import frc.robot.subsystems.Controller.AccessoryButtons;
 public class Controller extends XboxController {
 
   public static double forward;
@@ -182,10 +177,14 @@ public class Controller extends XboxController {
       /* Algae/Coral Selector */
 
       GMPCS.onTrue(
+        Commands.sequence(
         // TODO: Add code to select Algae
+        )
       );
       GMPCS.onFalse(
+        Commands.sequence(
         // TODO: Add code to select Coral
+        )
       );
     } 
   }
@@ -194,7 +193,7 @@ public class Controller extends XboxController {
     super(port);
   }
 
-  /* public void Translate() {
+  public void Translate() {
     Translation2d Lstick = new Translation2d(this.getLeftX(),-this.getLeftY());
     Lstick = VectorUtils.deadband(Lstick,0.1,1);
     forward = Lstick.getY(); // Forward is Positive consistent the FRC field coordinate system
@@ -203,9 +202,9 @@ public class Controller extends XboxController {
     Translation2d Rstick = new Translation2d(this.getRightX(),this.getRightY());
     Rstick = VectorUtils.deadband(Rstick,0.1,1);
     rotate = -Rstick.getX(); // Counter Clockwise is Positive consistent the FRC field coordinate system
-    
+  }
 
-  if (DriverStation.isTeleopEnabled()){
+  /* if (DriverStation.isTeleopEnabled()){
       IntakeShooter.getInstance().setShooterAngle(IntakeShooter.getInstance().getAngleTarget() + ShooterConstants.kManualAngleSpeed * 0.02 * forward);
     }
     // getLeftX()
