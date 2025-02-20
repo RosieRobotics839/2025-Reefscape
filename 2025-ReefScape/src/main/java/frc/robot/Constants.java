@@ -17,6 +17,7 @@ import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Filesystem;
+import frc.robot.Constants.CANID_t;
 import frc.robot.subsystems.Climber;
 //import frc.robot.subsystems.Climber;
 import frc.robot.subsystems.DriveTrain;
@@ -205,17 +206,17 @@ public final class Constants {
    
     //public static int kCurrentInit = (int)NTDouble.create(3,"Climber/kCurrentInit",val->kCurrentInit=(int)val);
     public static int kClimberMotorCurrentLimit = (int)NTDouble.create(50,"Climber/kCurrentLimit",(val) ->Climber.getInstance().m_motorClimber.smartCurrentLimit(val));
-    public static double kClimberSpeed = 0; // Change once we can test
+    public static double kClimberAngleTolerance = Units.degreesToRadians(NTDouble.create(3, "Climber/kClimberAngleTolerance", val -> kClimberAngleTolerance = Units.degreesToRadians(val)));
+
+    public static double kClimberAngleIn = 0; // Change once we can test
+    public static double kClimberAngleOut = 0; // Change once we can test
+
+    // TODO: Change values of Calibration Maps.
+    public static double [] kClimberCalibrationX = new double[]{0, 0, 0, 0, 0, 0, 0, 0, 0}; //analog values 
+    public static double [] kClimberCalibrationY = new double[]{0, 0, 0, 0, 0, 0, 0, 0, 0}; // degrees 
     
     public static double kSpoolDiameter = Units.inchesToMeters(1);
-    //public static double kGearRatio = 120;
-    public static double kGearRatio = 60;
-    public static double kClimberEncoderVelocityFactor = Math.PI*kSpoolDiameter/kGearRatio;
-    public static double kClimberEncoderPositionFactor = Math.PI*kSpoolDiameter/kGearRatio;
-    public static double kInitRetractMargin = Units.inchesToMeters(1);
-    public static double kInitTime = NTDouble.create(0.25,"Climber/kInitTime",val->kInitTime=val);
-    public static double kInitMaxEffort = NTDouble.create(.1,"Climber/kInitMaxEffort",val->kInitMaxEffort=val);
-    public static double kInitCurrentLimit = NTDouble.create(3,"Climber/kInitCurrentLimit",val->kInitCurrentLimit=val);
+    public static double kGearRatio = 125;
 
     public static double kMaxSpeed = Units.inchesToMeters(NTDouble.create(6, "Climber/kMaxSpeed", val -> kMaxSpeed = Units.inchesToMeters(val)));
   }
