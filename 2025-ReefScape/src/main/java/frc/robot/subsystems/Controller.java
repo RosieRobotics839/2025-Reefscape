@@ -4,8 +4,11 @@
 
 package frc.robot.subsystems;
 
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.RepeatCommand;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.button.POVButton;
 import frc.utils.VectorUtils;
@@ -13,9 +16,10 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
-//import frc.robot.Constants.ClimberConstants;
+import frc.robot.Constants.ClimberConstants;
 //import frc.robot.Constants.ShooterConstants;
 import frc.robot.Constants.kDriveTrain.DriveConstants;
+import frc.robot.subsystems.Controller.AccessoryButtons;
 public class Controller extends XboxController {
 
   public static double forward;
@@ -88,107 +92,101 @@ public class Controller extends XboxController {
   }
 
   public static class AccessoryButtons {
-    public JoystickButton Orange, Blue, Red, Green, LB, RB, LT, RT, Select, Start, LS, RS, Home;
+    public JoystickButton Intake, Outtake, ClimberIn, ClimberOut, GMPCS, StageDial1, StageDial2, StageDial3, StageDial4, LeftScore, RightScore, RS, Home;
     public POVButton DPadUp, DPadRight, DPadDown, DPadLeft;
     AccessoryButtons(Controller controller){
-      Orange = new JoystickButton(controller, 1);  // Orange Square
-      Blue   = new JoystickButton(controller, 2);  // Blue X
-      Red    = new JoystickButton(controller, 3);  // Red Circle
-      Green  = new JoystickButton(controller, 4);  // Green Triangle
-      LB     = new JoystickButton(controller, 5);  // Left Shoulder Button
-      RB     = new JoystickButton(controller, 6);  // Right Shoulder Button
-      LT     = new JoystickButton(controller, 7);  // Left Trigger
-      RT     = new JoystickButton(controller, 8);  // Right Trigger
-      Select = new JoystickButton(controller, 9);  // Select
-      Start  = new JoystickButton(controller, 10); // Start
-      LS     = new JoystickButton(controller, 11); // Left Stick Click
-      RS     = new JoystickButton(controller, 12); // Right Stick Click
-      Home   = new JoystickButton(controller, 13); // Home Button
-      DPadUp    = new POVButton(controller, 0);
-      DPadRight    = new POVButton(controller, 90);
-      DPadDown    = new POVButton(controller, 180);
-      DPadLeft    = new POVButton(controller, 270);
+      Intake     = new JoystickButton(controller, 1);  // Intake Button
+      Outtake    = new JoystickButton(controller, 2);  // Expel Button (Outtake for those who don't know)
+      ClimberIn  = new JoystickButton(controller, 3);  // Brings Climber In & Funnel Up
+      ClimberOut = new JoystickButton(controller, 4);  // Brings Climber Out & Funnel Down
+      GMPCS      = new JoystickButton(controller, 5);  // Game Piece Selector Button (Algae or Coral)
+      StageDial1 = new JoystickButton(controller, 6);  // Stage Dial Scoring Level 1 (Trough)
+      StageDial2 = new JoystickButton(controller, 7);  // Stage Dial Scoring Level 2
+      StageDial3 = new JoystickButton(controller, 8);  // Stage Dial Scoring Level 3
+      StageDial4 = new JoystickButton(controller, 9);  // Stage Dial Scoring Level 4
+      LeftScore  = new JoystickButton(controller, 10); // Scoring Left of Reef Face (Switch)
+      RightScore = new JoystickButton(controller, 11); // Scoring Right of Reef Face (Switch)
+      //RS       = new JoystickButton(controller, 12); // Right Stick Click
+      //Home     = new JoystickButton(controller, 13); // Home Button
+      //DPadUp    = new POVButton(controller, 0);
+      //DPadRight    = new POVButton(controller, 90);
+      //DPadDown    = new POVButton(controller, 180);
+      //DPadLeft    = new POVButton(controller, 270);
 
-    // DriveTrain driveTrain = DriveTrain.getInstance(); 
-    // Autonomous m_autonomous = Autonomous.getInstance();
-    // IntakeShooter intakeShooter = IntakeShooter.getInstance();
-    // Climber climberL = Climber.right();
-    // Climber climberR = Climber.left();
-    // static AccessoryButtons buttons; 
-    // AccessoryButton(Controller controller) {
+      /* Run Climber Command Sequences */
 
-      /* Set climber values(?) */
+      ClimberIn.onTrue(
+        Commands.sequence(
+          Funnel.getInstance().FunnelUpCommand,
+          Climber.getInstance().ClimberInCommand
+        )
+      );
 
-      /* LB.whileTrue(new RepeatCommand(new InstantCommand(() -> {
-        Climber.setAverageHeight(Climber.getAverageTargetHeight() - ClimberConstants.kMaxSpeed * 0.02);
-      })));
-      RB.whileTrue(new RepeatCommand(new InstantCommand(() -> {
-        Climber.setAverageHeight(Climber.getAverageTargetHeight() + ClimberConstants.kMaxSpeed * 0.02);
-      })));
-      LT.whileTrue(new RepeatCommand(new InstantCommand(() -> {
-        Climber.setOffset(Climber.getTargetOffset() - ClimberConstants.kMaxSpeed * 0.02);
-      })));
-      RT.whileTrue(new RepeatCommand(new InstantCommand(() -> {
-        Climber.setOffset(Climber.getTargetOffset() + ClimberConstants.kMaxSpeed * 0.02);
-      })));
+      ClimberOut.onTrue(
+        Commands.sequence(
+          Funnel.getInstance().FunnelDownCommand,
+          Climber.getInstance().ClimberOutCommand
+        )
+      );
 
-      LS.and(RS).onTrue(new InstantCommand(() -> IntakeShooter.getInstance().setAngleInverted())); 
-      /* Set shooter amp / speaker */
+      /* Intake and Outtake Command Sequences */
 
-      /* Blue.onTrue(new InstantCommand(() -> { 
-        IntakeShooter.getInstance().setShooterSpeedRatio(1);
-      }));
-      Blue.onFalse(new InstantCommand(() -> {
-        IntakeShooter.getInstance().setShooterSpeedRatio(0);
-      }));
-      Green.onTrue(new InstantCommand(() -> {
-        IntakeShooter.getInstance().setShooterSpeedRatio(1);
-      }));
-      Green.onFalse(new InstantCommand(() -> {
-        IntakeShooter.getInstance().setShooterSpeedRatio(0);
-      })); */
+      Intake.onTrue(
+        Commands.sequence(
+          // TODO: Sequence Commands once branches tested and merged
+        )
+      );
+      Outtake.onTrue(
+        Commands.sequence(
+          // TODO: Sequence Commands once branches tested and merged
+        )
+      );
       
+      /* Stage Dial Command Sequences */
       
-      /* Set intake in / out */
-      
-      /* Orange.onTrue(new InstantCommand(() -> {
-        IntakeShooter.getInstance().intakeSequence = false;
-        IntakeShooter.getInstance().intakeNote.cancel();
-        IntakeShooter.getInstance().setIntakeSpeedRatio(0.75);
-      }));
-      Orange.onFalse(new InstantCommand(() -> {
-        IntakeShooter.getInstance().setIntakeSpeedRatio(0);
-      }));
-      Red.onTrue(new InstantCommand(() -> {
-        IntakeShooter.getInstance().intakeSequence = false;
-        IntakeShooter.getInstance().intakeNote.cancel();
-        IntakeShooter.getInstance().setIntakeSpeedRatio(-1);
-      }));
-      Red.onFalse(new InstantCommand(() -> {
-        IntakeShooter.getInstance().setIntakeSpeedRatio(0);
-      })); */
+      StageDial1.onTrue(
+        Commands.sequence(
+          // TODO: Sequence Commands once branches tested and merged
+        )
+      );
+      StageDial2.onTrue(
+        Commands.sequence(
+          // TODO: Sequence Commands once branches tested and merged
+        )
+      );
+      StageDial3.onTrue(
+        Commands.sequence(
+          // TODO: Sequence Commands once branches tested and merged
+        )
+      );
+      StageDial4.onTrue(
+        Commands.sequence(
+          // TODO: Sequence Commands once branches tested and merged
+        )
+      );
 
 
-      /* Set arm positions. */
+      /* Side Positioning for Scoring */
 
-      /* DPadDown.onTrue(new InstantCommand(() -> {
-        IntakeShooter.getInstance().setShooterAngle(ShooterConstants.kAnglePreset.Ground);
-      }));
-      DPadLeft.onTrue(new InstantCommand(() -> {
-        IntakeShooter.getInstance().setShooterAngle(ShooterConstants.kAnglePreset.Amp);
-      }));
-      DPadUp.onTrue(new InstantCommand(() -> {
-        IntakeShooter.getInstance().setShooterAngle(ShooterConstants.kAnglePreset.Up);
-      }));
-      DPadRight.onTrue(new InstantCommand(() -> {
-        IntakeShooter.getInstance().setShooterAngle(ShooterConstants.kAnglePreset.Speaker);
-      }));
-      DPadRight.whileTrue(new InstantCommand(() -> {
-        IntakeShooter.getInstance().setShooterAngle(IntakeShooter.getInstance().m_speakerAngle);
-      }));
-      DPadRight.onFalse(new InstantCommand(() -> {
-        IntakeShooter.getInstance().setShooterAngle(ShooterConstants.kAnglePreset.Speaker);
-      })); */
+      LeftScore.onTrue(
+        Commands.sequence(
+          // TODO: Sequence Commands once branches tested and merged
+        )
+      );
+      RightScore.onTrue(
+        Commands.sequence(
+          // TODO: Sequence Commands once branches tested and merged
+        )
+      );
+
+      /* Algae/Coral Selector */
+
+      GMPCS.onTrue(
+        // TODO: Add code to select Algae
+      );
+      GMPCS.onFalse(
+        // TODO: Add code to select Coral
+      );
     } 
   }
 
@@ -196,7 +194,7 @@ public class Controller extends XboxController {
     super(port);
   }
 
-  public void Translate() {
+  /* public void Translate() {
     Translation2d Lstick = new Translation2d(this.getLeftX(),-this.getLeftY());
     Lstick = VectorUtils.deadband(Lstick,0.1,1);
     forward = Lstick.getY(); // Forward is Positive consistent the FRC field coordinate system
@@ -207,14 +205,14 @@ public class Controller extends XboxController {
     rotate = -Rstick.getX(); // Counter Clockwise is Positive consistent the FRC field coordinate system
     
 
-    /* if (DriverStation.isTeleopEnabled()){
+  if (DriverStation.isTeleopEnabled()){
       IntakeShooter.getInstance().setShooterAngle(IntakeShooter.getInstance().getAngleTarget() + ShooterConstants.kManualAngleSpeed * 0.02 * forward);
-    } */
+    }
     // getLeftX()
     // getLeftY()
     // getRightX()
     // getRightY()
-  } 
+  } */
 
   public void armThing() {
     if (this.getLeftY() < 0.01 && this.getLeftY() > -0.01) {
