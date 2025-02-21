@@ -112,14 +112,14 @@ public class Controller extends XboxController {
 
       ClimberIn.onTrue(
         Commands.sequence(
-          Funnel.getInstance().FunnelUpCommand,
+          Funnel.getInstance().FunnelUpCommand(),
           Climber.getInstance().ClimberInCommand
         )
       );
 
       ClimberOut.onTrue(
         Commands.sequence(
-          Funnel.getInstance().FunnelDownCommand,
+          Funnel.getInstance().FunnelDownCommand(),
           Climber.getInstance().ClimberOutCommand
         )
       );

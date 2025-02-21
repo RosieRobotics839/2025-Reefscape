@@ -2,7 +2,7 @@ package frc.robot.subsystems;
 import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
-import edu.wpi.first.wpilibj.AnalogInput;
+import edu.wpi.first.wpilibj.DutyCycleEncoder;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -14,18 +14,18 @@ import frc.robot.Constants.GameConstants;
 
 public class Arm extends SubsystemBase{
 
+    static NetworkTable table = NetworkTableInstance.getDefault().getTable("roboRIO/Arm/table");
+    
     DoublePublisher nt_currentAngle, nt_targetAngle;
 
-    private static Arm instance = new Arm(ArmConstants.kArmCANID, ArmConstants.kAnalogInputID);
+    private static Arm instance = new Arm(ArmConstants.kArmCANID, ArmConstants.kDigitalInputID);
 
     public static Arm getInstance(){
         return instance;
     }
 
-    static NetworkTable table = NetworkTableInstance.getDefault().getTable("roboRIO/Arm/table");
-    
     public Motor m_motorArm;
-    public AnalogInput m_armAnalogEncoder;
+    public DutyCycleEncoder m_armAnalogEncoder;
     public double m_currentAngle;
     public double m_angleTarget = NTDouble.create(0, table, "targetAngle",(val)->setArmAngle(val));
     public double targetAngle = 0;
@@ -68,26 +68,34 @@ public class Arm extends SubsystemBase{
     public void setArmAngle(double target) {
         setArmAngleSafely(target);
     }
+    CalibrationMap m_armCalibrationMap = new CalibrationMap(ArmConstants.kArmCalibrationX, ArmConstants.kArmCalibrationY);
+        
+    public boolean calibrationValid(){
+        return m_armAnalogEncoder.get() > m_armCalibrationMap.xmin() && m_armAnalogEncoder.get() < m_armCalibrationMap.xmax();
+    }
+
+    public Command Calibrate = Commands.sequence(
+        Commands.waitUntil(this::calibrationValid),
+        Commands.waitUntil(()->m_motorArm.isSetupDone()),
+        Commands.waitUntil(()->m_motorArm.setEncoderPosition(m_armCalibrationMap.get(m_armAnalogEncoder.get())))
+    );
 
     public Arm(int CANID, int analogID) {
 
         nt_armOffset = table.getDoubleTopic("angle/armOffset").publish();
+        nt_currentAngle = table.getDoubleTopic("angle/currentAngle").publish();
+        nt_targetAngle = table.getDoubleTopic("angle/currentAngle").publish();
 
-        CalibrationMap m_armCalibrationMap = new CalibrationMap(ArmConstants.kArmCalibrationX, ArmConstants.kArmCalibrationY);
-        
-        m_armAnalogEncoder = new AnalogInput(analogID);
-        m_armOffset = m_armAnalogEncoder.getValue();
-        nt_armOffset.set(m_armOffset);
-        if (m_armOffset > m_armCalibrationMap.xmin() && m_armOffset < m_armCalibrationMap.xmax()) {
-            m_newArmOffset = m_armOffset;
-            }
+        m_armAnalogEncoder = new DutyCycleEncoder(analogID);
 
         m_motorArm = new Motor(ArmConstants.kArmCANID, ArmConstants.kMotorType, "arm")
             .withStatorLimit((int)ArmConstants.kArmMotorCurrentLimit)
             .inverted(true)
             .withGearRatio(ArmConstants.kArmGearRatio)
             .withSpeedLimit(ArmConstants.kMaxSpeed)
-            .setCalibration(m_newArmOffset);
+            .setCalibration(m_newArmOffset*4096.0);
+
+        Calibrate.schedule();
     } 
 
     public Command createMoveToAngleCommand(double target) {
@@ -132,6 +140,7 @@ public class Arm extends SubsystemBase{
         }
 
         setArmAngle(m_angleTarget);
+        nt_armOffset.set(m_armAnalogEncoder.get());
         nt_currentAngle.set(m_currentAngle);
         nt_targetAngle.set(m_angleTarget);
 

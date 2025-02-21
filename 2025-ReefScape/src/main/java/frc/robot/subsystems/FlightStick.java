@@ -61,6 +61,9 @@ public class FlightStick extends Joystick {
   
       /* Change speed modes */
 
+      Btm11Btn.onTrue(Funnel.getInstance().FunnelDownCommand());
+      Btm12Btn.onTrue(Funnel.getInstance().FunnelUpCommand());
+
       Trigger.onTrue(new InstantCommand(() -> {
         m_speedSelector = rangeLimit(++m_speedSelector, 0, DriveConstants.kMaxSpeedMetersPerSecond.length-1);
         DriveTrain.getInstance().setMaxSpeed(DriveConstants.kMaxSpeedMetersPerSecond[m_speedSelector]);

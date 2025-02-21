@@ -11,13 +11,13 @@ import frc.utils.Motor;
 
 public class Funnel extends SubsystemBase{
 
+    static NetworkTable table = NetworkTableInstance.getDefault().getTable("roboRIO/Funnel/table");
+
     private static Funnel instance = new Funnel(FunnelConstants.kFunnelCANID);
 
     public static Funnel getInstance(){
         return instance;
     }
-
-    static NetworkTable table = NetworkTableInstance.getDefault().getTable("roboRIO/Funnel/table");
 
     public Motor m_motorFunnel;
     private double m_targetPosition;
@@ -35,15 +35,19 @@ public class Funnel extends SubsystemBase{
         m_motorFunnel.setPosition(position);
     }
 
-    public Command FunnelUpCommand = Commands.sequence(
-        Commands.runOnce(() -> setTargetPosition(FunnelConstants.kFunnelUp)),
-        Commands.waitUntil(this::atTargetPosition)
-    );
+    public Command FunnelUpCommand(){
+        return Commands.sequence(
+            Commands.runOnce(() -> setTargetPosition(FunnelConstants.kFunnelUp)),
+            Commands.waitUntil(this::atTargetPosition)
+        );
+    }
         
-    public Command FunnelDownCommand = Commands.sequence(
+    public Command FunnelDownCommand(){
+        return Commands.sequence(
         Commands.runOnce(() -> setTargetPosition(FunnelConstants.kFunnelDown)),
         Commands.waitUntil(this::atTargetPosition)
-    );
+        );
+    }
 
     DoublePublisher
     nt_;

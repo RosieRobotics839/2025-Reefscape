@@ -63,7 +63,7 @@ public final class Constants {
 
     public static MyMotorType kMotorType = MyMotorType.KRAKEN;
     public static int kArmCANID = 4;
-    public static int kAnalogInputID = 4;
+    public static int kDigitalInputID = 1;
     public static double kArmStage1Ratio = 5.0 / 1.0;
     public static double kArmMotorGearReduction = (2 * kArmStage1Ratio); // Multiplying by 2 in account of the sprocket gear
     public static double kArmEncoderPositionFactor = (2.0 * Math.PI) / kArmMotorGearReduction;
@@ -84,8 +84,8 @@ public final class Constants {
     public static double kTargetAngleLevel4 = 0;
 
     // TODO: Change values of Calibration Maps.
-    public static double [] kArmCalibrationX = new double[]{0, 0, 0, 0, 0, 0, 0, 0, 0}; //analog values
-    public static double [] kArmCalibrationY = new double[]{0, 0, 0, 0, 0, 0, 0, 0, 0}; // degrees
+    public static double [] kArmCalibrationX = new double[]{-2, 90}; //analog values
+    public static double [] kArmCalibrationY = new double[]{ 0.511770, 0.773146}; // degrees
 
     public static double kArmMotorCurrentLimit = (NTDouble.create(5, "Arm/kCurrentLimit", (val) ->Arm.getInstance().m_motorArm.withStatorLimit(val)));
     public static double kArmAngleTolerance = Units.degreesToRadians(NTDouble.create(5, "Arm/kArmAngleTolerance", val -> kArmAngleTolerance = Units.degreesToRadians(val)));
@@ -236,7 +236,7 @@ public final class Constants {
   public static class FunnelConstants {
 
     public static MyMotorType kMotorType = MyMotorType.NEO;
-    public static int kFunnelCANID = 5; // TODO: change
+    public static int kFunnelCANID = 8;
 
     // Position control gains
     public static double kFunnelPosKp = (NTDouble.create(0.3, "Funnel/Position/kP",(val)->Funnel.getInstance().m_motorFunnel.withKP(val, Motor.GainSlot.POSITION)));
@@ -244,15 +244,14 @@ public final class Constants {
     public static double kFunnelPosKd = (NTDouble.create(0, "Funnel/Position/kD",(val)->Funnel.getInstance().m_motorFunnel.withKD(val, Motor.GainSlot.POSITION)));
     public static double kFunnelPosKff = (NTDouble.create(0, "Funnel/Position/kFF",(val)->Funnel.getInstance().m_motorFunnel.withKFF(val, Motor.GainSlot.POSITION)));
 
-    public static double kFunnelUp = 0; // Change once we can test
+    public static double kFunnelUp = 3.7; // Change once we can test
     public static double kFunnelDown = 0; // Change once we can test
 
-    public static int kFunnelMotorCurrentLimit = (int)NTDouble.create(50,"Funnel/kCurrentLimit",(val) ->Funnel.getInstance().m_motorFunnel.withStatorLimit(val));
-    public static double kFunnelAngleTolerance = Units.degreesToRadians(NTDouble.create(3, "Funnel/kFunnelAngleTolerance", val -> kFunnelAngleTolerance = Units.degreesToRadians(val)));
+    public static int kFunnelMotorCurrentLimit = (int)NTDouble.create(5,"Funnel/kCurrentLimit",(val) ->Funnel.getInstance().m_motorFunnel.withStatorLimit(val));
+    public static double kFunnelAngleTolerance = Units.degreesToRadians(NTDouble.create(0.3, "Funnel/kFunnelAngleTolerance", val -> kFunnelAngleTolerance = Units.degreesToRadians(val)));
 
-    public static double kFunnelGearRatio = 4;
-    public static double kMaxSpeed = 8;
-
+    public static double kFunnelGearRatio = 1;
+    public static double kMaxSpeed = 3;
   }
 
   public static class OperatorConstants {
@@ -358,7 +357,7 @@ public final class Constants {
   public static class ClimberConstants {
     public static MyMotorType kMotorType = MyMotorType.NEO;
     // TODO: Change later
-    public static int kAnalogInputID = 3; 
+    public static int kDigitalInputID = 2;
     public static int kClimberCANID = 3;
 
     public static double kClimberKp = (NTDouble.create(0, "Climber/kClimberKp", (val)->kClimberKp = (val)));
@@ -374,8 +373,8 @@ public final class Constants {
     public static double kClimberAngleOut = 0; // Change once we can test
 
     // TODO: Change values of Calibration Maps.
-    public static double [] kClimberCalibrationX = new double[]{0, 0, 0, 0, 0, 0, 0, 0, 0}; //analog values 
-    public static double [] kClimberCalibrationY = new double[]{0, 0, 0, 0, 0, 0, 0, 0, 0}; // degrees 
+    public static double [] kClimberCalibrationX = new double[]{0.507191, 0.581880, 0.829728, 0.989784}; //analog values 
+    public static double [] kClimberCalibrationY = new double[]{25, 0, -90, -148}; // degrees 
     
     public static double kClimberGearRatio = 125;
 

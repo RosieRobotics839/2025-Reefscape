@@ -15,6 +15,8 @@ import frc.utils.NTValues.NTBoolean;
 
 public class EndEffector extends SubsystemBase {
 
+    NetworkTable table = NetworkTableInstance.getDefault().getTable("roboRIO/EndEffector");
+
     private static EndEffector instance = new EndEffector(EffectorConstants.kEffectorCANID);
 
     public static EndEffector getInstance(){
@@ -29,8 +31,6 @@ public class EndEffector extends SubsystemBase {
     private double m_algaeRelativePosition;
 
     public Debouncer m_beamDebouncer = new Debouncer(EffectorConstants.kBeamBreakDebounceSec, Debouncer.DebounceType.kBoth);
-
-    NetworkTable testtable = NetworkTableInstance.getDefault().getTable("roboRIO/CAUTION/TestInput");
 
     public boolean hasGamePiece(){
       return m_hasGamePiece;
@@ -60,7 +60,7 @@ public class EndEffector extends SubsystemBase {
     }
 
     public DigitalInput m_beamBreak = new DigitalInput(EffectorConstants.kBeamBreakPin);
-    public NTBoolean m_beamBreakTestSensor = (Robot.isReal() ? null : new NTBoolean(true, testtable, "Effector/BeamBreakTestInput", (val)->{}));
+    public NTBoolean m_beamBreakTestSensor = (Robot.isReal() ? null : new NTBoolean(true, table, "Effector/BeamBreakTestInput", (val)->{}));
 
     @Override
     public void periodic() {
