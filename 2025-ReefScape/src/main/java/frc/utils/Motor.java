@@ -4,6 +4,7 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.controls.VelocityVoltage;
+import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.revrobotics.REVLibError;
@@ -70,7 +71,7 @@ public class Motor extends SubsystemBase {
     double m_maxPositiveSpeed = Double.POSITIVE_INFINITY;
     double m_maxNegativeSpeed = Double.NEGATIVE_INFINITY;
     SlewRateLimiter m_positionlimiter = new SlewRateLimiter(m_maxPositiveSpeed, m_maxNegativeSpeed, 0);
-    
+
     double m_gearReduction;
     double m_speedTarget;
     double m_positionTarget;
@@ -97,7 +98,7 @@ public class Motor extends SubsystemBase {
 
     Gains [] m_gains = new Gains[4];
 
-    DoublePublisher 
+    DoublePublisher
     nt_angleinit,
     nt_speedcmd;
 
@@ -129,7 +130,7 @@ public class Motor extends SubsystemBase {
     nt_outputRange;
 
     private double m_simPosition, m_simSpeed;
-    
+
     public void scheduleSetup(){
         if (!m_appliedVelocityGains && !m_appliedPositionGains){
             // Set default motor gains
@@ -144,7 +145,7 @@ public class Motor extends SubsystemBase {
 
         switch (motorType){
             case KRAKEN:
-                m_setupMotor = Commands.sequence( 
+                m_setupMotor = Commands.sequence(
                             Commands.waitUntil(() -> motor_talon.getConfigurator().apply(config_talon).isOK()),
                             new InstantCommand(()-> m_setupMotorDone = true)
                             );
@@ -181,7 +182,7 @@ public class Motor extends SubsystemBase {
 
         nt_enabslowspeed = new NTBoolean(m_enabSlowSpeed,testtable,"motors/"+name+"/enabslowspeed",(val)->m_enabSlowSpeed=val);
         nt_testEnabled  = new NTBoolean(false,testtable,"motors/"+name+"/testenable",(val)->m_testEnable = val);
-        nt_testSpeed    = new NTDouble(0.0,testtable,"motors/"+name+"/testspeed",(val)->{if (m_testEnable) 
+        nt_testSpeed    = new NTDouble(0.0,testtable,"motors/"+name+"/testspeed",(val)->{if (m_testEnable)
             _setSpeed(val, GainSlot.SPEED);
              else nt_testSpeed.set(0);});
         nt_testPosition = new NTDouble(0.0,testtable,"motors/"+name+"/testpos",(val)->{if (m_testEnable) _setPosition(val, GainSlot.POSITION); else nt_testPosition.set(0);});
@@ -203,7 +204,7 @@ public class Motor extends SubsystemBase {
         nt_Kd           = new NTDouble(0.0,testtable,"motors/"+name+"/gains/KD",(val)->withKD(val,GainSlot.values()[nt_slot.get()]));
         nt_Kff          = new NTDouble(0.0,testtable, "motors/"+name+"/gains/KFF", (val)->withKFF(val,GainSlot.values()[nt_slot.get()]));
 
-        switch (motorType){   
+        switch (motorType){
             case KRAKEN:
                 motor_talon = new TalonFX(CANID);
                 config_talon = new TalonFXConfiguration();
@@ -220,13 +221,13 @@ public class Motor extends SubsystemBase {
                 m_gains[0] = new Gains(MotorDefaults.NEO.kGainPosition);
                 m_gains[1] = new Gains(MotorDefaults.NEO.kGainSpeed);
                 m_gains[2] = new Gains(MotorDefaults.NEO.kGainAux1);
-                m_gains[3] = new Gains(MotorDefaults.NEO.kGainAux2);           
+                m_gains[3] = new Gains(MotorDefaults.NEO.kGainAux2);
                 break;
             default:
                 m_gains[0] = new Gains(MotorDefaults.NEO.kGainPosition);
                 m_gains[1] = new Gains(MotorDefaults.NEO.kGainSpeed);
                 m_gains[2] = new Gains(MotorDefaults.NEO.kGainAux1);
-                m_gains[3] = new Gains(MotorDefaults.NEO.kGainAux2);   
+                m_gains[3] = new Gains(MotorDefaults.NEO.kGainAux2);
         }
 
         withGearRatio(1.0);
@@ -257,7 +258,7 @@ public class Motor extends SubsystemBase {
                 config_talon.withMotorOutput(config_talon.MotorOutput.withInverted(value));
                 break;
             case NEO:
-                config_neo.inverted(invert);       
+                config_neo.inverted(invert);
                 break;
             default:
         }
@@ -267,31 +268,31 @@ public class Motor extends SubsystemBase {
     }
 
     /**
-     * Sets the motor idle behavior for robot disabled (Brake or Free Spin) 
+     * Sets the motor idle behavior for robot disabled (Brake or Free Spin)
      * @param brake True to set idle mode to brake
      * @return Motor instance for chaining methods
      */
-    public Motor idleBrake(boolean brake){ 
+    public Motor idleBrake(boolean brake){
         switch (motorType) {
             case KRAKEN:
                 motor_talon.setNeutralMode(( brake ? NeutralModeValue.Brake : NeutralModeValue.Coast ));
                 break;
             case NEO:
-                config_neo.idleMode(( brake ? SparkBaseConfig.IdleMode.kBrake : SparkBaseConfig.IdleMode.kCoast));     
+                config_neo.idleMode(( brake ? SparkBaseConfig.IdleMode.kBrake : SparkBaseConfig.IdleMode.kCoast));
                 break;
             default:
         }
         if (m_setupMotorDone) scheduleSetup();
         nt_idleBrake.set(brake);
         return this;
-    } 
+    }
 
     public Motor withSlowSpeedControl(boolean val){
         nt_enabslowspeed.set(val);
         m_enabSlowSpeed = val;
         return this;
     }
-    
+
     /**
      * This function sets the gear reduction of the motor in rotations to the mechanism it is attached to in rotations. You should not use this for unit conversions to in/s.
      * @param positionFactor A value greater than one is a reduction in gearing (typical)
@@ -304,14 +305,14 @@ public class Motor extends SubsystemBase {
                 config_talon.Feedback.withSensorToMechanismRatio(gearReduction);
                 break;
             case NEO:
-                config_neo.encoder.positionConversionFactor(1/gearReduction);   
-                config_neo.encoder.velocityConversionFactor(1/gearReduction/60.0);      
+                config_neo.encoder.positionConversionFactor(1/gearReduction);
+                config_neo.encoder.velocityConversionFactor(1/gearReduction/60.0);
                 break;
             default:
         }
         if (m_setupMotorDone) scheduleSetup();
         return this;
-    } 
+    }
 
     public Motor withStatorLimit(double stallLimit){
         switch (motorType) {
@@ -321,7 +322,7 @@ public class Motor extends SubsystemBase {
                     .withStatorCurrentLimitEnable(true);
                 break;
             case NEO:
-                config_neo.smartCurrentLimit((int)stallLimit);       
+                config_neo.smartCurrentLimit((int)stallLimit);
                 break;
             default:
         }
@@ -338,17 +339,17 @@ public class Motor extends SubsystemBase {
 
     public Motor feedbackSensor(FeedbackSensor sensor){
         switch (motorType) {
-            case KRAKEN:  
+            case KRAKEN:
                 // Not really needed As of 1/21/2025
                 break;
             case NEO:
-                config_neo.closedLoop.feedbackSensor(sensor);     
+                config_neo.closedLoop.feedbackSensor(sensor);
                 break;
             default:
         }
         if (m_setupMotorDone) scheduleSetup();
         return this;
-    } 
+    }
 
     public Motor withKP(double val, GainSlot slot){
         m_gains[slot.ordinal()].Kp = val;
@@ -387,7 +388,7 @@ public class Motor extends SubsystemBase {
         m_gains[slot.ordinal()].Ki = i;
         m_gains[slot.ordinal()].Kd = d;
         m_gains[slot.ordinal()].Kff = ff;
-        
+
         switch (motorType) {
             case KRAKEN:
                 switch (slot){
@@ -401,7 +402,7 @@ public class Motor extends SubsystemBase {
                 }
                 break;
             case NEO:
-                config_neo.closedLoop.pidf(p,i,d,ff, ClosedLoopSlot.values()[slot.ordinal()]);    
+                config_neo.closedLoop.pidf(p,i,d,ff, ClosedLoopSlot.values()[slot.ordinal()]);
                 break;
             default:
         }
@@ -412,27 +413,31 @@ public class Motor extends SubsystemBase {
         nt_Kff.set(ff);
         nt_slot.set(slot.ordinal());
         return this;
-    } 
+    }
 
     public Motor withOutputRange(double min, double max){
         withOutputRange(min, max, GainSlot.POSITION);
         withOutputRange(min, max, GainSlot.SPEED);
         return this;
     }
-    
+
     /**
      * Sets a speed limit for the motor with symmetric positive and negative values
      * @param speed "Mechanism rotations per second limit"
      * @return Motor instance for chaining methods
      */
-    public Motor withSpeedLimit(double speed){withSpeedLimit(speed, -speed); nt_speedLim.set(speed); return this;}
+    public Motor withSpeedLimit(double speed){
+        withSpeedLimit(speed, -speed); 
+        nt_speedLim.set(speed); 
+        return this;
+    }
 
     public Motor withSpeedLimit(double positive, double negative){
         m_maxPositiveSpeed = positive;
         m_maxNegativeSpeed = negative;
         nt_speedLimNeg.set(negative);
         nt_speedLimPos.set(positive);
-        
+
         // Create position limiter with the allowed travel distance at speed over 20 milliseconds.
         m_positionlimiter = new SlewRateLimiter(positive, negative, getPosition());
         return this;
@@ -445,13 +450,13 @@ public class Motor extends SubsystemBase {
                 // TODO: Do we need something here?
                 break;
             case NEO:
-                config_neo.closedLoop.outputRange(min, max, ClosedLoopSlot.values()[slot.ordinal()]);     
+                config_neo.closedLoop.outputRange(min, max, ClosedLoopSlot.values()[slot.ordinal()]);
                 break;
             default:
         }
         if (m_setupMotorDone) scheduleSetup();
         return this;
-    } 
+    }
 
     public Motor withIZone(double zone){
         nt_izone.set(zone);
@@ -464,13 +469,13 @@ public class Motor extends SubsystemBase {
                 */
                 break;
             case NEO:
-                config_neo.closedLoop.iZone(zone);    
+                config_neo.closedLoop.iZone(zone);
                 break;
             default:
         }
         if (m_setupMotorDone) scheduleSetup();
         return this;
-    } 
+    }
 
     /**
      * A continuous mechanism is a mechanism with unlimited travel in any direction, and whose
@@ -487,17 +492,17 @@ public class Motor extends SubsystemBase {
     public Motor positionWrappingEnabled(boolean enabled){
         switch (motorType) {
             case KRAKEN:
-                config_talon.ClosedLoopGeneral.withContinuousWrap(enabled); 
+                config_talon.ClosedLoopGeneral.withContinuousWrap(enabled);
                 break;
             case NEO:
                 config_neo.closedLoop.positionWrappingInputRange(-0.5, 0.5);
-                config_neo.closedLoop.positionWrappingEnabled(enabled);  
+                config_neo.closedLoop.positionWrappingEnabled(enabled);
                 break;
             default:
         }
         if (m_setupMotorDone) scheduleSetup();
         return this;
-    } 
+    }
 
     public void stopMotor(){
         m_speedTarget = 0;
@@ -512,7 +517,7 @@ public class Motor extends SubsystemBase {
                 m_simSpeed = 0;
         }
     }
-    
+
     public boolean setSpeed(double speed){return setSpeed(speed, GainSlot.SPEED);} // Default GainSlot
     public boolean setSpeed(double speed, GainSlot slot){
         // If motor testing is active, ignore external request.
@@ -538,7 +543,7 @@ public class Motor extends SubsystemBase {
                 m_controlType = ControlType.SLOWSPEED;
                 //m_positionTarget = getPosition() + getVelocity() * 0.020;
             }
-            // If spinning too fast, set speed control mode to reduce speed near SLOWSPEED range first 
+            // If spinning too fast, set speed control mode to reduce speed near SLOWSPEED range first
             if (Math.abs(getVelocity()*m_gearReduction) > MotorDefaults.kSlowThreshold*1.2){
                 _setTargetSpeed(speed, slot);
             }
@@ -569,7 +574,23 @@ public class Motor extends SubsystemBase {
         return status;
     }
 
-    public void setPosition(double position){setPosition(position, GainSlot.POSITION);}
+    public Motor setFollowerMode(int leaderMotorCANID, boolean inverted){
+        switch (motorType) {
+            case KRAKEN:
+                motor_talon.setControl(new Follower(leaderMotorCANID, inverted)).isOK();
+                break;
+            case NEO:
+                config_neo.follow(leaderMotorCANID, inverted);
+                if (m_setupMotorDone) scheduleSetup();
+                break;
+            default:
+        }
+        return this;
+    }
+
+    public void setPosition(double position){
+        setPosition(position, GainSlot.POSITION);
+    }
     public void setPosition(double position, GainSlot slot){
         // If motor testing is active, ignore external request.
         if (m_testEnable == true){
@@ -681,7 +702,7 @@ public class Motor extends SubsystemBase {
     public boolean isSetupDone() {
         return m_setupMotorDone;
     }
-    
+
     @Override
     public void periodic(){
         if (m_setupScheduled == false && m_setupMotorDone == false) {

@@ -8,6 +8,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 import java.util.stream.LongStream;
+
+import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation3d;
@@ -17,9 +19,12 @@ import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Filesystem;
-//import frc.robot.subsystems.Climber;
+import frc.robot.subsystems.Arm;
 import frc.robot.subsystems.DriveTrain;
-//import frc.robot.subsystems.IntakeShooter;
+import frc.robot.subsystems.EndEffector;
+import frc.robot.subsystems.Elevator;
+import frc.robot.subsystems.Climber;
+import frc.robot.subsystems.Funnel;
 import frc.robot.subsystems.Vision;
 import frc.utils.Motor;
 import frc.utils.Motor.MyMotorType;
@@ -41,6 +46,122 @@ public final class Constants {
   public static class CANID_t {
     public int encoder, driving, steering;
     public CANID_t(int abs_encoder, int drive, int steer){this.encoder = abs_encoder; this.driving = drive; this.steering = steer;}
+  }
+
+  public static class GameConstants {
+
+    public enum ScoreLevel{
+      TROUGH, LEVEL2, LEVEL3, LEVEL4
+    }
+
+  public static int kLimitUnderDZ = 9; // The Limit for how high the Elevator can go under the danger zone (dz / 9 - 21 inches)
+  public static int kLimitAboveDZ = 21; // The Limit for how high the Elevator can go above the danger zone (dz / 9 - 21 inches)
+  public static int kAngleMaxDZ = 67; // The Max Angle for the Arm while it is in the Danger Zone (dz)
+
+  }
+  public static class ArmConstants {
+
+    public static MyMotorType kMotorType = MyMotorType.KRAKEN;
+    public static int kArmCANID = 4;
+    public static int kDigitalInputID = 1;
+    public static double kArmStage1Ratio = 5.0 / 1.0;
+    public static double kArmMotorGearReduction = (2 * kArmStage1Ratio); // Multiplying by 2 in account of the sprocket gear
+    public static double kArmEncoderPositionFactor = (2.0 * Math.PI) / kArmMotorGearReduction;
+    public static double kArmEncoderVelocityFactor = (2.0 * Math.PI) / kArmMotorGearReduction / 60.0;
+
+    public static double kArmKp = (NTDouble.create(0, "Arm/kArmKp", (val)->kArmKp = (val)));
+    public static double kArmKi = (NTDouble.create(0, "Arm/kArmKi", (val)->kArmKi = (val)));
+    public static double kArmKd = (NTDouble.create(0, "Arm/kArmKd", (val)->kArmKd = (val)));
+    public static double kArmKff = (NTDouble.create(0, "Arm/kArmKff", (val)->kArmKff = (val)));
+
+    // Creates Max and Min values for Arm Software Hardstop
+    public static double kAngleMax = Units.degreesToRadians(NTDouble.create(89, "Arm/kAngleMax", val -> kAngleMax = Units.degreesToRadians(val)));
+    public static double kAngleMin = Units.degreesToRadians(NTDouble.create(-3, "Arm/kAngleMin", val -> kAngleMin = Units.degreesToRadians(val)));
+
+    // TODO: Change once angles are settled on.
+    public static double kTargetAngleTrough = 0;
+    public static double kTargetAngleLevelMiddle = 0;
+    public static double kTargetAngleLevel4 = 0;
+
+    // TODO: Change values of Calibration Maps.
+    public static double [] kArmCalibrationX = new double[]{-2, 90}; //analog values
+    public static double [] kArmCalibrationY = new double[]{ 0.511770, 0.773146}; // degrees
+
+    public static double kArmMotorCurrentLimit = (NTDouble.create(5, "Arm/kCurrentLimit", (val) ->Arm.getInstance().m_motorArm.withStatorLimit(val)));
+    public static double kArmAngleTolerance = Units.degreesToRadians(NTDouble.create(5, "Arm/kArmAngleTolerance", val -> kArmAngleTolerance = Units.degreesToRadians(val)));
+
+    public static double kArmGearRatio = 40;
+    public static double kMaxSpeed = 0.5;
+  }
+
+  public static class EffectorConstants {
+    public static MyMotorType kMotorType = MyMotorType.NEO;
+    public static int kEffectorCANID = 7; //Change later
+    public static double kEffectorStage1Ratio = 5.0 / 1.0; //Starting with a 5:1 Gear Ratio.
+    public static double kEffectorMotorGearReduction = kEffectorStage1Ratio;
+    public static double kEffectorEncoderPositionFactor = (2.0 * Math.PI) / kEffectorMotorGearReduction;
+    public static double kEffectorSpeed = 0; //Change once we can test
+    public static double kAlgaeMotorRevolutions = 5;
+
+    public static double kMaxSpeed = 1;
+    public static int kCANID_Intake = 8;
+    public static int kBeamBreakPin = 9;
+    public static double kBeamBreakDebounceSec = NTDouble.create(0.010, "Intake/kBeamBreakDebounceSec", val->{kBeamBreakDebounceSec=val; EndEffector.getInstance().m_beamDebouncer = new Debouncer(val, Debouncer.DebounceType.kBoth);});
+    public static boolean kIntakeIsInverted = false;
+    public static double kRetractDistance = NTDouble.create(10, "Intake/kRetractDistance", val->{kRetractDistance=val;});
+
+    public static double kEffectorMotorCurrentLimit = (NTDouble.create(5, "Effector/kCurrentLimit", (val) ->EndEffector.getInstance().m_motorEffector.withStatorLimit(val)));
+
+    // Position control gains
+    public static double kEffectorPosKp = (NTDouble.create(0.3, "Effector/Position/kP", 
+        (val)->EndEffector.getInstance().m_motorEffector.withKP(val, Motor.GainSlot.POSITION)));
+    public static double kEffectorPosKi = (NTDouble.create(0.002, "Effector/Position/kI", 
+        (val)->EndEffector.getInstance().m_motorEffector.withKI(val, Motor.GainSlot.POSITION)));
+    public static double kEffectorPosKd = (NTDouble.create(0, "Effector/Position/kD", 
+        (val)->EndEffector.getInstance().m_motorEffector.withKD(val, Motor.GainSlot.POSITION)));
+    public static double kEffectorPosKff = (NTDouble.create(0, "Effector/Position/kFF", 
+        (val)->EndEffector.getInstance().m_motorEffector.withKFF(val, Motor.GainSlot.POSITION)));
+
+    // Velocity control gains  
+    public static double kEffectorVelKp = (NTDouble.create(0.0, "Effector/Velocity/kP", 
+        (val)->EndEffector.getInstance().m_motorEffector.withKP(val, Motor.GainSlot.SPEED)));
+    public static double kEffectorVelKi = (NTDouble.create(0, "Effector/Velocity/kI", 
+        (val)->EndEffector.getInstance().m_motorEffector.withKI(val, Motor.GainSlot.SPEED)));
+    public static double kEffectorVelKd = (NTDouble.create(0, "Effector/Velocity/kD", 
+        (val)->EndEffector.getInstance().m_motorEffector.withKD(val, Motor.GainSlot.SPEED)));
+    public static double kEffectorVelKff = (NTDouble.create(0.0, "Effector/Velocity/kFF", 
+        (val)->EndEffector.getInstance().m_motorEffector.withKFF(val, Motor.GainSlot.SPEED)));
+
+    public static double kEffectorGearRatio = 5;
+  }
+  public static class ElevatorConstants {
+
+    public static MyMotorType kMotorType = MyMotorType.KRAKEN;
+    public static int kEleLeftCANID = 11;
+    public static int kEleRightCANID = 12;
+
+    public static int klimitSwitchChannel;
+
+    public static double kElevatorKp = (NTDouble.create(0, "Elevator/kElevatorKp", (val)->kElevatorKp = (val)));
+    public static double kElevatorKi = (NTDouble.create(10, "Elevator/kElevatorKi", (val)->kElevatorKi = (val)));
+    public static double kElevatorKd = (NTDouble.create(0, "Elevator/kElevatorKd", (val)->kElevatorKd = (val)));
+    public static double kElevatorKff = (NTDouble.create(0, "Elevator/kElevatorKff", (val)->kElevatorKff = (val)));
+
+    public static double kLeftElevatorMotorCurrentLimit = (NTDouble.create(5, "Elevator/kLeftCurrentLimit", (val) ->Elevator.getInstance().m_EleMotorLeft.withStatorLimit(val)));
+    public static double kRightElevatorMotorCurrentLimit = (NTDouble.create(5, "Elevator/kRightCurrentLimit", (val) ->Elevator.getInstance().m_EleMotorRight.withStatorLimit(val)));
+
+    // Values in inches that the elevator should be raised from the bottom to score different heights of coral and algea
+    // These need to be tested and adjusted
+    public static double kMaxHeightInch = (NTDouble.create(27.5, "Elevator/MaxHeightInch", (val)->kMaxHeightInch = (val)));; // 16.6 Rotations of the Axle
+    public static double kHeight3Inch = (NTDouble.create(16, "Elevator/Height3Inch", (val)->kHeight3Inch = (val)));
+    public static double kHeight2Inch = (NTDouble.create(8, "Elevator/Height2Inch", (val)->kHeight2Inch = (val)));
+    public static double kHeight1Inch = (NTDouble.create(1, "Elevator/Height1Inch", (val)->kHeight1Inch = (val)));
+    public static double kMinHeightInch = (NTDouble.create(0, "Elevator/MinHeightInch", (val)->kMinHeightInch = (val)));
+
+    public static double kElevatorTolerance = 0.5;
+    public static double kMaxSpeedPositive = 10;
+    public static double kMaxSpeedNegative = -4;
+    public static double kElavatorGearRatio = 16;
   }
 
   public static class MotorDefaults {
@@ -110,6 +231,27 @@ public final class Constants {
     public static double kBrightness = NTDouble.create(0.1, "LED/kBrightness", (val)->kBrightness=val);
     public static double kFlashTime = NTDouble.create(0.5, "LED/kFlashTime", (val)->kFlashTime=val);
   
+  }
+
+  public static class FunnelConstants {
+
+    public static MyMotorType kMotorType = MyMotorType.NEO;
+    public static int kFunnelCANID = 8;
+
+    // Position control gains
+    public static double kFunnelPosKp = (NTDouble.create(0.3, "Funnel/Position/kP",(val)->Funnel.getInstance().m_motorFunnel.withKP(val, Motor.GainSlot.POSITION)));
+    public static double kFunnelPosKi = (NTDouble.create(0.002, "Funnel/Position/kI",(val)->Funnel.getInstance().m_motorFunnel.withKI(val, Motor.GainSlot.POSITION)));
+    public static double kFunnelPosKd = (NTDouble.create(0, "Funnel/Position/kD",(val)->Funnel.getInstance().m_motorFunnel.withKD(val, Motor.GainSlot.POSITION)));
+    public static double kFunnelPosKff = (NTDouble.create(0, "Funnel/Position/kFF",(val)->Funnel.getInstance().m_motorFunnel.withKFF(val, Motor.GainSlot.POSITION)));
+
+    public static double kFunnelUp = 3.7; // Change once we can test
+    public static double kFunnelDown = 0; // Change once we can test
+
+    public static int kFunnelMotorCurrentLimit = (int)NTDouble.create(5,"Funnel/kCurrentLimit",(val) ->Funnel.getInstance().m_motorFunnel.withStatorLimit(val));
+    public static double kFunnelAngleTolerance = Units.degreesToRadians(NTDouble.create(0.3, "Funnel/kFunnelAngleTolerance", val -> kFunnelAngleTolerance = Units.degreesToRadians(val)));
+
+    public static double kFunnelGearRatio = 1;
+    public static double kMaxSpeed = 3;
   }
 
   public static class OperatorConstants {
@@ -212,124 +354,33 @@ public final class Constants {
     public static final double kWheelBase = Units.inchesToMeters(22.75);       // Distance between front and back wheels
   }
 
-  /* public static class IntakeConstants {
-    // Velocity Control PID Gains
-    public static double kIntakeRollerKp  = NTDouble.create(0.00002,"Intake/kRollerKp",val->{ kIntakeRollerKp = val; IntakeShooter.getInstance().m_pidIntake.setP(val,0);});
-    public static double kIntakeRollerKi  = NTDouble.create(0, "Intake/kRollerKi",val->{ kIntakeRollerKi = val; IntakeShooter.getInstance().m_pidIntake.setI(val,0);});
-    public static double kIntakeRollerKd  = NTDouble.create(0,"Intake/kRollerKd",val->{ kIntakeRollerKd = val; IntakeShooter.getInstance().m_pidIntake.setD(val,0);});
-    public static double kIntakeRollerKff = NTDouble.create(0.005,"Intake/kRollerKff",val ->{ kIntakeRollerKff = val; IntakeShooter.getInstance().m_pidIntake.setFF(val,0);});
-    // Position Control PID Gains
-    public static double kIntakeRollerPosKp  = NTDouble.create(8, "Intake/kRollerPosKp",val->{ kIntakeRollerPosKp = val; IntakeShooter.getInstance().m_pidIntake.setP(val,1);});
-    public static double kIntakeRollerPosKi  = NTDouble.create(0, "Intake/kRollerPosKi",val->{ kIntakeRollerPosKi = val; IntakeShooter.getInstance().m_pidIntake.setI(val,1);});
-    public static double kIntakeRollerPosKd  = NTDouble.create(0,"Intake/kRollerPosKd",val->{ kIntakeRollerPosKd = val; IntakeShooter.getInstance().m_pidIntake.setD(val,1);});
-    public static double kIntakeRollerPosKff = NTDouble.create(0,"Intake/kRollerPosKff",val ->{ kIntakeRollerPosKff = val; IntakeShooter.getInstance().m_pidIntake.setFF(val,1);});
-      
-    public static double kRollerDiameter = Units.inchesToMeters(1.375);
-    public static double kEncoderVelocityFactor = 1/5.0;
-    public static double kEncoderPositionFactor = 1/5.0*(Math.PI*kRollerDiameter);
+  public static class ClimberConstants {
+    public static MyMotorType kMotorType = MyMotorType.NEO;
+    // TODO: Change later
+    public static int kDigitalInputID = 2;
+    public static int kClimberCANID = 3;
 
-    public static double kMaxSpeed = NTDouble.create(2000, "Intake/kMaxSpeed", val->kMaxSpeed=val);
-    public static int kCANID_Intake = 8;
-    public static int kBeamBreakPin = 9;
-    public static double kBeamBreakDebounceSec = NTDouble.create(0.010, "Intake/kBeamBreakDebounceSec", val->{kBeamBreakDebounceSec=val; IntakeShooter.getInstance().m_beamDebouncer = new Debouncer(val, Debouncer.DebounceType.kBoth);});
-    public static boolean kIntakeIsInverted = false;
-    public static double kRetractDistance = NTDouble.create(10, "Intake/kRetractDistance", val->{kRetractDistance=val;});
-  } */
-
-  /* public static class ShooterConstants {
-    public static double kMaxSpeed = NTDouble.create(3000,"Shooter/kMaxSpeed",val->kMaxSpeed = val);
-    public static double kMaxSpeedBack = NTDouble.create(1000,"Shooter/Back/kMaxBackSpeed",val->kMaxSpeed = val);
-    public static double kAtMaxSpeedPercent = 0.8;
-        
-    public static double kShooterVelocityFactor = 1;
-
-    public static boolean kShooterIsInverted = false;
-
-    public static int kCANID_Shooter = 7;
-
-    public static double kShooterKp  = NTDouble.create(0.0004,"Shooter/kShooterKp",val->{ kShooterKp = val; IntakeShooter.getInstance().m_pidShooter.setP(val); IntakeShooter.getInstance().m_pidShooter.setP(val);});
-    public static double kShooterKi  = NTDouble.create(0.000008, "Shooter/kShooterKi",val->{ kShooterKi = val; IntakeShooter.getInstance().m_pidShooter.setI(val); IntakeShooter.getInstance().m_pidShooter.setI(val);});
-    public static double kShooterKd  = NTDouble.create(0.0,"Shooter/kShooterKd",val->{ kShooterKd = val; IntakeShooter.getInstance().m_pidShooter.setD(val); IntakeShooter.getInstance().m_pidShooter.setD(val);});
-    public static double kShooterKff = NTDouble.create(0.0002,"Shooter/kShooterKff",val ->{ kShooterKff = val; IntakeShooter.getInstance().m_pidShooter.setFF(val); IntakeShooter.getInstance().m_pidShooter.setFF(val);});
-
-    // Angle constants
-
-    public static int kCANID_AngleLeft = 4;
-    public static int kCANID_AngleRight = 12;
-    public static int kAnalogInputpin = 4;
-
-    public static double kAngleKp  = NTDouble.create(0.9,"Shooter/kAngleKp",val->{ kAngleKp = val; IntakeShooter.getInstance().m_pidAngle.setP(val); IntakeShooter.getInstance().m_pidAngleRight.setP(val);});
-    public static double kAngleKi  = NTDouble.create(0.0, "Shooter/kAngleKi",val->{ kAngleKi = val; IntakeShooter.getInstance().m_pidAngle.setI(val); IntakeShooter.getInstance().m_pidAngleRight.setI(val);});
-    public static double kAngleKd  = NTDouble.create(60,"Shooter/kAngleKd",val->{ kAngleKd = val; IntakeShooter.getInstance().m_pidAngle.setD(val); IntakeShooter.getInstance().m_pidAngleRight.setD(val);});
-    public static double kAngleKff = NTDouble.create(0,"Shooter/kAngleKff",val ->{ kAngleKff = val; IntakeShooter.getInstance().m_pidAngle.setFF(val); IntakeShooter.getInstance().m_pidAngleRight.setFF(val);});
-
-    public static double kAngleEncoderPositionFactor = (2 * Math.PI/70);
-
-    // Calibration map for intake shooter
-
-    public static double [] kShooterAngleCalibrationX = new double[]{638, 1137,  1372, 1654,  1959, 2172, 2404, 2462, 2482}; //analog values
-    public static double [] kShooterAngleCalibrationY = new double[]{131, 105,   90,   70,    45,   25,    0, -6.0, -8.0}; // degrees
-
-    // perform unit conversion on kShooterAngleCalibration degrees to radians
-    static {for (int i=0; i<kShooterAngleCalibrationY.length; i++){ kShooterAngleCalibrationY[i] = Units.degreesToRadians(kShooterAngleCalibrationY[i]); }};
-
-    public static int kAngleCurrentLimit = 70;
-    public static double kAngleMax = Units.degreesToRadians(NTDouble.create(105, "Shooter/kAngleMax", val -> kAngleMax = Units.degreesToRadians(val)));
-    public static double kAngleMin = Units.degreesToRadians(NTDouble.create(-4, "Shooter/kAngleMin", val -> kAngleMin = Units.degreesToRadians(val)));
-    public static double kManualAngleSpeed = Units.degreesToRadians(NTDouble.create(90, "Shooter/kManualAngleSpeed", val -> kManualAngleSpeed = Units.degreesToRadians(val)));
-    public static double kAngleTolerance = Units.degreesToRadians(NTDouble.create(15, "Shooter/kAngleTolerance", val -> kAngleTolerance = Units.degreesToRadians(val)));
-
-    public static InterpolatingDoubleTreeMap kAngleDistMap = new InterpolatingDoubleTreeMap();
-
-
-    static {kAngleDistMap.put(Units.feetToMeters(3.15), Units.degreesToRadians(14.0)); } // 18
-    static {kAngleDistMap.put(Units.feetToMeters(6.0), Units.degreesToRadians(32.0)); }
-    static {kAngleDistMap.put(Units.feetToMeters(8.0), Units.degreesToRadians(33.4)); }
-    static {kAngleDistMap.put(Units.feetToMeters(10), Units.degreesToRadians(33.32)); }
-
-    public static double kAngleDistAMin= Units.degreesToRadians(NTDouble.create(12, "Shooter/kAngleDistAMin", val -> kAngleDistAMin = Units.degreesToRadians(val)));
-    public static double kAngleDistAMax= Units.degreesToRadians(NTDouble.create(28, "Shooter/kAngleDistAMax", val -> kAngleDistAMax = Units.degreesToRadians(val)));
-    public static double kAngleDistDMin= Units.feetToMeters(NTDouble.create(4.4, "Shooter/kAngleDistDMin", val -> kAngleDistDMin = Units.feetToMeters(val)));
-    public static double kAngleDistDMax= Units.feetToMeters(NTDouble.create(9.4, "Shooter/kAngleDistDMax", val -> kAngleDistDMax = Units.feetToMeters(val)));
-    public static double kSpeakerAimDistance = Units.feetToMeters(NTDouble.create(-0.25, "Shooter/kSpeakerAimDistance", val -> kAngleDistDMax = Units.feetToMeters(val)));
-    public static double kAngleDistDerK = NTDouble.create(0.15, "Shooter/kAngleDistDerK", val -> kAngleDistDerK = val);
-    public static double kAngleDistGain = Units.degreesToRadians(NTDouble.create(-2,"Shooter/kAngleDistGainDegPerFPS", val -> kAngleDistGain = Units.degreesToRadians(val)/Units.feetToMeters(1)))/Units.feetToMeters(1);
-    public static double kVelocityMaxAdjust = Units.degreesToRadians(NTDouble.create(10,"Shooter/kVelocityMaxAdjustDeg", val -> kVelocityMaxAdjust = Units.degreesToRadians(val)));
-
-    public static class kAnglePreset {
-      public static double Amp = Units.degreesToRadians(NTDouble.create(102,"Intake/kAnglePreset/Amp", val->Amp=Units.degreesToRadians(val)));
-      public static double Speaker = Units.degreesToRadians(NTDouble.create(19,"Intake/kAnglePreset/Speaker", val->Speaker=Units.degreesToRadians(val)));
-      public static double Ground = Units.degreesToRadians(NTDouble.create(-3,"Intake/kAnglePreset/Ground", val->Ground=Units.degreesToRadians(val)));
-      public static double Up = Units.degreesToRadians(NTDouble.create(90,"Intake/kAnglePreset/Up", val->Up=Units.degreesToRadians(val)));
-    }
-  } */
-
-  /* public static class ClimberConstants {
-    public static int kCANIDLeft = 3;
-    public static int kCANIDRight = 11;
-    public static double kPIDKp  = NTDouble.create(30,"Climber/PID/Kp",val->{ kPIDKp = val; Climber.right().m_pidClimber.setP(val); Climber.left().m_pidClimber.setP(val);});
-    public static double kPIDKi  = NTDouble.create(0,"Climber/PID/Ki",val->{ kPIDKi = val; Climber.right().m_pidClimber.setI(val); Climber.left().m_pidClimber.setI(val);});
-    public static double kPIDKd  = NTDouble.create(0,"Climber/PID/Kd",val->{ kPIDKd = val; Climber.right().m_pidClimber.setD(val); Climber.left().m_pidClimber.setD(val);});
-    public static double kPIDKff  = NTDouble.create(0,"Climber/PID/Kff",val->{ kPIDKff = val; Climber.right().m_pidClimber.setFF(val); Climber.left().m_pidClimber.setFF(val);});
+    public static double kClimberKp = (NTDouble.create(0, "Climber/kClimberKp", (val)->kClimberKp = (val)));
+    public static double kClimberKi = (NTDouble.create(0, "Climber/kClimberKi", (val)->kClimberKi = (val)));
+    public static double kClimberKd = (NTDouble.create(0, "Climber/kClimberKd", (val)->kClimberKd = (val)));
+    public static double kClimberKff = (NTDouble.create(0, "Climber/kClimberKff", (val)->kClimberKff = (val)));
    
-    public static int kCurrentInit = (int)NTDouble.create(3,"Climber/kCurrentInit",val->kCurrentInit=(int)val);
-    public static int kCurrentLimit = (int)NTDouble.create(50,"Climber/kCurrentLimit",val->{kCurrentLimit=(int)val; Climber.right().m_climber.setSmartCurrentLimit((int)val); Climber.left().m_climber.setSmartCurrentLimit((int)val);});
+    //public static int kCurrentInit = (int)NTDouble.create(3,"Climber/kCurrentInit",val->kCurrentInit=(int)val);
+    public static int kClimberMotorCurrentLimit = (int)NTDouble.create(50,"Climber/kCurrentLimit",(val) ->Climber.getInstance().m_motorClimber.withStatorLimit(val));
+    public static double kClimberAngleTolerance = Units.degreesToRadians(NTDouble.create(3, "Climber/kClimberAngleTolerance", val -> kClimberAngleTolerance = Units.degreesToRadians(val)));
+
+    public static double kClimberAngleIn = 0; // Change once we can test
+    public static double kClimberAngleOut = 0; // Change once we can test
+
+    // TODO: Change values of Calibration Maps.
+    public static double [] kClimberCalibrationX = new double[]{0.507191, 0.581880, 0.829728, 0.989784}; //analog values 
+    public static double [] kClimberCalibrationY = new double[]{25, 0, -90, -148}; // degrees 
     
-    public static double kMaxHeight = Units.inchesToMeters(NTDouble.create(41,"Climber/kMaxHeightInch",val->kMaxHeight=Units.inchesToMeters(val)));
-    public static double kMinHeight = Units.inchesToMeters(NTDouble.create(21.5,"Climber/kMinHeightInch",val->kMinHeight=Units.inchesToMeters(val)));
-    public static double kSpoolDiameter = Units.inchesToMeters(1);
-    //public static double kGearRatio = 120;
-    public static double kGearRatio = 60;
-    public static double kEncoderVelocityFactor = Math.PI*kSpoolDiameter/kGearRatio;
-    public static double kEncoderPositionFactor = Math.PI*kSpoolDiameter/kGearRatio;
-    public static double kInitRetractMargin = Units.inchesToMeters(1);
-    public static double kInitTime = NTDouble.create(0.25,"Climber/kInitTime",val->kInitTime=val);
-    public static double kInitMaxEffort = NTDouble.create(.1,"Climber/kInitMaxEffort",val->kInitMaxEffort=val);
-    public static double kInitCurrentLimit = NTDouble.create(3,"Climber/kInitCurrentLimit",val->kInitCurrentLimit=val);
+    public static double kClimberGearRatio = 125;
 
-    public static double kMaxSpeed = Units.inchesToMeters(NTDouble.create(6, "Climber/kMaxSpeed", val -> kMaxSpeed = Units.inchesToMeters(val)));
-  } */
-
+    public static double kMaxSpeed = 1;
+  }
+  
   public static class AutoConstants {
 
     public static double kSpeakerNearDistance = Units.feetToMeters(NTDouble.create(6.5, "Autonomous/kSpeakerNearDistance", val -> kSpeakerNearDistance = Units.feetToMeters(val)));
