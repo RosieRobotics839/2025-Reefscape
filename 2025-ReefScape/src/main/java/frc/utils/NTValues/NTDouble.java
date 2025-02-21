@@ -20,8 +20,6 @@ public class NTDouble {
 
     public boolean resetOnRecv = false;
 
-    private boolean m_ignore = false;
-
     public static double create(double defaultValue, String name, DoubleConsumer lambda){
         NTDouble instance = new NTDouble(defaultValue, table, name, lambda);
         return instance.get();
@@ -37,24 +35,19 @@ public class NTDouble {
         publisher = _table.getDoubleTopic(name).publish();
         publisher.set(defaultValue);
         
-        // add a listener to only value changes on the Y subscriber
         _table.addListener(
             name,
-            EnumSet.of(NetworkTableEvent.Kind.kValueAll),
+            EnumSet.of(NetworkTableEvent.Kind.kValueRemote),
             (table,key,event)-> {
-                if (!m_ignore){
-                    lambda.accept(event.valueData.value.getDouble());
-                    if (resetOnRecv){
-                        set(defaultValue);
-                    }
-                } else {
-                  m_ignore = false;
+                lambda.accept(event.valueData.value.getDouble());
+                if (resetOnRecv){
+                    set(defaultValue);
                 }
-            });
+            }
+        );
     }
 
     public void set(double val){
-        m_ignore = true;
         publisher.set(val);
     }
 
