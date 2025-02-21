@@ -426,7 +426,11 @@ public class Motor extends SubsystemBase {
      * @param speed "Mechanism rotations per second limit"
      * @return Motor instance for chaining methods
      */
-    public Motor withSpeedLimit(double speed){withSpeedLimit(speed, -speed); nt_speedLim.set(speed); return this;}
+    public Motor withSpeedLimit(double speed){
+        withSpeedLimit(speed, -speed); 
+        nt_speedLim.set(speed); 
+        return this;
+    }
 
     public Motor withSpeedLimit(double positive, double negative){
         m_maxPositiveSpeed = positive;
@@ -584,7 +588,9 @@ public class Motor extends SubsystemBase {
         return this;
     }
 
-    public void setPosition(double position){setPosition(position, GainSlot.POSITION);}
+    public void setPosition(double position){
+        setPosition(position, GainSlot.POSITION);
+    }
     public void setPosition(double position, GainSlot slot){
         // If motor testing is active, ignore external request.
         if (m_testEnable == true){

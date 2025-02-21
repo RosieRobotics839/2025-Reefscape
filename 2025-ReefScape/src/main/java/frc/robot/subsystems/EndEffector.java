@@ -51,10 +51,12 @@ public class EndEffector extends SubsystemBase {
     public EndEffector(int CANID) {
 
       m_motorEffector = new Motor(Constants.EffectorConstants.kEffectorCANID, EffectorConstants.kMotorType, "effector")
-          .smartCurrentLimit((int)EffectorConstants.kEffectorMotorCurrentLimit)
+          .withStatorLimit((int)EffectorConstants.kEffectorMotorCurrentLimit)
           .inverted(false)
-          .positionConversionFactor((EffectorConstants.kEffectorEncoderPositionFactor))
-          .pidf(EffectorConstants.kEffectorKp, EffectorConstants.kEffectorKi, EffectorConstants.kEffectorKd, EffectorConstants.kEffectorKff);
+          .withGearRatio((EffectorConstants.kEffectorGearRatio))
+          .withSpeedLimit(EffectorConstants.kMaxSpeed)
+          .pidf(EffectorConstants.kEffectorPosKp, EffectorConstants.kEffectorPosKi, EffectorConstants.kEffectorPosKd, EffectorConstants.kEffectorPosKff, Motor.GainSlot.POSITION)
+          .pidf(EffectorConstants.kEffectorVelKp, EffectorConstants.kEffectorVelKi, EffectorConstants.kEffectorVelKd, EffectorConstants.kEffectorVelKff, Motor.GainSlot.SPEED);
     }
 
     public DigitalInput m_beamBreak = new DigitalInput(EffectorConstants.kBeamBreakPin);

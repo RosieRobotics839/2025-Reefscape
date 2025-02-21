@@ -30,18 +30,20 @@ public class Funnel extends SubsystemBase{
         return m_motorFunnel.getPosition();
     }
 
-    public boolean setTargetPosition(double position){
+    public void setTargetPosition(double position){
         m_targetPosition = position;
-        return m_motorFunnel.setPosition(position);
+        m_motorFunnel.setPosition(position);
     }
 
-    Command FunnelUpCommand = Commands.sequence(
-        Commands.waitUntil(() -> {return setTargetPosition(FunnelConstants.kFunnelUp);}),
-        Commands.waitUntil(() -> {return atTargetPosition();}));
-
-    Command FunnelDownCommand = Commands.sequence(
-        Commands.waitUntil(() -> {return setTargetPosition(FunnelConstants.kFunnelDown);}),
-        Commands.waitUntil(() -> {return atTargetPosition();}));
+    public Command FunnelUpCommand = Commands.sequence(
+        Commands.runOnce(() -> setTargetPosition(FunnelConstants.kFunnelUp)),
+        Commands.waitUntil(this::atTargetPosition)
+    );
+        
+    public Command FunnelDownCommand = Commands.sequence(
+        Commands.runOnce(() -> setTargetPosition(FunnelConstants.kFunnelDown)),
+        Commands.waitUntil(this::atTargetPosition)
+    );
 
     DoublePublisher
     nt_;
@@ -49,10 +51,11 @@ public class Funnel extends SubsystemBase{
     public Funnel(int CANID) {
     
         m_motorFunnel = new Motor(FunnelConstants.kFunnelCANID, FunnelConstants.kMotorType, "funnel")
-            .smartCurrentLimit((int)FunnelConstants.kFunnelMotorCurrentLimit)
+            .withStatorLimit((int)FunnelConstants.kFunnelMotorCurrentLimit)
             .inverted(true)
-            .positionConversionFactor((FunnelConstants.kFunnelGearRatio))
-            .pidf(FunnelConstants.kFunnelKp, FunnelConstants.kFunnelKi, FunnelConstants.kFunnelKd, FunnelConstants.kFunnelKff);
+            .withGearRatio(FunnelConstants.kFunnelGearRatio)
+            .withSpeedLimit(FunnelConstants.kMaxSpeed)
+            .pidf(FunnelConstants.kFunnelPosKp, FunnelConstants.kFunnelPosKi, FunnelConstants.kFunnelPosKd, FunnelConstants.kFunnelPosKff, Motor.GainSlot.POSITION);
 
     }
 

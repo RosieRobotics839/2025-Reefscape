@@ -36,19 +36,21 @@ public class Climber extends SubsystemBase{
         return m_motorClimber.getPosition(); // TODO: use calibration map for climber angle to spool rotation
     }
 
-    public boolean setTargetAngle(double position){
+    public void setTargetAngle(double position){
         m_targetAngle = position;
         double m_motorTarget = m_targetAngle; // TODO: use calibration map for spool rotations to climber angle
-        return m_motorClimber.setPosition(m_motorTarget);
+        m_motorClimber.setPosition(m_motorTarget);
     }
-
-    Command ClimberInCommand = Commands.sequence(
-        Commands.waitUntil(() -> {return setTargetAngle(ClimberConstants.kClimberAngleIn);}),
-        Commands.waitUntil(() -> {return atTargetAngle();}));
-
-    Command ClimberOutCommand = Commands.sequence(
-        Commands.waitUntil(() -> {return setTargetAngle(ClimberConstants.kClimberAngleOut);}),
-        Commands.waitUntil(() -> {return atTargetAngle();}));
+        
+    public Command ClimberInCommand = Commands.sequence(
+        Commands.runOnce(() -> setTargetAngle(ClimberConstants.kClimberAngleIn)),
+        Commands.waitUntil(this::atTargetAngle)
+    );
+        
+    public Command ClimberOutCommand = Commands.sequence(
+        Commands.runOnce(() -> setTargetAngle(ClimberConstants.kClimberAngleOut)),
+        Commands.waitUntil(this::atTargetAngle)
+    );
 
     DoublePublisher
     nt_climberOffset;
@@ -67,11 +69,12 @@ public class Climber extends SubsystemBase{
         }
 
         m_motorClimber = new Motor(ClimberConstants.kClimberCANID, ClimberConstants.kMotorType, "climber")
-            .smartCurrentLimit((int)ClimberConstants.kClimberMotorCurrentLimit)
+            .withStatorLimit((int)ClimberConstants.kClimberMotorCurrentLimit)
             .inverted(true)
-            .positionConversionFactor((ClimberConstants.kClimberGearRatio))
-            .setCalibration(m_newClimberOffset)
-            .pidf(ClimberConstants.kClimberKp, ClimberConstants.kClimberKi, ClimberConstants.kClimberKd, ClimberConstants.kClimberKff);
+            .idleBrake(true)
+            .withGearRatio((ClimberConstants.kClimberGearRatio))
+            .withSpeedLimit(ClimberConstants.kMaxSpeed)
+            .setCalibration(m_newClimberOffset);
 
     }
 

@@ -7,7 +7,6 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.ArmConstants;
-import frc.robot.Constants.ElevatorConstants;
 import frc.utils.CalibrationMap;
 import frc.utils.Motor;
 import frc.utils.NTValues.NTDouble;
@@ -84,12 +83,11 @@ public class Arm extends SubsystemBase{
             }
 
         m_motorArm = new Motor(ArmConstants.kArmCANID, ArmConstants.kMotorType, "arm")
-            .smartCurrentLimit((int)ArmConstants.kArmMotorCurrentLimit)
+            .withStatorLimit((int)ArmConstants.kArmMotorCurrentLimit)
             .inverted(true)
-            .positionConversionFactor((ArmConstants.kArmEncoderPositionFactor))
-            .setCalibration(m_newArmOffset)
-            .pidf(ArmConstants.kArmKp, ArmConstants.kArmKi, ArmConstants.kArmKd, ArmConstants.kArmKff);
-
+            .withGearRatio(ArmConstants.kArmGearRatio)
+            .withSpeedLimit(ArmConstants.kMaxSpeed)
+            .setCalibration(m_newArmOffset);
     } 
 
     public Command createMoveToAngleCommand(double target) {

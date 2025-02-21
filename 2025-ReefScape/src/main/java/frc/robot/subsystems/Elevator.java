@@ -8,10 +8,10 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
-import frc.robot.Constants.ArmConstants;
 import frc.robot.Constants.ElevatorConstants;
 import frc.robot.Constants.GameConstants;
 import frc.utils.Motor;
+import frc.utils.Motor.GainSlot;
 import frc.utils.NTValues.NTDouble;
 
 public class Elevator extends SubsystemBase {
@@ -91,13 +91,16 @@ public class Elevator extends SubsystemBase {
         
         m_EleMotorLeft = new Motor(ElevatorConstants.kEleLeftCANID, ElevatorConstants.kMotorType, "eleLeft")
             .inverted(false)
-            .smartCurrentLimit(ElevatorConstants.kLeftElevatorMotorCurrentLimit)
-            .pidf(ElevatorConstants.kElevatorKp, ElevatorConstants.kElevatorKi, ElevatorConstants.kElevatorKd, ElevatorConstants.kElevatorKff);
+            .withStatorLimit((int)ElevatorConstants.kLeftElevatorMotorCurrentLimit)
+            .withSpeedLimit(ElevatorConstants.kMaxSpeedPositive,ElevatorConstants.kMaxSpeedNegative)
+            .withGearRatio(ElevatorConstants.kElavatorGearRatio)
+            .withKI(ElevatorConstants.kElevatorKi,GainSlot.POSITION);
 
         m_EleMotorRight = new Motor(ElevatorConstants.kEleRightCANID, ElevatorConstants.kMotorType, "eleRight")
             .inverted(true)
-            .smartCurrentLimit(ElevatorConstants.kRightElevatorMotorCurrentLimit)
-            .pidf(ElevatorConstants.kElevatorKp, ElevatorConstants.kElevatorKi, ElevatorConstants.kElevatorKd, ElevatorConstants.kElevatorKff)
+            .withStatorLimit((int)ElevatorConstants.kRightElevatorMotorCurrentLimit)
+            .withGearRatio(ElevatorConstants.kElavatorGearRatio)
+            .withKI(ElevatorConstants.kElevatorKi,GainSlot.POSITION)
             .setFollowerMode(ElevatorConstants.kEleLeftCANID, false); // not sure if we need to invert motor second time, test this
 
     }
