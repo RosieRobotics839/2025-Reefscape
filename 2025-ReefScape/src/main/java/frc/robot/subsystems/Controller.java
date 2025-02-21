@@ -139,28 +139,42 @@ public class Controller extends XboxController {
         )
       );
       
-      /* Stage Dial Command Sequences */
+      /* Sample button bindings for Elevator and Arm, need to test */
       
       StageDial1.onTrue(
         Commands.sequence(
-          // TODO: Sequence Commands once branches tested and merged
+            // Move elevator first if needed
+            Elevator.getInstance().moveToTroughCommand(),
+            // Then move arm
+            Arm.getInstance().moveToTroughCommand()
         )
-      );
-      StageDial2.onTrue(
+    );
+
+    StageDial2.onTrue(
         Commands.sequence(
-          // TODO: Sequence Commands once branches tested and merged
+            // If moving to level 2, might need to coordinate movements
+            Commands.parallel(
+                Elevator.getInstance().moveToLevel2Command(),
+                Arm.getInstance().moveToLevel2Command()
+            )
         )
-      );
-      StageDial3.onTrue(
+    );
+
+    StageDial3.onTrue(
         Commands.sequence(
-          // TODO: Sequence Commands once branches tested and merged
+            // For level 3, might want to move arm first
+            Arm.getInstance().moveToLevel3Command(),
+            Elevator.getInstance().moveToLevel3Command()
         )
-      );
-      StageDial4.onTrue(
+    );
+
+    StageDial4.onTrue(
         Commands.sequence(
-          // TODO: Sequence Commands once branches tested and merged
+            // For level 4, elevator first then arm
+            Elevator.getInstance().moveToLevel4Command(),
+            Arm.getInstance().moveToLevel4Command()
         )
-      );
+    );
 
 
       /* Side Positioning for Scoring */
