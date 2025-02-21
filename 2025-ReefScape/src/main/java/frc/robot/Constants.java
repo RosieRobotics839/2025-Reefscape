@@ -52,6 +52,11 @@ public final class Constants {
     public enum ScoreLevel{
       TROUGH, LEVEL2, LEVEL3, LEVEL4
     }
+
+  public static int kLimitUnderDZ = 9; // The Limit for how high the Elevator can go under the danger zone (dz / 9 - 21 inches)
+  public static int kLimitAboveDZ = 21; // The Limit for how high the Elevator can go above the danger zone (dz / 9 - 21 inches)
+  public static int kAngleMaxDZ = 67; // The Max Angle for the Arm while it is in the Danger Zone (dz)
+
   }
   public static class ArmConstants {
 
@@ -114,7 +119,7 @@ public final class Constants {
     public static int kEleLeftCANID = 11;
     public static int kEleRightCANID = 12;
 
-    public static int klimitSwitchChanel;
+    public static int klimitSwitchChannel;
 
     public static double kElevatorKp = (NTDouble.create(0, "Elevator/kElevatorKp", (val)->kElevatorKp = (val)));
     public static double kElevatorKi = (NTDouble.create(0, "Elevator/kElevatorKi", (val)->kElevatorKi = (val)));

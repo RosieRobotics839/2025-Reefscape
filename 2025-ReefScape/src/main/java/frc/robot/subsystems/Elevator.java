@@ -8,6 +8,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.Constants.ArmConstants;
 import frc.robot.Constants.ElevatorConstants;
 import frc.robot.Constants.GameConstants;
 import frc.utils.Motor;
@@ -25,28 +26,31 @@ public class Elevator extends SubsystemBase {
     public Motor m_EleMotorLeft;
     public Motor m_EleMotorRight;
     boolean setupElevator = false;
-    private double m_targetHeight = ElevatorConstants.kMinHeightInch;
-    private double m_currentHeight = ElevatorConstants.kMinHeightInch;
+    public double m_targetHeight = 0;
+    public double m_currentHeight = 0;
     GameConstants.ScoreLevel m_scoreReefLevel;
+    public double minHeightInch = ElevatorConstants.kMinHeightInch;
+    public double maxHeightInch = ElevatorConstants.kMaxHeightInch;
+    public double armCurrentAngle;
 
     Command ElevatorCommand = Commands.sequence(
         Commands.waitUntil(() -> {
             switch(m_scoreReefLevel){
                 case TROUGH:
-                    return m_EleMotorLeft.setPosition(ElevatorConstants.kHeight1Inch);
+                    m_targetHeight = ElevatorConstants.kHeight1Inch;
                 case LEVEL2:
-                    return m_EleMotorLeft.setPosition(ElevatorConstants.kHeight2Inch);
+                    m_targetHeight = ElevatorConstants.kHeight2Inch;
                 case LEVEL3:
-                    return m_EleMotorLeft.setPosition(ElevatorConstants.kHeight3Inch);
+                    m_targetHeight = ElevatorConstants.kHeight3Inch;
                 case LEVEL4:
-                    return m_EleMotorLeft.setPosition(ElevatorConstants.kMaxHeightInch);
+                    m_targetHeight = ElevatorConstants.kMaxHeightInch;
             }
             return false;
         }),
         Commands.waitUntil(() -> {return isAtPosition();})
     );
 
-    DigitalInput limitSwitch = new DigitalInput(ElevatorConstants.klimitSwitchChanel);
+    DigitalInput limitSwitch = new DigitalInput(ElevatorConstants.klimitSwitchChannel);
     Trigger limitTrigger = new Trigger(() -> limitSwitch.get());
 
     public void setPosition(Double position) {
@@ -59,7 +63,7 @@ public class Elevator extends SubsystemBase {
 
     public void setElevatorHeight(double targetHeightInches){
         // ensure target height is within allowed range
-        m_targetHeight = Math.min(Math.max(targetHeightInches, ElevatorConstants.kMinHeightInch), ElevatorConstants.kMaxHeightInch);
+        m_targetHeight = Math.min(Math.max(targetHeightInches, minHeightInch), maxHeightInch);
 
         // Convert inches to motor rotations and set position
         double targetRotations = m_targetHeight / (2 * Math.PI); // We need to adjust this conversion factor to elevator motor gearing
@@ -101,11 +105,29 @@ public class Elevator extends SubsystemBase {
             m_currentHeight = m_EleMotorLeft.getPosition() * (2 * Math.PI); // Convert motor rotations to inches
         }
 
+        // Sets variable to be instance of arm class
+        armCurrentAngle = Arm.getInstance().m_currentAngle;
+
+        // Checking to see if the current angle is greater than or equal to the init minimum angle of the arm and less than or equal to the init maximum angle of the arm.
+        // Once true it sets the min height of the elevator to be the init minimum height and the max height to be the limit under the danger zone.
+        if (armCurrentAngle >= ArmConstants.kAngleMin && armCurrentAngle <= ArmConstants.kAngleMax){
+            minHeightInch = ElevatorConstants.kMinHeightInch;
+            maxHeightInch = GameConstants.kLimitUnderDZ;
+        // Checking to see if the current height is greater than or equal to the limit above the danger zone and less than or equal to the init maximum height.
+        // Once true it sets the minimum height to be the limit above the danger zone and the max height to be the init maximum height.
+        // Doing this to differentiate whether the elevator is already above the danger zone or not.
+        } else if (m_currentHeight >= GameConstants.kLimitAboveDZ && m_currentHeight <= ElevatorConstants.kMaxHeightInch){
+            minHeightInch = GameConstants.kLimitAboveDZ;
+            maxHeightInch = ElevatorConstants.kMaxHeightInch;
+        }
+
         // Stop at limit
         if (limitSwitch.get()) {
             m_currentHeight = ElevatorConstants.kMinHeightInch;
             m_EleMotorLeft.setPosition(0); // Reset encoder at bottom limit
             m_EleMotorRight.setPosition(0);
         }
+        
+        setElevatorHeight(m_targetHeight);
     }
 }

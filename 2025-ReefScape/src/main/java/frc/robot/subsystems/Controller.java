@@ -128,12 +128,14 @@ public class Controller extends XboxController {
 
       Intake.onTrue(
         Commands.sequence(
-          // TODO: Sequence Commands once branches tested and merged
+          EndEffector.getInstance().IntakeCommand
         )
       );
       Outtake.onTrue(
         Commands.sequence(
-          // TODO: Sequence Commands once branches tested and merged
+          Arm.getInstance().ArmPositionCommand,
+          Elevator.getInstance().ElevatorCommand,
+          EndEffector.getInstance().ExpelCommand
         )
       );
       

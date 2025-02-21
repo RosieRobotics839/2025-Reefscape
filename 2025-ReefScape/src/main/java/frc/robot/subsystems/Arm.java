@@ -7,6 +7,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.ArmConstants;
+import frc.robot.Constants.ElevatorConstants;
 import frc.utils.CalibrationMap;
 import frc.utils.Motor;
 import frc.robot.Constants.GameConstants;
@@ -25,6 +26,9 @@ public class Arm extends SubsystemBase{
     public AnalogInput m_armAnalogEncoder;
     public double m_currentAngle;
     public double m_angleTarget;
+    public double AngleMin = ArmConstants.kAngleMin;
+    public double AngleMax = ArmConstants.kAngleMax;
+    public double elevatorCurrentHeight;
     double m_armOffset = 0; //change later
     double m_newArmOffset = 0;
     boolean m_setupArmDone = false;
@@ -42,7 +46,7 @@ public class Arm extends SubsystemBase{
      */
     public void setArmAngle(double target) {
         if (!m_setupArmDone) return;
-        target = Math.max(ArmConstants.kAngleMin, Math.min(ArmConstants.kAngleMax, target));
+        target = Math.max(AngleMin, Math.min(AngleMax, target));
         m_motorArm.setPosition(target);
         m_angleTarget = target;
     }
@@ -96,6 +100,23 @@ public class Arm extends SubsystemBase{
         // Update current Angle from encoder position
         if (m_motorArm.isSetupDone()){
             m_currentAngle = m_motorArm.getPosition();
+        }
+
+        elevatorCurrentHeight = Elevator.getInstance().m_currentHeight; // Setting variable to Instance of Elevator
+
+        // Checking to see if the current height of the elevator is greater than the limit under the danger zone and less than or equal to the limit above the danger zone
+        // After this check is done, and it returns true, it sets the angle max to be the max angle before the arm collides with the elevator and the min angle to the init mininum angle.
+        if (elevatorCurrentHeight > GameConstants.kLimitUnderDZ && elevatorCurrentHeight <= GameConstants.kLimitAboveDZ){
+            AngleMax = GameConstants.kAngleMaxDZ;
+            AngleMin = ArmConstants.kAngleMin;
+        // Checking to see if the current height of the elevator is either:
+        // 1. Greater than or equal to the init minimum height of the elevator and less than or equal to the limit under the danger zone
+        // 2. Greater than the limit above the danger zone and less than or equal to the init maximum height of the elevator
+        // Once true it sets the max angle to be the init max angle and same for the min angle.
+        } else if ((elevatorCurrentHeight >= ElevatorConstants.kMinHeightInch && elevatorCurrentHeight <= GameConstants.kLimitUnderDZ)
+        || (elevatorCurrentHeight > GameConstants.kLimitAboveDZ && elevatorCurrentHeight <= ElevatorConstants.kMaxHeightInch)){
+            AngleMax = ArmConstants.kAngleMax;
+            AngleMin = ArmConstants.kAngleMin;
         }
     }
 }
