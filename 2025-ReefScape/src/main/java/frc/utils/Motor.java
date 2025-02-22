@@ -651,6 +651,9 @@ public class Motor extends SubsystemBase {
                 return motor_talon.setPosition(position).isOK();
             case NEO:
                 return encoder_neo.setPosition(position) == REVLibError.kOk; // Our math is based on rotations per Minute
+            case SIMULATED:
+                m_simPosition = position;
+                return true;
             default:
         }
         return false;
