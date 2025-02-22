@@ -9,7 +9,6 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.ArmConstants;
 import frc.utils.Calibrate;
-import frc.utils.CalibrationMap;
 import frc.utils.Motor;
 import frc.utils.NTValues.NTDouble;
 import frc.robot.Constants.GameConstants;
@@ -20,7 +19,7 @@ public class Arm extends SubsystemBase{
     
     DoublePublisher nt_currentAngle, nt_targetAngle;
 
-    private static Arm instance = new Arm(ArmConstants.kArmCANID, ArmConstants.kDigitalInputID);
+    private static Arm instance = new Arm(ArmConstants.kCANID, ArmConstants.kDigitalInputID);
 
     public static Arm getInstance(){
         return instance;
@@ -43,11 +42,11 @@ public class Arm extends SubsystemBase{
     GameConstants.ScoreLevel m_scoreReefLevel;
 
     DoublePublisher
-    nt_armOffset;
+    nt_positionSensor;
 
     // Checking to see if we are at the score position.
     public Boolean atScorePosition(){
-        return Math.abs(m_currentAngle - m_angleTarget) < ArmConstants.kArmAngleTolerance; 
+        return Math.abs(m_currentAngle - m_angleTarget) < ArmConstants.kAngleTolerance; 
     }
 
     public void setArmAngleSafely(double target) {
@@ -73,13 +72,13 @@ public class Arm extends SubsystemBase{
 
     public Arm(int CANID, int analogID) {
 
-        nt_armOffset = table.getDoubleTopic("angle/armOffset").publish();
+        nt_positionSensor = table.getDoubleTopic("angle/positionSensor").publish();
         nt_currentAngle = table.getDoubleTopic("angle/currentAngle").publish();
         nt_targetAngle = table.getDoubleTopic("angle/currentAngle").publish();
 
         m_angleSensor = new DutyCycleEncoder(analogID);
 
-        m_motor = new Motor(ArmConstants.kArmCANID, ArmConstants.kMotorType, "arm")
+        m_motor = new Motor(ArmConstants.kCANID, ArmConstants.kMotorType, "arm")
             .withStatorLimit((int)ArmConstants.kArmMotorCurrentLimit)
             .inverted(true)
             .withGearRatio(ArmConstants.kArmGearRatio)
@@ -136,7 +135,7 @@ public class Arm extends SubsystemBase{
         }
 
         setArmAngle(m_angleTarget);
-        nt_armOffset.set(m_angleSensor.get());
+        nt_positionSensor.set(m_angleSensor.get());
         nt_currentAngle.set(m_currentAngle);
         nt_targetAngle.set(m_angleTarget);
 

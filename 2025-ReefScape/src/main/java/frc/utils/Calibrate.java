@@ -47,7 +47,7 @@ public class Calibrate extends CalibrationMap {
                 nt_x.set(val);
                 nt_y.set(get(val));
                 // Wait until input is within calibration map X values
-                if (val < m_xmin && val > m_xmax){
+                if (val < m_xmin || val > m_xmax){
                     nt_action.set(false);
                     return false;
                 }

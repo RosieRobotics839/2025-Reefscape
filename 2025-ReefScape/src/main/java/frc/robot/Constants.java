@@ -84,12 +84,12 @@ public final class Constants {
     public static double kTargetAngleLevel4 = 0;
 
     // TODO: Change values of Calibration Maps.
-    public static double [] kCalibrationX = new double[]{-2, 90}; //analog values
-    public static double [] kCalibrationY = new double[]{ 0.511770, 0.773146}; // degrees
+    public static double [] kCalibrationX = new double[]{ 0.511770, 0.773146}; //analog values
+    public static double [] kCalibrationY = new double[]{-2, 90}; // degrees
 
     public static double kArmMotorCurrentLimit = (NTDouble.create(5, "Arm/kCurrentLimit", (val) ->Arm.getInstance().m_motor.withStatorLimit(val)));
-    public static double kArmAngleTolerance = Units.degreesToRadians(NTDouble.create(5, "Arm/kArmAngleTolerance", val -> kArmAngleTolerance = Units.degreesToRadians(val)));
 
+    public static double kAngleTolerance = Units.degreesToRadians(NTDouble.create(5, "Arm/kArmAngleTolerance", val -> kAngleTolerance = Units.degreesToRadians(val)));
     public static double kArmGearRatio = 40;
     public static double kMaxSpeed = 0.5;
   }
@@ -366,15 +366,15 @@ public final class Constants {
     public static double kClimberKff = (NTDouble.create(0, "Climber/kClimberKff", (val)->kClimberKff = (val)));
    
     //public static int kCurrentInit = (int)NTDouble.create(3,"Climber/kCurrentInit",val->kCurrentInit=(int)val);
-    public static int kClimberMotorCurrentLimit = (int)NTDouble.create(50,"Climber/kCurrentLimit",(val) ->Climber.getInstance().m_motorClimber.withStatorLimit(val));
-    public static double kClimberAngleTolerance = Units.degreesToRadians(NTDouble.create(3, "Climber/kClimberAngleTolerance", val -> kClimberAngleTolerance = Units.degreesToRadians(val)));
+    public static int kMotorCurrentLimit = (int)NTDouble.create(50,"Climber/kCurrentLimit",(val) ->Climber.getInstance().m_motor.withStatorLimit(val));
+    public static double kAngleTolerance = Units.degreesToRadians(NTDouble.create(3, "Climber/kClimberAngleTolerance", val -> kAngleTolerance = Units.degreesToRadians(val)));
 
-    public static double kClimberAngleIn = 0; // Change once we can test
-    public static double kClimberAngleOut = 0; // Change once we can test
+    public static double kAngleIn = 0; // Change once we can test
+    public static double kAngleOut = 0; // Change once we can test
 
     // TODO: Change values of Calibration Maps.
-    public static double [] kClimberCalibrationX = new double[]{0.507191, 0.581880, 0.829728, 0.989784}; //analog values 
-    public static double [] kClimberCalibrationY = new double[]{25, 0, -90, -148}; // degrees 
+    public static double [] kCalibrationX = new double[]{0.507191, 0.581880, 0.829728, 0.989784}; //analog values 
+    public static double [] kCalibrationY = new double[]{25, 0, -90, -148}; // degrees 
     
     public static double kClimberGearRatio = 125;
 
