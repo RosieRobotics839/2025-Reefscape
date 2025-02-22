@@ -69,8 +69,6 @@ public final class Constants {
     public static double kArmEncoderPositionFactor = (2.0 * Math.PI) / kArmMotorGearReduction;
     public static double kArmEncoderVelocityFactor = (2.0 * Math.PI) / kArmMotorGearReduction / 60.0;
 
-    public static double kArmKi = (NTDouble.create(0, "Arm/kArmKi", (val)->kArmKi = (val)));
-    public static double kArmKff = (NTDouble.create(0, "Arm/kArmKff", (val)->kArmKff = (val)));
     public static Motor.Gains kGainPosition = MotorDefaults.Kraken.kGainPosition;
 
     // Creates Max and Min values for Arm Software Hardstop
@@ -99,7 +97,6 @@ public final class Constants {
     public static double kEffectorStage1Ratio = 5.0 / 1.0; //Starting with a 5:1 Gear Ratio.
     public static double kEffectorMotorGearReduction = kEffectorStage1Ratio;
     public static double kEffectorEncoderPositionFactor = (2.0 * Math.PI) / kEffectorMotorGearReduction;
-    public static double kEffectorSpeed = 0; //Change once we can test
     public static double kSpeed = 0; //Change once we can test
     public static double kAlgaeMotorRevolutions = 5;
 
@@ -112,12 +109,6 @@ public final class Constants {
     public static double kMotorCurrentLimit = (NTDouble.create(5, "Effector/kCurrentLimit", (val) ->EndEffector.getInstance().m_motor.withStatorLimit(val)));
 
     // Position control gains
-    public static double kEffectorPosKi = (NTDouble.create(0.002, "Effector/Position/kI", 
-        (val)->EndEffector.getInstance().m_motorEffector.withKI(val, Motor.GainSlot.POSITION)));
-        (val)->EndEffector.getInstance().m_motorEffector.withKP(val, Motor.GainSlot.SPEED)));
-    public static double kEffectorVelKi = (NTDouble.create(0, "Effector/Velocity/kI", 
-        (val)->EndEffector.getInstance().m_motorEffector.withKD(val, Motor.GainSlot.SPEED)));
-    public static double kEffectorVelKff = (NTDouble.create(0.0, "Effector/Velocity/kFF", 
     public static Motor.Gains kGainPosition = new Motor.Gains(0.06, 0.0004, 0, 0);
     public static Motor.Gains kGainVelocity = new Motor.Gains(0, 0, 0, 0);
 
@@ -345,7 +336,7 @@ public final class Constants {
     public static MyMotorType kMotorType = MyMotorType.NEO;
     // TODO: Change later
     public static int kDigitalInputID = 2;
-    public static int kClimberCANID = 3;
+    public static int kCANID = 3;
 
     //public static int kCurrentInit = (int)NTDouble.create(3,"Climber/kCurrentInit",val->kCurrentInit=(int)val);
     public static int kMotorCurrentLimit = (int)NTDouble.create(50,"Climber/kCurrentLimit",(val) ->Climber.getInstance().m_motor.withStatorLimit(val));
