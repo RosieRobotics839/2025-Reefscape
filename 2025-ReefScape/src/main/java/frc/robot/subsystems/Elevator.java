@@ -93,14 +93,14 @@ public class Elevator extends SubsystemBase {
             .inverted(false)
             .withStatorLimit((int)ElevatorConstants.kLeftElevatorMotorCurrentLimit)
             .withSpeedLimit(ElevatorConstants.kMaxSpeedPositive,ElevatorConstants.kMaxSpeedNegative)
-            .withGearRatio(ElevatorConstants.kElavatorGearRatio)
-            .withKI(ElevatorConstants.kElevatorKi,GainSlot.POSITION);
+            .withGearRatio(ElevatorConstants.kElevatorGearRatio)
+            .pidf(ElevatorConstants.kGainPosition, GainSlot.POSITION);
 
         m_EleMotorRight = new Motor(ElevatorConstants.kEleRightCANID, ElevatorConstants.kMotorType, "eleRight")
             .inverted(true)
             .withStatorLimit((int)ElevatorConstants.kRightElevatorMotorCurrentLimit)
-            .withGearRatio(ElevatorConstants.kElavatorGearRatio)
-            .withKI(ElevatorConstants.kElevatorKi,GainSlot.POSITION)
+            .withGearRatio(ElevatorConstants.kElevatorGearRatio)
+            .pidf(ElevatorConstants.kGainPosition, GainSlot.POSITION)
             .setFollowerMode(ElevatorConstants.kEleLeftCANID, false); // not sure if we need to invert motor second time, test this
 
     }
