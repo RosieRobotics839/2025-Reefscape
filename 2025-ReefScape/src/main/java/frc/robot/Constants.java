@@ -109,7 +109,7 @@ public final class Constants {
     public static double kMotorCurrentLimit = (NTDouble.create(5, "Effector/kCurrentLimit", (val) ->EndEffector.getInstance().m_motor.withStatorLimit(val)));
 
     // Position control gains
-    public static Motor.Gains kGainPosition = new Motor.Gains(0.06, 0.0004, 0, 0);
+    public static Motor.Gains kGainPosition = new Motor.Gains(0.3, 0.002, 0, 0);
     public static Motor.Gains kGainVelocity = new Motor.Gains(0, 0, 0, 0);
 
     public static double kGearRatio = 5;
