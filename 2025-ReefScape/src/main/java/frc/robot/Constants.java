@@ -56,7 +56,7 @@ public final class Constants {
 
   public static int kLimitUnderDZ = 9; // The Limit for how high the Elevator can go under the danger zone (dz / 9 - 21 inches)
   public static int kLimitAboveDZ = 21; // The Limit for how high the Elevator can go above the danger zone (dz / 9 - 21 inches)
-  public static int kAngleMaxDZ = 67; // The Max Angle for the Arm while it is in the Danger Zone (dz)
+  public static int kAngleMaxDZ = 67; // The Max Angle in degrees for the Arm while it is in the Danger Zone (dz)
 
   }
   public static class ArmConstants {
@@ -72,8 +72,8 @@ public final class Constants {
     public static Motor.Gains kGainPosition = MotorDefaults.Kraken.kGainPosition;
 
     // Creates Max and Min values for Arm Software Hardstop
-    public static double kAngleMax = Units.degreesToRadians(NTDouble.create(89, "Arm/kAngleMax", val -> kAngleMax = Units.degreesToRadians(val)));
-    public static double kAngleMin = Units.degreesToRadians(NTDouble.create(-3, "Arm/kAngleMin", val -> kAngleMin = Units.degreesToRadians(val)));
+    public static double kAngleMax = (NTDouble.create(89, "Arm/kAngleMax", (val)->kAngleMax = (val)));
+    public static double kAngleMin = (NTDouble.create(-3, "Arm/kAngleMin", (val)->kAngleMin = (val)));
 
     // TODO: Change once angles are settled on.
     public static double kTargetAngleTrough = 0;
@@ -81,12 +81,12 @@ public final class Constants {
     public static double kTargetAngleLevel4 = 0;
 
     // TODO: Change values of Calibration Maps.
-    public static double [] kCalibrationX = new double[]{ 0.511770, 0.773146}; //analog values
+    public static double [] kCalibrationX = new double[]{ 0.333, 0.598}; //analog values
     public static double [] kCalibrationY = new double[]{-2, 90}; // degrees
 
     public static double kArmMotorCurrentLimit = (NTDouble.create(5, "Arm/kCurrentLimit", (val) ->Arm.getInstance().m_motor.withStatorLimit(val)));
 
-    public static double kAngleTolerance = Units.degreesToRadians(NTDouble.create(5, "Arm/kArmAngleTolerance", val -> kAngleTolerance = Units.degreesToRadians(val)));
+    public static double kAngleTolerance = (NTDouble.create(0.5, "Arm/kArmAngleTolerance", val -> kAngleTolerance = (val)));
     public static double kArmGearRatio = 40;
     public static double kMaxSpeed = 0.5;
   }

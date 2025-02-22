@@ -1,4 +1,5 @@
 package frc.robot.subsystems;
+
 import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
@@ -27,8 +28,8 @@ public class Arm extends SubsystemBase{
 
     public Motor m_motor;
     public DutyCycleEncoder m_angleSensor;
-    public double m_currentAngle;
-    public double m_angleTarget = NTDouble.create(0, table, "targetAngle",(val)->setArmAngle(val));
+    public double m_currentAngle = 0;
+    public double m_angleTarget = NTDouble.create(0, table, "angle/targetAngle",(val)->setArmAngle(val));
     public double targetAngle = 0;
     public double AngleMin = ArmConstants.kAngleMin;
     public double AngleMax = ArmConstants.kAngleMax;
@@ -42,7 +43,10 @@ public class Arm extends SubsystemBase{
     GameConstants.ScoreLevel m_scoreReefLevel;
 
     DoublePublisher
-    nt_positionSensor;
+        nt_positionSensor,
+        nt_setupDone,
+        nt_safetyLimit,
+        nt_motorCommand;
 
     // Checking to see if we are at the score position.
     public Boolean atScorePosition(){
@@ -50,7 +54,11 @@ public class Arm extends SubsystemBase{
     }
 
     public void setArmAngleSafely(double target) {
-        if (!m_setupDone) return;
+        nt_setupDone.set(m_setupDone ? 1.0 : 0.0);
+        if (!m_setupDone){
+            System.out.println("Arm setup not done, ignoring command");
+            return;
+        }
         
         // Get current elevator position
         boolean inDangerZone = Elevator.getInstance().isInDangerZone();
@@ -62,7 +70,14 @@ public class Arm extends SubsystemBase{
         
         // Apply normal min/max bounds
         target = Math.max(AngleMin, Math.min(AngleMax, target));
-        m_motor.setPosition(target);
+
+        // Debug output for safety limits
+        nt_safetyLimit.set(target);
+
+        // Convert degrees to rotations and send to motor
+        double motorCommand = target/(2.0*Math.PI);
+        nt_motorCommand.set(motorCommand);
+        m_motor.setPosition(motorCommand);
         m_angleTarget = target;
     }
 
@@ -74,7 +89,10 @@ public class Arm extends SubsystemBase{
 
         nt_positionSensor = table.getDoubleTopic("angle/positionSensor").publish();
         nt_currentAngle = table.getDoubleTopic("angle/currentAngle").publish();
-        nt_targetAngle = table.getDoubleTopic("angle/currentAngle").publish();
+        nt_targetAngle = table.getDoubleTopic("angle/targetAngle").publish();
+        nt_setupDone = table.getDoubleTopic("debug/setupDone").publish();
+        nt_safetyLimit = table.getDoubleTopic("debug/safetyLimit").publish();
+        nt_motorCommand = table.getDoubleTopic("debug/motorCommand").publish();
 
         m_angleSensor = new DutyCycleEncoder(analogID);
 
