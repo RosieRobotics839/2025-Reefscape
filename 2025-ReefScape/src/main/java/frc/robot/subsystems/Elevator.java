@@ -8,6 +8,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.Constants.ArmConstants;
 import frc.robot.Constants.ElevatorConstants;
 import frc.robot.Constants.GameConstants;
 import frc.utils.Motor;
@@ -51,20 +52,20 @@ public class Elevator extends SubsystemBase {
     }
 
     public boolean isInDangerZone() {
-        return (m_currentHeight > GameConstants.kLimitUnderDZ && 
-                m_currentHeight <= GameConstants.kLimitAboveDZ);
+        return (m_currentHeight > ElevatorConstants.kLimitUnderDZ && 
+                m_currentHeight <= ElevatorConstants.kLimitAboveDZ);
     }
 
     public void setElevatorHeightSafely(double targetHeightInches) {
         // Check if we're about to enter danger zone
-        boolean willBeInDangerZone = (targetHeightInches > GameConstants.kLimitUnderDZ && 
-                                     targetHeightInches <= GameConstants.kLimitAboveDZ);
+        boolean willBeInDangerZone = (targetHeightInches > ElevatorConstants.kLimitUnderDZ && 
+                                     targetHeightInches <= ElevatorConstants.kLimitAboveDZ);
         
         if (willBeInDangerZone) {
             // If arm angle is too large, adjust arm first
             double currentArmAngle = Arm.getInstance().m_currentAngle;
-            if (currentArmAngle > GameConstants.kAngleMaxDZ) {
-                Arm.getInstance().setArmAngleSafely(GameConstants.kAngleMaxDZ);
+            if (currentArmAngle > ArmConstants.kAngleMaxDZ) {
+                Arm.getInstance().setArmAngleSafely(ArmConstants.kAngleMaxDZ);
                 // Wait for arm to reach safe position before moving elevator
                 if (!Arm.getInstance().atScorePosition()) {
                     return;
@@ -109,11 +110,11 @@ public class Elevator extends SubsystemBase {
         return Commands.sequence(
             // First check if we're moving into danger zone
             Commands.waitUntil(() -> {
-                if (targetHeight > GameConstants.kLimitUnderDZ && 
-                    targetHeight <= GameConstants.kLimitAboveDZ) {
+                if (targetHeight > ElevatorConstants.kLimitUnderDZ && 
+                    targetHeight <= ElevatorConstants.kLimitAboveDZ) {
                     // If moving into danger zone, ensure arm is safe first
                     double currentArmAngle = Arm.getInstance().m_currentAngle;
-                    if (currentArmAngle > GameConstants.kAngleMaxDZ) {
+                    if (currentArmAngle > ArmConstants.kAngleMaxDZ) {
                         return false; // Wait for arm to be safe, unsure if this will get stuck forever
                     }
                 }

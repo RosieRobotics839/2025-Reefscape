@@ -49,18 +49,16 @@ public final class Constants {
   }
 
   public static class GameConstants {
-
     public enum ScoreLevel{
       TROUGH, LEVEL2, LEVEL3, LEVEL4
     }
-
-  public static int kLimitUnderDZ = 9; // The Limit for how high the Elevator can go under the danger zone (dz / 9 - 21 inches)
-  public static int kLimitAboveDZ = 21; // The Limit for how high the Elevator can go above the danger zone (dz / 9 - 21 inches)
-  public static int kAngleMaxDZ = 67; // The Max Angle in degrees for the Arm while it is in the Danger Zone (dz)
-
   }
+  
   public static class ArmConstants {
-
+    public static double kLimitUnderDZ = Units.inchesToMeters(NTDouble.create(9.0,"GameConstants/DZ/kLimUnderDZ",(val)->kLimitUnderDZ=Units.inchesToMeters(val)));; // The Limit for how high the Elevator can go under the danger zone (dz / 9 - 21 inches)
+    public static double kLimitAboveDZ = Units.inchesToMeters(NTDouble.create(21.0,"GameConstants/DZ/kLimAboveDZ",(val)->kLimitAboveDZ=Units.inchesToMeters(val)));; // The Limit for how high the Elevator can go above the danger zone (dz / 9 - 21 inches)
+    public static double kAngleMaxDZ = Units.degreesToRadians(NTDouble.create(67.0,"GameConstants/DZ/kAngleMax",(val)->kAngleMaxDZ=Units.degreesToRadians(val))); // The Max Angle in degrees for the Arm while it is in the Danger Zone (dz)
+  
     public static MyMotorType kMotorType = MyMotorType.KRAKEN;
     public static int kCANID = 4;
     public static int kDigitalInputID = 1;
@@ -119,6 +117,9 @@ public final class Constants {
     public static MyMotorType kMotorType = MyMotorType.KRAKEN;
     public static int kEleLeftCANID = 11;
     public static int kEleRightCANID = 12;
+
+    public static double kLimitUnderDZ = Units.inchesToMeters(NTDouble.create(9.0,"GameConstants/DZ/kLimUnderDZ",(val)->kLimitUnderDZ=Units.inchesToMeters(val)));; // The Limit for how high the Elevator can go under the danger zone (dz / 9 - 21 inches)
+    public static double kLimitAboveDZ = Units.inchesToMeters(NTDouble.create(21.0,"GameConstants/DZ/kLimAboveDZ",(val)->kLimitAboveDZ=Units.inchesToMeters(val)));; // The Limit for how high the Elevator can go above the danger zone (dz / 9 - 21 inches)
 
     public static int klimitSwitchChannel;
 

@@ -65,7 +65,7 @@ public class Arm extends SubsystemBase{
         
         if (inDangerZone) {
             // If in danger zone, limit angle to safe value
-            target = Math.min(target, GameConstants.kAngleMaxDZ);
+            target = Math.min(target, ArmConstants.kAngleMaxDZ);
         }
         
         // Apply normal min/max bounds
@@ -116,7 +116,7 @@ public class Arm extends SubsystemBase{
             // Check if movement is safe based on elevator position
             Commands.waitUntil(() -> {
                 if (Elevator.getInstance().isInDangerZone()) {
-                    targetAngle = Math.min(target, GameConstants.kAngleMaxDZ);
+                    targetAngle = Math.min(target, ArmConstants.kAngleMaxDZ);
                 }
                 return true;
             }),
