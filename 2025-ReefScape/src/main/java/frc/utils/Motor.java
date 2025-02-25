@@ -486,7 +486,7 @@ public class Motor extends SubsystemBase {
      * If there is a gear ratio between the sensor and the mechanism, make sure to apply a setGearRatio so
      * the closed loop operates on the full rotation.
      * @param enabled If true, uses a mode of closed loop operation that enables the motor
-     * to take the “shortest path”
+     * to take the shortest path
      * @return Motor instance for chaining methods
      */
     public Motor positionWrappingEnabled(boolean enabled){

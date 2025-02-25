@@ -5,6 +5,7 @@ import edu.wpi.first.networktables.BooleanPublisher;
 import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DutyCycleEncoder;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -33,8 +34,6 @@ public class Arm extends SubsystemBase{
     public double m_currentAngle = 0;
     public double m_angleTarget = Units.degreesToRadians(NTDouble.create(0, table, "angle/targetAngle",(val)->setArmAngle(Units.degreesToRadians(val))));
     public double targetAngle = 0;
-    public double AngleMin = ArmConstants.kAngleMin;
-    public double AngleMax = ArmConstants.kAngleMax;
     public double elevatorCurrentHeight;
     double m_armOffset = 0; //change later
     double m_newArmOffset = 0;
@@ -62,11 +61,10 @@ public class Arm extends SubsystemBase{
      * @return Arm Position
      */
     public double getArmPosition(){
-        return m_motor.getPosition() / ArmConstants.kArmGearRatio * (2 * Math.PI);
+        return m_motor.getPosition() * (2 * Math.PI);
     }
 
     private void setArmAngleSafely(double target) {
-        nt_setupDone.set(m_setupDone);
         if (!m_setupDone){
             return;
         }
@@ -80,10 +78,10 @@ public class Arm extends SubsystemBase{
         }
         
         // Apply normal min/max bounds
-        target = Math.max(AngleMin, Math.min(AngleMax, target));
+        target = Math.max(ArmConstants.kAngleMin, Math.min(ArmConstants.kAngleMax, target));
 
         // Debug output for safety limits
-        nt_safetyLimit.set(target);
+        nt_safetyLimit.set(Units.radiansToDegrees(target));
 
         // Convert degrees to rotations and send to motor
         double motorCommand = target/(2.0*Math.PI);
@@ -152,15 +150,16 @@ public class Arm extends SubsystemBase{
     @Override
     public void periodic() {
 
-        // Update current Angle from encoder position
-        if (m_motor.isSetupDone()){
-            m_currentAngle = m_motor.getPosition();
+        if (DriverStation.isDisabled()){
+            m_angleTarget = getArmPosition();
         }
 
         setArmAngleSafely(m_angleTarget);
+
+        nt_setupDone.set(m_setupDone);
         nt_positionSensor.set(m_angleSensor.get());
-        nt_currentAngle.set(m_currentAngle);
-        nt_targetAngle.set(m_angleTarget);
+        nt_currentAngle.set(Units.radiansToDegrees(getArmPosition()));
+        nt_targetAngle.set(Units.radiansToDegrees(m_angleTarget));
 
     }
 }

@@ -66,17 +66,17 @@ public final class Constants {
     public static Motor.Gains kGainPosition = MotorDefaults.Kraken.kGainPosition;
 
     // Creates Max and Min values for Arm Software Hardstop
-    public static double kAngleMax = (NTDouble.create(89, "Arm/kAngleMax", (val)->kAngleMax = (val)));
-    public static double kAngleMin = (NTDouble.create(-3, "Arm/kAngleMin", (val)->kAngleMin = (val)));
+    public static double kAngleMax = Units.degreesToRadians(NTDouble.create(89, "Arm/kAngleMax", (val)->kAngleMax = Units.degreesToRadians(val)));
+    public static double kAngleMin = Units.degreesToRadians(NTDouble.create(-3, "Arm/kAngleMin", (val)->kAngleMin = Units.degreesToRadians(val)));
 
     // TODO: Change once angles are settled on.
-    public static double kTargetAngleTrough = 0;
-    public static double kTargetAngleLevelMiddle = 0;
-    public static double kTargetAngleLevel4 = 0;
+    public static double kTargetAngleTrough = Units.degreesToRadians(NTDouble.create(67, "Arm/Target/kAngleTrough", (val)->kTargetAngleTrough = Units.degreesToRadians(val)));
+    public static double kTargetAngleLevelMiddle = Units.degreesToRadians(NTDouble.create(67, "Arm/Target/kLevelMiddle", (val)->kTargetAngleLevelMiddle = Units.degreesToRadians(val)));
+    public static double kTargetAngleLevel4 = Units.degreesToRadians(NTDouble.create(67, "Arm/Target/kLevel4", (val)->kTargetAngleLevel4 = Units.degreesToRadians(val)));
 
     // TODO: Change values of Calibration Maps.
     public static double [] kCalibrationX = new double[]{ 0.333, 0.598}; //analog values
-    public static double [] kCalibrationY = new double[]{Units.degreesToRadians(-2), Units.degreesToRadians(90)};
+    public static double [] kCalibrationY = new double[]{Units.degreesToRotations(-2), Units.degreesToRotations(90)};
 
     public static double kArmMotorCurrentLimit = (NTDouble.create(5, "Arm/kCurrentLimit", (val) ->Arm.getInstance().m_motor.withStatorLimit(val)));
 
