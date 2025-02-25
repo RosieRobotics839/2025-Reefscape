@@ -1,5 +1,7 @@
 package frc.robot.subsystems;
 
+import edu.wpi.first.math.util.Units;
+import edu.wpi.first.networktables.BooleanPublisher;
 import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
@@ -29,7 +31,7 @@ public class Arm extends SubsystemBase{
     public Motor m_motor;
     public DutyCycleEncoder m_angleSensor;
     public double m_currentAngle = 0;
-    public double m_angleTarget = NTDouble.create(0, table, "angle/targetAngle",(val)->setArmAngle(val));
+    public double m_angleTarget = Units.degreesToRadians(NTDouble.create(0, table, "angle/targetAngle",(val)->setArmAngle(Units.degreesToRadians(val))));
     public double targetAngle = 0;
     public double AngleMin = ArmConstants.kAngleMin;
     public double AngleMax = ArmConstants.kAngleMax;
@@ -44,19 +46,28 @@ public class Arm extends SubsystemBase{
 
     DoublePublisher
         nt_positionSensor,
-        nt_setupDone,
         nt_safetyLimit,
         nt_motorCommand;
 
+    BooleanPublisher
+        nt_setupDone;
+
     // Checking to see if we are at the score position.
-    public Boolean atScorePosition(){
-        return Math.abs(m_currentAngle - m_angleTarget) < ArmConstants.kAngleTolerance; 
+    public Boolean isAtPosition(){
+        return Math.abs(getArmPosition() - m_angleTarget) < ArmConstants.kAngleTolerance; 
     }
 
-    public void setArmAngleSafely(double target) {
-        nt_setupDone.set(m_setupDone ? 1.0 : 0.0);
+    /**
+     * Returns arm position in radians
+     * @return Arm Position
+     */
+    public double getArmPosition(){
+        return m_motor.getPosition() / ArmConstants.kArmGearRatio * (2 * Math.PI);
+    }
+
+    private void setArmAngleSafely(double target) {
+        nt_setupDone.set(m_setupDone);
         if (!m_setupDone){
-            System.out.println("Arm setup not done, ignoring command");
             return;
         }
         
@@ -78,11 +89,14 @@ public class Arm extends SubsystemBase{
         double motorCommand = target/(2.0*Math.PI);
         nt_motorCommand.set(motorCommand);
         m_motor.setPosition(motorCommand);
-        m_angleTarget = target;
     }
 
-    public void setArmAngle(double target) {
-        setArmAngleSafely(target);
+    public boolean isInDangerZone(){
+        return getArmPosition() > ArmConstants.kAngleMaxDZ;
+    }
+
+    public void setArmAngle(double target){
+        m_angleTarget = target;
     }
 
     public Arm(int CANID, int analogID) {
@@ -90,7 +104,7 @@ public class Arm extends SubsystemBase{
         nt_positionSensor = table.getDoubleTopic("angle/positionSensor").publish();
         nt_currentAngle = table.getDoubleTopic("angle/currentAngle").publish();
         nt_targetAngle = table.getDoubleTopic("angle/targetAngle").publish();
-        nt_setupDone = table.getDoubleTopic("debug/setupDone").publish();
+        nt_setupDone = table.getBooleanTopic("debug/setupDone").publish();
         nt_safetyLimit = table.getDoubleTopic("debug/safetyLimit").publish();
         nt_motorCommand = table.getDoubleTopic("debug/motorCommand").publish();
 
@@ -113,17 +127,8 @@ public class Arm extends SubsystemBase{
 
     public Command createMoveToAngleCommand(double target) {
         return Commands.sequence(
-            // Check if movement is safe based on elevator position
-            Commands.waitUntil(() -> {
-                if (Elevator.getInstance().isInDangerZone()) {
-                    targetAngle = Math.min(target, ArmConstants.kAngleMaxDZ);
-                }
-                return true;
-            }),
             // Move to safe angle
-            Commands.runOnce(() -> setArmAngle(targetAngle)),
-            // Wait until movement is complete
-            Commands.waitUntil(this::atScorePosition)
+            Commands.runOnce(() -> setArmAngle(targetAngle))
         );
     }
 
@@ -152,7 +157,7 @@ public class Arm extends SubsystemBase{
             m_currentAngle = m_motor.getPosition();
         }
 
-        setArmAngle(m_angleTarget);
+        setArmAngleSafely(m_angleTarget);
         nt_positionSensor.set(m_angleSensor.get());
         nt_currentAngle.set(m_currentAngle);
         nt_targetAngle.set(m_angleTarget);

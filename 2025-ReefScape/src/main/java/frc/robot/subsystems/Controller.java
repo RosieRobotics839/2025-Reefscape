@@ -133,8 +133,7 @@ public class Controller extends XboxController {
       );
       Outtake.onTrue(
         Commands.sequence(
-          //Arm.getInstance().ArmPositionCommand,
-          //Elevator.getInstance().ElevatorCommand,
+          Commands.waitUntil(() -> {return Elevator.getInstance().isAtPosition() && Arm.getInstance().isAtPosition();}),
           EndEffector.getInstance().ExpelCommand
         )
       );

@@ -62,11 +62,7 @@ public final class Constants {
     public static MyMotorType kMotorType = MyMotorType.KRAKEN;
     public static int kCANID = 4;
     public static int kDigitalInputID = 1;
-    public static double kArmStage1Ratio = 5.0 / 1.0;
-    public static double kArmMotorGearReduction = (2 * kArmStage1Ratio); // Multiplying by 2 in account of the sprocket gear
-    public static double kArmEncoderPositionFactor = (2.0 * Math.PI) / kArmMotorGearReduction;
-    public static double kArmEncoderVelocityFactor = (2.0 * Math.PI) / kArmMotorGearReduction / 60.0;
-
+    
     public static Motor.Gains kGainPosition = MotorDefaults.Kraken.kGainPosition;
 
     // Creates Max and Min values for Arm Software Hardstop
@@ -126,7 +122,7 @@ public final class Constants {
     public static double kLeftElevatorMotorCurrentLimit = (NTDouble.create(30, "Elevator/kLeftCurrentLimit", (val) ->Elevator.getInstance().m_EleMotorLeft.withStatorLimit(val)));
     public static double kRightElevatorMotorCurrentLimit = (NTDouble.create(30, "Elevator/kRightCurrentLimit", (val) ->Elevator.getInstance().m_EleMotorRight.withStatorLimit(val)));
 
-    // Values in inches that the elevator should be raised from the bottom to score different heights of coral and algea
+    // Values in inches that the elevator should be raised from the bottom to score different heights of coral and algae
     // These need to be tested and adjusted
     public static double kMaxHeightInch = Units.inchesToMeters(NTDouble.create(27.5, "Elevator/MaxHeightInch", (val)->kMaxHeightInch = Units.inchesToMeters(val)));; // 16.6 Rotations of the Axle
     public static double kHeight3Inch = Units.inchesToMeters(NTDouble.create(16, "Elevator/Height3Inch", (val)->kHeight3Inch = Units.inchesToMeters(val)));
@@ -138,6 +134,7 @@ public final class Constants {
     public static double kMaxSpeedPositive = 10; // Rotations per second
     public static double kMaxSpeedNegative = -4; // Rotations per second
     public static double kElevatorGearRatio = 16;
+    public static double kSprocketDiameter = Units.inchesToMeters(1.685);
 
     public static Motor.Gains kGainPosition = new Motor.Gains(19.2,0.625,0,0);
     
