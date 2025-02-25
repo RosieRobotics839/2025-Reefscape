@@ -117,7 +117,7 @@ public final class Constants {
     public static double kLimitUnderDZ = Units.inchesToMeters(NTDouble.create(9.0,"GameConstants/DZ/kLimUnderDZ",(val)->kLimitUnderDZ=Units.inchesToMeters(val)));; // The Limit for how high the Elevator can go under the danger zone (dz / 9 - 21 inches)
     public static double kLimitAboveDZ = Units.inchesToMeters(NTDouble.create(21.0,"GameConstants/DZ/kLimAboveDZ",(val)->kLimitAboveDZ=Units.inchesToMeters(val)));; // The Limit for how high the Elevator can go above the danger zone (dz / 9 - 21 inches)
 
-    public static int klimitSwitchChannel;
+    public static int klimitSwitchChannel = 8;
 
     public static double kLeftElevatorMotorCurrentLimit = (NTDouble.create(30, "Elevator/kLeftCurrentLimit", (val) ->Elevator.getInstance().m_EleMotorLeft.withStatorLimit(val)));
     public static double kRightElevatorMotorCurrentLimit = (NTDouble.create(30, "Elevator/kRightCurrentLimit", (val) ->Elevator.getInstance().m_EleMotorRight.withStatorLimit(val)));
@@ -131,10 +131,12 @@ public final class Constants {
     public static double kMinHeightInch = Units.inchesToMeters(NTDouble.create(0, "Elevator/MinHeightInch", (val)->kMinHeightInch = Units.inchesToMeters(val)));
 
     public static double kElevatorTolerance = Units.inchesToMeters(0.5);
-    public static double kMaxSpeedPositive = 10; // Rotations per second
-    public static double kMaxSpeedNegative = -4; // Rotations per second
     public static double kElevatorGearRatio = 16;
     public static double kSprocketDiameter = Units.inchesToMeters(1.685);
+
+    public static double kMaxSpeedPositive = 10; // Rotations per second
+    public static double kMaxSpeedNegative = -4; // Rotations per second
+    public static double kCalibrationSpeed = 1/kElevatorGearRatio; // Rotations per second
 
     public static Motor.Gains kGainPosition = new Motor.Gains(19.2,0.625,0,0);
     

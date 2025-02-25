@@ -1,9 +1,12 @@
 package frc.robot.subsystems;
 
+import edu.wpi.first.math.util.Units;
+import edu.wpi.first.networktables.BooleanPublisher;
 import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.DigitalInput;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -18,6 +21,7 @@ public class Elevator extends SubsystemBase {
 
     static NetworkTable table = NetworkTableInstance.getDefault().getTable("roboRIO/Elevator");
     DoublePublisher nt_currentHeight, nt_targetHeight;
+    BooleanPublisher nt_calibrated;
 
     private static Elevator instance = new Elevator();
     public static Elevator getInstance(){
@@ -27,7 +31,7 @@ public class Elevator extends SubsystemBase {
     public Motor m_EleMotorLeft;
     public Motor m_EleMotorRight;
     boolean setupElevator = false;
-    public double m_targetHeight = NTDouble.create(0, table, "targetHeight",(val)->setElevatorHeight(val));
+    public double m_targetHeight = NTDouble.create(0, table, "targetHeight",(val)->setPosition(Units.inchesToMeters(val)));
     public double m_currentHeight = 0;
     GameConstants.ScoreLevel m_scoreReefLevel;
     public double minHeightInch = ElevatorConstants.kMinHeightInch;
@@ -38,28 +42,32 @@ public class Elevator extends SubsystemBase {
     Trigger limitTrigger = new Trigger(() -> limitSwitch.get());
 
     public void setPosition(Double position) {
-        setElevatorHeight(position);
+        setPosition(position);
     }
 
-    public double getElevatorHeight() {
-        return m_currentHeight;
+    /**
+     * Returns the current elevator height based on the left elevator motor position multiplied by the circumference of the sprocket.
+     * @return Elevator distance in inches from bottom limit switch
+     */
+    public double getPosition() {
+        return m_EleMotorLeft.getPosition() * (Math.PI * ElevatorConstants.kSprocketDiameter);
     }
 
     // Check if elevator is at target position
     public boolean isAtPosition() {
-        return Math.abs(getElevatorHeight() - m_targetHeight) < ElevatorConstants.kElevatorTolerance; 
+        return Math.abs(getPosition() - m_targetHeight) < ElevatorConstants.kElevatorTolerance; 
     }
 
     public boolean isInDangerZone() {
-        return (getElevatorHeight() > ElevatorConstants.kLimitUnderDZ && 
-                getElevatorHeight() <= ElevatorConstants.kLimitAboveDZ);
+        return (getPosition() > ElevatorConstants.kLimitUnderDZ && 
+                getPosition() <= ElevatorConstants.kLimitAboveDZ);
     }
 
     public void setElevatorHeightSafely(double targetHeight) {
         // Check if we're about to enter danger zone
         if (Arm.getInstance().isInDangerZone()){
             // Use the average of the limits to decide if we are above or below the danger zone
-            if (getElevatorHeight() > ((ElevatorConstants.kLimitUnderDZ + ElevatorConstants.kLimitAboveDZ) / 2)){
+            if (getPosition() > ((ElevatorConstants.kLimitUnderDZ + ElevatorConstants.kLimitAboveDZ) / 2)){
                 targetHeight = Math.min(Math.max(targetHeight, ElevatorConstants.kLimitAboveDZ), maxHeightInch);
             } else {
                 targetHeight = Math.min(Math.max(targetHeight, minHeightInch), ElevatorConstants.kLimitUnderDZ);
@@ -78,7 +86,7 @@ public class Elevator extends SubsystemBase {
      * Sets the elevator target height
      * @param target (meters)
      */
-    public void setElevatorHeight(double target) {
+    public void setPosition(double target) {
         m_targetHeight = target;
     }
 
@@ -86,18 +94,21 @@ public class Elevator extends SubsystemBase {
 
         nt_currentHeight = table.getDoubleTopic("currentHeight").publish();
         nt_targetHeight = table.getDoubleTopic("targetHeight").publish();
+        nt_calibrated = table.getBooleanTopic("calibrated").publish();
         
         m_EleMotorLeft = new Motor(ElevatorConstants.kEleLeftCANID, ElevatorConstants.kMotorType, "eleLeft")
             .inverted(false)
             .withStatorLimit((int)ElevatorConstants.kLeftElevatorMotorCurrentLimit)
             .withSpeedLimit(ElevatorConstants.kMaxSpeedPositive,ElevatorConstants.kMaxSpeedNegative)
             .withGearRatio(ElevatorConstants.kElevatorGearRatio)
+            .withSpeedLimit(ElevatorConstants.kMaxSpeedPositive, ElevatorConstants.kMaxSpeedNegative)
             .pidf(ElevatorConstants.kGainPosition, GainSlot.POSITION);
 
         m_EleMotorRight = new Motor(ElevatorConstants.kEleRightCANID, ElevatorConstants.kMotorType, "eleRight")
             .inverted(true)
             .withStatorLimit((int)ElevatorConstants.kRightElevatorMotorCurrentLimit)
             .withGearRatio(ElevatorConstants.kElevatorGearRatio)
+            .withSpeedLimit(ElevatorConstants.kMaxSpeedPositive, ElevatorConstants.kMaxSpeedNegative)
             .pidf(ElevatorConstants.kGainPosition, GainSlot.POSITION)
             .setFollowerMode(ElevatorConstants.kEleLeftCANID, false); // not sure if we need to invert motor second time, test this
 
@@ -106,7 +117,7 @@ public class Elevator extends SubsystemBase {
     public Command createMoveToHeightCommand(double targetHeight) {
         return Commands.sequence(
             // move elevator
-            Commands.runOnce(() -> setElevatorHeight(targetHeight))
+            Commands.runOnce(() -> setPosition(targetHeight))
         );
     }
 
@@ -127,18 +138,31 @@ public class Elevator extends SubsystemBase {
         return createMoveToHeightCommand(ElevatorConstants.kMaxHeightInch);
     }
     boolean m_isCalibrated = false;
+    boolean m_lastLimitSwitch = limitSwitch.get();
     @Override
     public void periodic() {
 
-        // Stop at limit switch
-        if (!m_isCalibrated && limitSwitch.get()) {
+        if (DriverStation.isDisabled() || !m_isCalibrated){
+            m_targetHeight = getPosition();
+        }
+
+        // Handle limit switch calibration either disabled or enabled. Requires the limit switch to transition from not pressed to pressed for now.
+        if (!m_lastLimitSwitch && limitSwitch.get() && !m_isCalibrated){
             m_EleMotorLeft.setEncoderPosition(0); // Reset encoder at bottom limit
             m_EleMotorRight.setEncoderPosition(0);
+            m_targetHeight = Units.inchesToMeters(0);
             m_isCalibrated = true;
         }
-        
-        setElevatorHeightSafely(m_targetHeight);
-        nt_currentHeight.set(m_currentHeight);
-        nt_targetHeight.set(m_targetHeight);
+        m_lastLimitSwitch = limitSwitch.get();
+
+        if (DriverStation.isEnabled()){
+            if (m_isCalibrated){
+                setElevatorHeightSafely(m_targetHeight);
+            }
+        }
+
+        nt_calibrated.set(m_isCalibrated);
+        nt_currentHeight.set(Units.metersToInches(getPosition()));
+        nt_targetHeight.set(Units.metersToInches(m_targetHeight));
     }
 }
