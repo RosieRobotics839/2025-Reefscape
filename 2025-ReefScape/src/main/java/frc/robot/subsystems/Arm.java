@@ -110,7 +110,7 @@ public class Arm extends SubsystemBase{
 
         m_motor = new Motor(ArmConstants.kCANID, ArmConstants.kMotorType, "arm")
             .withStatorLimit((int)ArmConstants.kArmMotorCurrentLimit)
-            .inverted(true)
+            .inverted(false)
             .withGearRatio(ArmConstants.kArmGearRatio)
             .withSpeedLimit(ArmConstants.kMaxSpeed);
 

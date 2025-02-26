@@ -21,7 +21,7 @@ public class Elevator extends SubsystemBase {
 
     static NetworkTable table = NetworkTableInstance.getDefault().getTable("roboRIO/Elevator");
     DoublePublisher nt_currentHeight, nt_targetHeight;
-    BooleanPublisher nt_calibrated;
+    BooleanPublisher nt_calibrated, nt_limitSwitch;
 
     private static Elevator instance = new Elevator();
     public static Elevator getInstance(){
@@ -63,22 +63,22 @@ public class Elevator extends SubsystemBase {
                 getPosition() <= ElevatorConstants.kLimitAboveDZ);
     }
 
-    public void setElevatorHeightSafely(double targetHeight) {
+    public void setElevatorHeightSafely(double safeTargetHeight) {
         // Check if we're about to enter danger zone
         if (Arm.getInstance().isInDangerZone()){
             // Use the average of the limits to decide if we are above or below the danger zone
             if (getPosition() > ((ElevatorConstants.kLimitUnderDZ + ElevatorConstants.kLimitAboveDZ) / 2)){
-                targetHeight = Math.min(Math.max(targetHeight, ElevatorConstants.kLimitAboveDZ), maxHeightInch);
+                safeTargetHeight = Math.min(Math.max(safeTargetHeight, ElevatorConstants.kLimitAboveDZ), maxHeightInch);
             } else {
-                targetHeight = Math.min(Math.max(targetHeight, minHeightInch), ElevatorConstants.kLimitUnderDZ);
+                safeTargetHeight = Math.min(Math.max(safeTargetHeight, minHeightInch), ElevatorConstants.kLimitUnderDZ);
             }
         }
         
         // Ensure target height is within allowed range
-        targetHeight = Math.min(Math.max(targetHeight, minHeightInch), maxHeightInch);
+        safeTargetHeight = Math.min(Math.max(safeTargetHeight, minHeightInch), maxHeightInch);
         
         // Convert inches to motor rotations and set position
-        double targetRotations = m_targetHeight / (Math.PI * ElevatorConstants.kSprocketDiameter);
+        double targetRotations = safeTargetHeight / (Math.PI * ElevatorConstants.kSprocketDiameter);
         m_EleMotorLeft.setPosition(targetRotations);
     }
 
@@ -95,6 +95,7 @@ public class Elevator extends SubsystemBase {
         nt_currentHeight = table.getDoubleTopic("currentHeight").publish();
         nt_targetHeight = table.getDoubleTopic("targetHeight").publish();
         nt_calibrated = table.getBooleanTopic("calibrated").publish();
+        nt_limitSwitch = table.getBooleanTopic("limitSwitch").publish();
         
         m_EleMotorLeft = new Motor(ElevatorConstants.kEleLeftCANID, ElevatorConstants.kMotorType, "eleLeft")
             .inverted(false)
@@ -138,7 +139,8 @@ public class Elevator extends SubsystemBase {
         return createMoveToHeightCommand(ElevatorConstants.kMaxHeightInch);
     }
     boolean m_isCalibrated = false;
-    boolean m_lastLimitSwitch = limitSwitch.get();
+    boolean m_lastLimitSwitch = false;
+
     @Override
     public void periodic() {
 
@@ -152,8 +154,8 @@ public class Elevator extends SubsystemBase {
             m_EleMotorRight.setEncoderPosition(0);
             m_targetHeight = Units.inchesToMeters(0);
             m_isCalibrated = true;
+            m_lastLimitSwitch = true;
         }
-        m_lastLimitSwitch = limitSwitch.get();
 
         if (DriverStation.isEnabled()){
             if (m_isCalibrated){
@@ -164,5 +166,7 @@ public class Elevator extends SubsystemBase {
         nt_calibrated.set(m_isCalibrated);
         nt_currentHeight.set(Units.metersToInches(getPosition()));
         nt_targetHeight.set(Units.metersToInches(m_targetHeight));
+        nt_limitSwitch.set(limitSwitch.get());
+
     }
 }
