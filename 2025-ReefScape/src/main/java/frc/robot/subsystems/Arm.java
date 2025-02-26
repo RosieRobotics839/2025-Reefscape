@@ -74,7 +74,7 @@ public class Arm extends SubsystemBase{
         
         if (inDangerZone) {
             // If in danger zone, limit angle to safe value
-            target = Math.min(target, ArmConstants.kAngleMaxDZ);
+            target = Math.min(target, ArmConstants.kAngleMaxDZ-ArmConstants.kAngleDZMargin);
         }
         
         // Apply normal min/max bounds
