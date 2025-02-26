@@ -123,21 +123,23 @@ public final class Constants {
 
     // Values in inches that the elevator should be raised from the bottom to score different heights of coral and algae
     // These need to be tested and adjusted
-    public static double kMaxHeightInch = Units.inchesToMeters(NTDouble.create(27.5, "Elevator/MaxHeightInch", (val)->kMaxHeightInch = Units.inchesToMeters(val)));; // 16.6 Rotations of the Axle
-    public static double kHeight3Inch = Units.inchesToMeters(NTDouble.create(16, "Elevator/Height3Inch", (val)->kHeight3Inch = Units.inchesToMeters(val)));
-    public static double kHeight2Inch = Units.inchesToMeters(NTDouble.create(8, "Elevator/Height2Inch", (val)->kHeight2Inch = Units.inchesToMeters(val)));
-    public static double kHeight1Inch = Units.inchesToMeters(NTDouble.create(1, "Elevator/Height1Inch", (val)->kHeight1Inch = Units.inchesToMeters(val)));
-    public static double kMinHeightInch = Units.inchesToMeters(NTDouble.create(0, "Elevator/MinHeightInch", (val)->kMinHeightInch = Units.inchesToMeters(val)));
+    public static double kMaxHeight = Units.inchesToMeters(NTDouble.create(27.5, "Elevator/MaxHeightInch", (val)->kMaxHeight = Units.inchesToMeters(val)));; // 16.6 Rotations of the Axle
+    public static double kHeight3 = Units.inchesToMeters(NTDouble.create(16, "Elevator/Height3Inch", (val)->kHeight3 = Units.inchesToMeters(val)));
+    public static double kHeight2 = Units.inchesToMeters(NTDouble.create(8, "Elevator/Height2Inch", (val)->kHeight2 = Units.inchesToMeters(val)));
+    public static double kHeight1 = Units.inchesToMeters(NTDouble.create(1, "Elevator/Height1Inch", (val)->kHeight1 = Units.inchesToMeters(val)));
+    public static double kMinHeight = Units.inchesToMeters(NTDouble.create(0, "Elevator/MinHeightInch", (val)->kMinHeight = Units.inchesToMeters(val)));
 
     public static double kElevatorTolerance = Units.inchesToMeters(0.5);
     public static double kElevatorGearRatio = 16;
-    public static double kSprocketDiameter = Units.inchesToMeters(1.685);
+    public static double kSprocketCircumference = Units.inchesToMeters(1.685)*Math.PI;
 
-    public static double kMaxSpeedPositive = 10; // Rotations per second
-    public static double kMaxSpeedNegative = -4; // Rotations per second
-    public static double kCalibrationSpeed = 1/kElevatorGearRatio; // Rotations per second
+    public static double kMaxSpeedPositive = Units.inchesToMeters(24); // Inches per second
+    public static double kMaxSpeedNegative = Units.inchesToMeters(-8); // Inches per second
 
     public static Motor.Gains kGainPosition = new Motor.Gains(19.2,0.625,0,0);
+    public static double kCalibrationUpTravel = Units.inchesToMeters(NTDouble.create(1, "Elevator/Calibration/UpTravel", (val)->kCalibrationUpTravel = Units.inchesToMeters(val)));
+    public static double kCalibrationSpeed = Units.inchesToMeters(NTDouble.create(1, "Elevator/Calibration/Speed", (val)->kCalibrationSpeed = Units.inchesToMeters(val)));
+    public static double kCalibrationSlowSpeed = Units.inchesToMeters(NTDouble.create(0.3, "Elevator/Calibration/SlowSpeed", (val)->kCalibrationSlowSpeed = Units.inchesToMeters(val)));
     
   }
 

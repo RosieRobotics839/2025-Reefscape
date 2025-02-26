@@ -81,6 +81,8 @@ public class Motor extends SubsystemBase {
 
     double m_testSpeed;
     double m_testPosition;
+    
+    Boolean m_isStopped = true;
     boolean m_testEnable;
     boolean m_appliedPositionGains = false;
     boolean m_appliedVelocityGains = false;
@@ -427,6 +429,7 @@ public class Motor extends SubsystemBase {
      * @return Motor instance for chaining methods
      */
     public Motor withSpeedLimit(double speed){
+        speed = Math.abs(speed);
         withSpeedLimit(speed, -speed); 
         nt_speedLim.set(speed); 
         return this;
@@ -506,6 +509,8 @@ public class Motor extends SubsystemBase {
 
     public void stopMotor(){
         m_speedTarget = 0;
+        m_isStopped = true;
+
         switch (motorType) {
             case KRAKEN:
                 motor_talon.stopMotor();
@@ -528,6 +533,8 @@ public class Motor extends SubsystemBase {
     }
 
     protected boolean _setSpeed(double speed, GainSlot slot){
+
+        m_isStopped = false;
 
         // Limit speed to our speed limits;
         speed = MathUtil.clamp(speed,m_maxNegativeSpeed,m_maxPositiveSpeed);
@@ -557,7 +564,6 @@ public class Motor extends SubsystemBase {
 
     protected boolean _setTargetSpeed(double speed, GainSlot slot){
         boolean status;
-
         m_gainslot = slot;
         m_speedTarget = speed;
         switch (motorType) {
@@ -610,6 +616,7 @@ public class Motor extends SubsystemBase {
      * @return
      */
     protected void _setPosition(double position, GainSlot slot){
+        m_isStopped = false;
         if (m_controlType != ControlType.POSITION){
             // Transitioning into position control, reset our position control speed limiter.
             m_positionlimiter.reset(getPosition());
@@ -725,7 +732,7 @@ public class Motor extends SubsystemBase {
             }
         }
 
-        if (DriverStation.isDisabled()){
+        if (DriverStation.isDisabled() || m_isStopped){
             m_controlType = ControlType.NONE;
             m_speedTarget = 0;
             m_positionTarget = getPosition();
