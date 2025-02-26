@@ -107,6 +107,10 @@ public class Autonomous extends SubsystemBase {
     m_aimPoint = null;
   }
 
+  public void setElevator(double height){
+    Elevator.getInstance().setElevatorHeight(height);
+  }
+
   /** Creates a new Autonomous. */
   public Autonomous() {
     table = NetworkTableInstance.getDefault().getTable("roboRIO/Autonomous");
