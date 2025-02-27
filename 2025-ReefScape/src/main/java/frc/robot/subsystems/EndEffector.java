@@ -17,13 +17,13 @@ public class EndEffector extends SubsystemBase {
 
     NetworkTable table = NetworkTableInstance.getDefault().getTable("roboRIO/EndEffector");
 
-    private static EndEffector instance = new EndEffector(EffectorConstants.kEffectorCANID);
+    private static EndEffector instance = new EndEffector(EffectorConstants.kCANID);
 
     public static EndEffector getInstance(){
         return instance;
     }
     
-    public Motor m_motorEffector;
+    public Motor m_motor;
 
     private boolean m_beamBroken = false;
     private boolean m_hasGamePiece = false;
@@ -37,26 +37,26 @@ public class EndEffector extends SubsystemBase {
     }
 
     Command IntakeCommand = Commands.sequence(
-      Commands.waitUntil(() -> {return m_motorEffector.setSpeed(EffectorConstants.kEffectorSpeed);}), //Sets speed to intake game piece
+      Commands.waitUntil(() -> {return m_motor.setSpeed(EffectorConstants.kSpeed);}), //Sets speed to intake game piece
       Commands.waitUntil(() -> {return hasGamePiece();}), //Checking whether we have a game piece or not.
-      Commands.waitUntil(() -> {return m_motorEffector.setSpeed(0);}) //Stops motor after we have a game piece
+      Commands.waitUntil(() -> {return m_motor.setSpeed(0);}) //Stops motor after we have a game piece
     );
 
     Command ExpelCommand = Commands.sequence( //Outtake for those who don't know
-      Commands.waitUntil(() -> {return m_motorEffector.setSpeed(( m_hasCoral ? 1 : -1) * EffectorConstants.kEffectorSpeed);}), // If we have the coral ( ? ) then forward, anything else backward.
+      Commands.waitUntil(() -> {return m_motor.setSpeed(( m_hasCoral ? 1 : -1) * EffectorConstants.kSpeed);}), // If we have the coral ( ? ) then forward, anything else backward.
       Commands.waitUntil(() -> {return hasGamePiece();}), //Checking whether we have a game piece or not.
-      Commands.waitUntil(() -> {return m_motorEffector.setSpeed(0);}) //Stops motor after we have scored Coral
+      Commands.waitUntil(() -> {return m_motor.setSpeed(0);}) //Stops motor after we have scored Coral
     );
 
     public EndEffector(int CANID) {
 
-      m_motorEffector = new Motor(Constants.EffectorConstants.kEffectorCANID, EffectorConstants.kMotorType, "effector")
-          .withStatorLimit((int)EffectorConstants.kEffectorMotorCurrentLimit)
+      m_motor = new Motor(Constants.EffectorConstants.kCANID, EffectorConstants.kMotorType, "effector")
+          .withStatorLimit((int)EffectorConstants.kMotorCurrentLimit)
           .inverted(false)
-          .withGearRatio((EffectorConstants.kEffectorGearRatio))
+          .withGearRatio((EffectorConstants.kGearRatio))
           .withSpeedLimit(EffectorConstants.kMaxSpeed)
-          .pidf(EffectorConstants.kEffectorPosKp, EffectorConstants.kEffectorPosKi, EffectorConstants.kEffectorPosKd, EffectorConstants.kEffectorPosKff, Motor.GainSlot.POSITION)
-          .pidf(EffectorConstants.kEffectorVelKp, EffectorConstants.kEffectorVelKi, EffectorConstants.kEffectorVelKd, EffectorConstants.kEffectorVelKff, Motor.GainSlot.SPEED);
+          .pidf(EffectorConstants.kGainPosition, Motor.GainSlot.POSITION)
+          .pidf(EffectorConstants.kGainVelocity, Motor.GainSlot.SPEED);
     }
 
     public DigitalInput m_beamBreak = new DigitalInput(EffectorConstants.kBeamBreakPin);
@@ -81,10 +81,10 @@ public class EndEffector extends SubsystemBase {
     }
     
     // Coral not detected, checking to see if we have algae.
-    if (!m_beamBroken && (m_motorEffector.getVelocity() < 10 || m_motorEffector.getOutputCurrent() > 40)){
+    if (!m_beamBroken && (m_motor.getVelocity() < 10 || m_motor.getOutputCurrent() > 40)){
       m_hasGamePiece = true; 
       m_hasCoral = false;
-      m_algaeRelativePosition = m_motorEffector.getPosition();
+      m_algaeRelativePosition = m_motor.getPosition();
     //Checking to see whether we have a game piece or not by checking if the beam is broken, or velocity is less than 10 RPM, or Current is greater than 40
     }
 
@@ -93,7 +93,7 @@ public class EndEffector extends SubsystemBase {
       m_hasCoral = false;
     }
 
-    if (m_hasGamePiece && !m_hasCoral && m_motorEffector.getPosition() < (m_algaeRelativePosition - EffectorConstants.kAlgaeMotorRevolutions)){ //Checking to see if we still have algae by waiting until the position gets to a certain point.
+    if (m_hasGamePiece && !m_hasCoral && m_motor.getPosition() < (m_algaeRelativePosition - EffectorConstants.kAlgaeMotorRevolutions)){ //Checking to see if we still have algae by waiting until the position gets to a certain point.
       m_hasGamePiece = false;
     }
   }
