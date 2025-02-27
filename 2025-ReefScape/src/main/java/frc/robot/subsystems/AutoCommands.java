@@ -10,6 +10,7 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import frc.robot.Constants;
 import frc.robot.Robot;
 import frc.robot.Constants.AutoConstants;
 import frc.utils.VectorUtils;
@@ -41,4 +42,12 @@ public class AutoCommands {
         );
     }
     
+    public static Command ScoreCoral(double heightin){
+        return Commands.sequence(
+            new InstantCommand(() -> Elevator.getInstance().setPosition(heightin)),
+            EndEffector.getInstance().ExpelCommand,
+            new InstantCommand(() -> Elevator.getInstance().setPosition(Constants.ElevatorConstants.kMinHeightInch)),
+        );
+    }
+
 }
