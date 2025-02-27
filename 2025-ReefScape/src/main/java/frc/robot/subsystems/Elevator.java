@@ -53,6 +53,11 @@ public class Elevator extends SubsystemBase {
     public boolean isInDangerZone() {
         return (m_currentHeight > GameConstants.kLimitUnderDZ && 
                 m_currentHeight <= GameConstants.kLimitAboveDZ);
+        Boolean inDZ = (getPosition() > ElevatorConstants.kLimitUnderDZ && getPosition() <= ElevatorConstants.kLimitAboveDZ);
+        Boolean targetInDZ = (m_targetHeight > ElevatorConstants.kLimitUnderDZ && m_targetHeight <= ElevatorConstants.kLimitAboveDZ);
+        Boolean crossingDZ = (getPosition() <= ElevatorConstants.kLimitUnderDZ && m_targetHeight >= ElevatorConstants.kLimitUnderDZ) 
+                                || (getPosition() >= ElevatorConstants.kLimitAboveDZ && m_targetHeight <= ElevatorConstants.kLimitAboveDZ);
+        return inDZ || targetInDZ || crossingDZ || !m_isCalibrated.get();
     }
 
     public void setElevatorHeightSafely(double targetHeightInches) {
