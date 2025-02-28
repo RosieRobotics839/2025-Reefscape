@@ -144,6 +144,10 @@ public class Motor extends SubsystemBase {
             // If only velocity gains were applied
             pidf(new Gains(m_gains[GainSlot.SPEED.ordinal()].Kp * MotorDefaults.NEO.kPositionGainRatio, 0, 0, 0), GainSlot.POSITION);
         }
+        if (!m_appliedVelocityGains && m_appliedPositionGains){
+            // If only velocity gains were applied
+            pidf(new Gains(m_gains[GainSlot.POSITION.ordinal()].Kp / MotorDefaults.NEO.kPositionGainRatio, 0, 0, 0), GainSlot.SPEED);
+        }
 
         switch (motorType){
             case KRAKEN:
@@ -153,6 +157,7 @@ public class Motor extends SubsystemBase {
                             );
                 break;
             case NEO:
+            case NEO550:
                 m_setupMotor = Commands.sequence(
                     Commands.waitUntil(() -> (encoder_neo = motor_neo.getEncoder()) != null),
                     Commands.waitUntil(() -> {var status = motor_neo.configure(config_neo, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters); return status == REVLibError.kOk || status == REVLibError.kCannotPersistParametersWhileEnabled;}),
@@ -205,33 +210,48 @@ public class Motor extends SubsystemBase {
         nt_Ki           = new NTDouble(0.0,testtable,"motors/"+name+"/gains/KI",(val)->withKI(val,GainSlot.values()[nt_slot.get()]));
         nt_Kd           = new NTDouble(0.0,testtable,"motors/"+name+"/gains/KD",(val)->withKD(val,GainSlot.values()[nt_slot.get()]));
         nt_Kff          = new NTDouble(0.0,testtable, "motors/"+name+"/gains/KFF", (val)->withKFF(val,GainSlot.values()[nt_slot.get()]));
-
+        
+        // Create new motor configurations
         switch (motorType){
             case KRAKEN:
                 motor_talon = new TalonFX(CANID);
                 config_talon = new TalonFXConfiguration();
+                break;
+            case NEO:
+            case NEO550:
+                motor_neo = new MyCANSparkMax(CANID, MotorType.kBrushless);
+                controller_neo = motor_neo.getClosedLoopController();
+                encoder_neo = motor_neo.getEncoder();
+                config_neo = new SparkMaxConfig();
+                break;
+            case SIMULATED:
+        }
+
+        // Set Default Motor Gains
+        switch (motorType){
+            case KRAKEN:
                 m_gains[0] = new Gains(MotorDefaults.Kraken.kGainPosition);
                 m_gains[1] = new Gains(MotorDefaults.Kraken.kGainSpeed);
                 m_gains[2] = new Gains(MotorDefaults.Kraken.kGainAux1);
                 m_gains[3] = new Gains(MotorDefaults.Kraken.kGainAux2);
                 break;
+            case NEO550:
+                m_gains[0] = new Gains(MotorDefaults.NEO550.kGainPosition);
+                m_gains[1] = new Gains(MotorDefaults.NEO550.kGainSpeed);
+                m_gains[2] = new Gains(MotorDefaults.NEO550.kGainAux1);
+                m_gains[3] = new Gains(MotorDefaults.NEO550.kGainAux2);
+                break;
             case NEO:
-                motor_neo = new MyCANSparkMax(CANID, MotorType.kBrushless);
-                controller_neo = motor_neo.getClosedLoopController();
-                encoder_neo = motor_neo.getEncoder();
-                config_neo = new SparkMaxConfig();
+            case SIMULATED:
                 m_gains[0] = new Gains(MotorDefaults.NEO.kGainPosition);
                 m_gains[1] = new Gains(MotorDefaults.NEO.kGainSpeed);
                 m_gains[2] = new Gains(MotorDefaults.NEO.kGainAux1);
                 m_gains[3] = new Gains(MotorDefaults.NEO.kGainAux2);
                 break;
-            default:
-                m_gains[0] = new Gains(MotorDefaults.NEO.kGainPosition);
-                m_gains[1] = new Gains(MotorDefaults.NEO.kGainSpeed);
-                m_gains[2] = new Gains(MotorDefaults.NEO.kGainAux1);
-                m_gains[3] = new Gains(MotorDefaults.NEO.kGainAux2);
         }
 
+        // Set default configuration
+        withSlowSpeedControl(true);
         withGearRatio(1.0);
         withIZone(MotorDefaults.iZone);
         withSpeedLimit(Double.POSITIVE_INFINITY, Double.NEGATIVE_INFINITY);
@@ -244,7 +264,7 @@ public class Motor extends SubsystemBase {
     }
 
     public enum MyMotorType {
-        KRAKEN, NEO, SIMULATED
+        KRAKEN, NEO, NEO550, SIMULATED
     }
 
     public enum ControlType {
@@ -260,6 +280,7 @@ public class Motor extends SubsystemBase {
                 config_talon.withMotorOutput(config_talon.MotorOutput.withInverted(value));
                 break;
             case NEO:
+            case NEO550:
                 config_neo.inverted(invert);
                 break;
             default:
@@ -280,6 +301,7 @@ public class Motor extends SubsystemBase {
                 motor_talon.setNeutralMode(( brake ? NeutralModeValue.Brake : NeutralModeValue.Coast ));
                 break;
             case NEO:
+            case NEO550:
                 config_neo.idleMode(( brake ? SparkBaseConfig.IdleMode.kBrake : SparkBaseConfig.IdleMode.kCoast));
                 break;
             default:
@@ -307,6 +329,7 @@ public class Motor extends SubsystemBase {
                 config_talon.Feedback.withSensorToMechanismRatio(gearReduction);
                 break;
             case NEO:
+            case NEO550:
                 config_neo.encoder.positionConversionFactor(1/gearReduction);
                 config_neo.encoder.velocityConversionFactor(1/gearReduction/60.0);
                 break;
@@ -324,6 +347,7 @@ public class Motor extends SubsystemBase {
                     .withStatorCurrentLimitEnable(true);
                 break;
             case NEO:
+            case NEO550:
                 config_neo.smartCurrentLimit((int)stallLimit);
                 break;
             default:
@@ -345,6 +369,7 @@ public class Motor extends SubsystemBase {
                 // Not really needed As of 1/21/2025
                 break;
             case NEO:
+            case NEO550:
                 config_neo.closedLoop.feedbackSensor(sensor);
                 break;
             default:
@@ -404,6 +429,7 @@ public class Motor extends SubsystemBase {
                 }
                 break;
             case NEO:
+            case NEO550:
                 config_neo.closedLoop.pidf(p,i,d,ff, ClosedLoopSlot.values()[slot.ordinal()]);
                 break;
             default:
@@ -453,6 +479,7 @@ public class Motor extends SubsystemBase {
                 // TODO: Do we need something here?
                 break;
             case NEO:
+            case NEO550:
                 config_neo.closedLoop.outputRange(min, max, ClosedLoopSlot.values()[slot.ordinal()]);
                 break;
             default:
@@ -472,6 +499,7 @@ public class Motor extends SubsystemBase {
                 */
                 break;
             case NEO:
+            case NEO550:
                 config_neo.closedLoop.iZone(zone);
                 break;
             default:
@@ -498,6 +526,7 @@ public class Motor extends SubsystemBase {
                 config_talon.ClosedLoopGeneral.withContinuousWrap(enabled);
                 break;
             case NEO:
+            case NEO550:
                 config_neo.closedLoop.positionWrappingInputRange(-0.5, 0.5);
                 config_neo.closedLoop.positionWrappingEnabled(enabled);
                 break;
@@ -516,6 +545,7 @@ public class Motor extends SubsystemBase {
                 motor_talon.stopMotor();
                 break;
             case NEO:
+            case NEO550:
                 motor_neo.stopMotor();
                 break;
             default:
@@ -571,6 +601,7 @@ public class Motor extends SubsystemBase {
                 status = motor_talon.setControl(new VelocityVoltage(speed).withSlot(slot.ordinal())).isOK();
                 break;
             case NEO:
+            case NEO550:
                 status = controller_neo.setReference(speed, SparkMax.ControlType.kVelocity, ClosedLoopSlot.values()[slot.ordinal()]) == REVLibError.kOk;
                 break;
             default:
@@ -586,6 +617,7 @@ public class Motor extends SubsystemBase {
                 motor_talon.setControl(new Follower(leaderMotorCANID, inverted)).isOK();
                 break;
             case NEO:
+            case NEO550:
                 config_neo.follow(leaderMotorCANID, inverted);
                 if (m_setupMotorDone) scheduleSetup();
                 break;
@@ -642,6 +674,7 @@ public class Motor extends SubsystemBase {
                 status = motor_talon.setControl(new PositionVoltage(position).withSlot(slot.ordinal())).isOK();
                 break;
             case NEO:
+            case NEO550:
                 status = controller_neo.setReference(position, SparkMax.ControlType.kPosition, ClosedLoopSlot.values()[slot.ordinal()]) == REVLibError.kOk;
                 break;
             default:
@@ -657,6 +690,7 @@ public class Motor extends SubsystemBase {
             case KRAKEN:
                 return motor_talon.setPosition(position).isOK();
             case NEO:
+            case NEO550:
                 return encoder_neo.setPosition(position) == REVLibError.kOk; // Our math is based on rotations per Minute
             case SIMULATED:
                 m_simPosition = position;
@@ -676,6 +710,7 @@ public class Motor extends SubsystemBase {
             case KRAKEN:
                 return motor_talon.getVelocity().getValueAsDouble(); // Talon method returns rotations Per second
             case NEO:
+            case NEO550:
                 return encoder_neo.getVelocity(); // Our math is based on rotations per Minute
             default:
                 return m_simSpeed;
@@ -692,6 +727,7 @@ public class Motor extends SubsystemBase {
             case KRAKEN:
                 return motor_talon.getPosition().getValueAsDouble();
             case NEO:
+            case NEO550:
                 return encoder_neo.getPosition();
             default:
                 return m_simPosition;
@@ -703,6 +739,7 @@ public class Motor extends SubsystemBase {
             case KRAKEN:
                 return motor_talon.getStatorCurrent().getValueAsDouble();
             case NEO:
+            case NEO550:
                 return motor_neo.getOutputCurrent();
             default:
         }
@@ -723,6 +760,7 @@ public class Motor extends SubsystemBase {
                 case KRAKEN:
                     break;
                 case NEO:
+                case NEO550:
                     break;
                 case SIMULATED:
                     if (m_testPosition == 0){

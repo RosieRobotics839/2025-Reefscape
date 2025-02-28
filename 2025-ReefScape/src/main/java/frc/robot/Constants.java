@@ -157,6 +157,14 @@ public final class Constants {
       public static Motor.Gains kGainAux2 = new Motor.Gains(0,0,0,0);
       public static double kPositionGainRatio = kGainPosition.Kp/kGainSpeed.Kp; // For SLOWSPEED control
     }
+    public static class NEO550 {
+      // TODO: need to get good for 550 defaults. About 6x higher than NEO based on Funnel for now.
+      public static Motor.Gains kGainPosition = new Motor.Gains(.3,0.002,0,0);
+      public static Motor.Gains kGainSpeed = new Motor.Gains(0.09,0.0,0.0,0.066);
+      public static Motor.Gains kGainAux1 = new Motor.Gains(0,0,0,0);
+      public static Motor.Gains kGainAux2 = new Motor.Gains(0,0,0,0);
+      public static double kPositionGainRatio = kGainPosition.Kp/kGainSpeed.Kp; // For SLOWSPEED control
+    }
 
     public static double kOutputRange = 1;
     public static double iZone = 0.2;
@@ -245,7 +253,7 @@ public final class Constants {
   }
 
   public static class GyroConstants{
-    public static boolean kEnabled = true;
+    public static boolean kEnabled = kDriveTrain.kSwerveModule.kDriveType != MyMotorType.SIMULATED;
     public static int kCANID = 50;
     public static double kVisionCorrectionMaxRate = Units.degreesToRadians(NTDouble.create(40,"Gyro/kVisionCorrectionMaxRate",val->kVisionCorrectionMaxRate=Units.degreesToRadians(val)));
   }
