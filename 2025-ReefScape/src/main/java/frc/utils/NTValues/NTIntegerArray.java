@@ -20,8 +20,6 @@ public class NTIntegerArray {
     
     public boolean resetOnRecv = false;
 
-    private boolean m_ignore = false;
-
     public static long [] create(long [] defaultValue, String name, Consumer<long []> lambda){
         NTIntegerArray instance = new NTIntegerArray(defaultValue, table, name, lambda);
         return instance.get();
@@ -40,21 +38,17 @@ public class NTIntegerArray {
         // add a listener to only value changes on the Y subscriber
         _table.addListener(
             name,
-            EnumSet.of(NetworkTableEvent.Kind.kValueAll),
+            EnumSet.of(NetworkTableEvent.Kind.kValueRemote),
             (t,k,e)-> {
-                if (!m_ignore){
-                    lambda.accept(e.valueData.value.getIntegerArray());
-                    if (resetOnRecv){
-                        publisher.set(defaultValue);
-                    }
-                } else {
-                    m_ignore = false;
+                lambda.accept(e.valueData.value.getIntegerArray());
+                if (resetOnRecv){
+                    publisher.set(defaultValue);
                 }
-            });
+            }
+        );
     }
 
     public void set(long [] val){
-        m_ignore = true;
         publisher.set(val);
     }
 
