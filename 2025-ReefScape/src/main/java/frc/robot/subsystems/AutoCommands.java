@@ -19,10 +19,18 @@ public class AutoCommands {
     static public Command noop(){return new InstantCommand(()->{});};
 
     // Helper functions for april tag selection on blue vs red alliance.
-    //static public int speakerTag(){ return (DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == Alliance.Blue ? 7 : 4 ); }
-    //static public int ampTag(){     return (DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == Alliance.Blue ? 6 : 5 ); }
-    //static public int sourceLTag(){ return (DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == Alliance.Blue ? 2 : 9 ); }
-    //static public int sourceRTag(){ return (DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == Alliance.Blue ? 1 : 10); }
+    static public int coralSourceLTag(){ return (DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == Alliance.Blue ? 13 : 1 ); }
+    static public int coralSourceRTag(){ return (DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == Alliance.Blue ? 12 : 2 ); }
+    static public int bargeFrontTag(){ return (DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == Alliance.Blue ? 14 : 5 ); }
+    static public int bargeBackTag(){ return (DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == Alliance.Blue ? 4 : 15 ); }
+    static public int processorTag(){ return (DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == Alliance.Blue ? 3 : 16 ); }
+    // Direction of reef tags are in cardinal direction (North, South, ect.) from perspective of respective team driver station
+    static public int reefNWTag(){ return (DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == Alliance.Blue ? 20 : 11 ); }
+    static public int reefNNTag(){ return (DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == Alliance.Blue ? 21 : 10 ); }
+    static public int reefNETag(){ return (DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == Alliance.Blue ? 22 : 9 ); }
+    static public int reefSWTag(){ return (DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == Alliance.Blue ? 19 : 6 ); }
+    static public int reefSSTag(){ return (DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == Alliance.Blue ? 18 : 7 ); }
+    static public int reefSETag(){ return (DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == Alliance.Blue ? 17 : 8 ); }
 
     public static Command NavToPose(Pose2d pose){
         return new InstantCommand(() -> PathPlanning.getInstance().navigateTo(pose));
@@ -41,12 +49,27 @@ public class AutoCommands {
             }
         );
     }
+
+    public static Command GetCorral(){ // Only written for the leftmost coral source, and all values need to be thouroughly checked and tested
+        return Commands.sequence(
+            new InstantCommand(() -> Elevator.getInstance().setPosition(0)),
+            new InstantCommand(() -> Arm.getInstance().setArmAngle(0)),
+            new InstantCommand(() -> Autonomous.getInstance().aimAtPoint(PathPlanning.AprilTagAtDistance(coralSourceLTag(), 0),Units.degreesToRadians(180))),
+            new InstantCommand(() -> PathPlanning.getInstance().navigateTo(new Pose2d(
+                                        PathPlanning.AprilTagAtDistance( coralSourceLTag(), AutoConstants.kCoralSourceDistance).getTranslation(),
+                                        new Rotation2d(Units.degreesToRadians(270)),
+                                        ))),
+            Commands.waitUntil(() -> VectorUtils.isNear(PoseEstimator.getInstance().m_finalPose,PathPlanning.AprilTagAtDistance(coralSourceLTag,0),Units.feetToMeters(2),Math.PI)),
+        )
+    }
     
-    public static Command ScoreCoral(double heightin){
+    public static Command Score(double heightin, double anglerad){
         return Commands.sequence(
             new InstantCommand(() -> Elevator.getInstance().setPosition(heightin)),
+            new InstantCommand(() -> Arm.getInstance().setArmAngle(anglerad)),
             EndEffector.getInstance().ExpelCommand,
             new InstantCommand(() -> Elevator.getInstance().setPosition(Constants.ElevatorConstants.kMinHeightInch)),
+            new InstantCommand(() -> Arm.getInstance().setArmAngle(0))
         );
     }
 

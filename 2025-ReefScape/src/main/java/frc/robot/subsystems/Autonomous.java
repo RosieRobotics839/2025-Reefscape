@@ -31,7 +31,7 @@ public class Autonomous extends SubsystemBase {
 
   public Pose2d m_aimPoint;
   public double m_aimPointRotationOffset;
-
+/*
   public static List<Translation2d> bluestage = new ArrayList<Translation2d>(){{
     add(new Translation2d(2.85,4.45));
     add(new Translation2d(2.85,3.00));
@@ -60,7 +60,6 @@ public class Autonomous extends SubsystemBase {
   //  add(new Translation2d(15.464, 4.672));
   //  add(new Translation2d(16.542, 4.119));
   //}};
-
   public static List<List<Translation2d>> staticObstacles = new ArrayList<List<Translation2d>>(){{
     double halffield = Vision.getInstance().aprilTagFieldLayout.getFieldLength()/2.0;
     
@@ -79,20 +78,9 @@ public class Autonomous extends SubsystemBase {
       fieldobj.setPoses(it.next().stream().map(a->new Pose2d(a,new Rotation2d(0))).collect(Collectors.toList()));
     }    
   }};
-
+*/
   static NetworkTable table;
-  final BooleanPublisher nt_instage;
-
-  public void aimAtNote(){
-
-    Vision.getInstance().findPixyTarget();
-    
-    double angleDiff = Vision.getInstance().m_pixyTargetAngle/AutoConstants.kaimNoteGain;
-    double curAngle = PoseEstimator.getInstance().m_finalPose.getRotation().getRadians();
-
-    DriveTrain.getInstance().setTargetHeading(curAngle + angleDiff*(Math.PI/180.0));
-    // might need: DriveConstants.kAutoMaxRotAcceleration*(Vision.getInstance().frameCenterOffset /  + Math.signum(targetOffset) * 0.20));
-  }
+  //final BooleanPublisher nt_instage;
 
   public void aimAtPoint(Pose2d aimPoint){
     aimAtPoint(aimPoint, 0);
@@ -107,14 +95,10 @@ public class Autonomous extends SubsystemBase {
     m_aimPoint = null;
   }
 
-  public void setElevator(double height){
-    Elevator.getInstance().setElevatorHeight(height);
-  }
-
   /** Creates a new Autonomous. */
   public Autonomous() {
     table = NetworkTableInstance.getDefault().getTable("roboRIO/Autonomous");
-    nt_instage = table.getBooleanTopic("isInStage").publish();
+    //nt_instage = table.getBooleanTopic("isInStage").publish();
   }
 
   List<AprilTag> allTags;
@@ -156,7 +140,7 @@ public class Autonomous extends SubsystemBase {
       DriveTrain.getInstance().setTargetHeading(heading + m_aimPointRotationOffset);
     }
 
-    boolean insideStage = PathfindingUtils.PointInPolygon(PoseEstimator.getInstance().m_finalPose.getTranslation(), bluestage);
-    nt_instage.set(insideStage);
+    //boolean insideStage = PathfindingUtils.PointInPolygon(PoseEstimator.getInstance().m_finalPose.getTranslation(), bluestage);
+    //nt_instage.set(insideStage);
   }
 }
