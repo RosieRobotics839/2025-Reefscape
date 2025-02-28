@@ -15,7 +15,7 @@ import frc.robot.Constants.ArmConstants;
 import frc.utils.Calibrate;
 import frc.utils.Motor;
 import frc.utils.NTValues.NTDouble;
-import frc.robot.Constants.GameConstants;
+import frc.robot.Constants.ScoreConstants;
 
 public class Arm extends SubsystemBase{
 
@@ -41,7 +41,7 @@ public class Arm extends SubsystemBase{
     boolean scoringTrough = false;
     boolean scoringLevels2or3 = false;
     boolean scoringLevel4 = false;
-    GameConstants.ScoreLevel m_scoreReefLevel;
+    ScoreConstants.ScoreLevel m_scoreReefLevel;
 
     DoublePublisher
         nt_positionSensor,

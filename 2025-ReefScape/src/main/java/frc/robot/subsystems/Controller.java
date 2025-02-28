@@ -18,7 +18,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
-import frc.robot.Constants.GameConstants;
+import frc.robot.Constants.ScoreConstants;
 import frc.robot.Constants.kDriveTrain.DriveConstants;
 public class Controller extends XboxController {
 
@@ -100,7 +100,11 @@ public class Controller extends XboxController {
       EndEffector.getInstance().ExpelCommand
     );
 
-    GameConstants.ScoreLevel level;
+    ScoreConstants.ScoreLevel level;
+    ScoreConstants.ScoreLevel pieceSelected;
+
+    // boolean that decides which game piece we are handling
+    boolean isAlgaeSelected = false;  // Initially set to false (CORAL)
 
     AccessoryButtons(Controller controller){
       Intake     = new JoystickButton(controller, 1);  // Intake Button
@@ -178,7 +182,7 @@ public class Controller extends XboxController {
     StageDial1.onTrue(
       Commands.sequence(
         new InstantCommand(){
-          GameConstants.ScoreLevel level = GameConstants.ScoreLevel.TROUGH;
+          ScoreConstants.ScoreLevel level = ScoreConstants.ScoreLevel.TROUGH;
         }
       )
     );
@@ -186,7 +190,7 @@ public class Controller extends XboxController {
     StageDial2.onTrue(
       Commands.sequence(
         new InstantCommand(){
-          GameConstants.ScoreLevel level = GameConstants.ScoreLevel.LEVEL2;
+          ScoreConstants.ScoreLevel level = ScoreConstants.ScoreLevel.LEVEL2;
         }
       )
     );
@@ -194,7 +198,7 @@ public class Controller extends XboxController {
     StageDial3.onTrue(
       Commands.sequence(
         new InstantCommand(){
-          GameConstants.ScoreLevel level = GameConstants.ScoreLevel.LEVEL3;
+          ScoreConstants.ScoreLevel level = ScoreConstants.ScoreLevel.LEVEL3;
         }
       )
     );
@@ -202,7 +206,7 @@ public class Controller extends XboxController {
     StageDial4.onTrue(
       Commands.sequence(
         new InstantCommand(){
-          GameConstants.ScoreLevel level = GameConstants.ScoreLevel.LEVEL4;
+          ScoreConstants.ScoreLevel level = ScoreConstants.ScoreLevel.LEVEL4;
         }
       )
     );
@@ -225,12 +229,22 @@ public class Controller extends XboxController {
 
       GMPCS.onTrue(
         Commands.sequence(
-        // TODO: Add code to select Algae
-        )
-      );
-      GMPCS.onFalse(
-        Commands.sequence(
-        // TODO: Add code to select Coral
+          new InstantCommand() {
+            @Override
+            public void initialize() {
+              // Toggle the boolean variable on each press
+              isAlgaeSelected = !isAlgaeSelected;
+
+              // Use the boolean value to select the correct game piece
+              if (isAlgaeSelected) {
+                  // If the boolean is true, set to ALGAE
+                  ScoreConstants.GamePieceSelected pieceSelected = ScoreConstants.GamePieceSelected.ALGAE;
+              } else {
+                  // If the boolean is false, set to CORAL
+                  ScoreConstants.GamePieceSelected pieceSelected = ScoreConstants.GamePieceSelected.CORAL;
+              }
+            }
+          }
         )
       );
     } 

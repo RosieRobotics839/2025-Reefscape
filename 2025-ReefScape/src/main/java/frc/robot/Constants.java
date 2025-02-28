@@ -48,18 +48,24 @@ public final class Constants {
     public CANID_t(int abs_encoder, int drive, int steer){this.encoder = abs_encoder; this.driving = drive; this.steering = steer;}
   }
 
-  public static class GameConstants {
+  public static class ScoreConstants {
+
     public enum ScoreLevel{
       TROUGH, LEVEL2, LEVEL3, LEVEL4
     }
+
+    public enum GamePieceSelected{
+      ALGAE, CORAL
+    }
+    
   }
   
   public static class ArmConstants {
-    public static double kLimitUnderDZ = Units.inchesToMeters(NTDouble.create(9.0,"GameConstants/DZ/kLimUnderDZ",(val)->kLimitUnderDZ=Units.inchesToMeters(val)));; // The Limit for how high the Elevator can go under the danger zone (dz / 9 - 21 inches)
-    public static double kLimitAboveDZ = Units.inchesToMeters(NTDouble.create(21.0,"GameConstants/DZ/kLimAboveDZ",(val)->kLimitAboveDZ=Units.inchesToMeters(val)));; // The Limit for how high the Elevator can go above the danger zone (dz / 9 - 21 inches)
-    public static double kAngleMaxDZ = Units.degreesToRadians(NTDouble.create(67.0,"GameConstants/DZ/kAngleMax",(val)->kAngleMaxDZ=Units.degreesToRadians(val))); // The Max Angle in degrees for the Arm while it is in the Danger Zone (dz)
+    public static double kLimitUnderDZ = Units.inchesToMeters(NTDouble.create(9.0,"ArmConstants/DZ/kLimUnderDZ",(val)->kLimitUnderDZ=Units.inchesToMeters(val)));; // The Limit for how high the Elevator can go under the danger zone (dz / 9 - 21 inches)
+    public static double kLimitAboveDZ = Units.inchesToMeters(NTDouble.create(21.0,"ArmConstants/DZ/kLimAboveDZ",(val)->kLimitAboveDZ=Units.inchesToMeters(val)));; // The Limit for how high the Elevator can go above the danger zone (dz / 9 - 21 inches)
+    public static double kAngleMaxDZ = Units.degreesToRadians(NTDouble.create(67.0,"ArmConstants/DZ/kAngleMax",(val)->kAngleMaxDZ=Units.degreesToRadians(val))); // The Max Angle in degrees for the Arm while it is in the Danger Zone (dz)
     public static MyMotorType kMotorType = MyMotorType.KRAKEN;
-    public static double kAngleDZMargin = Units.degreesToRadians(NTDouble.create(5.0,"GameConstants/DZ/kAngleMargin",(val)->kAngleDZMargin=Units.degreesToRadians(val))); // The margin to keep in degrees for the Arm while it is in the Danger Zone (dz)
+    public static double kAngleDZMargin = Units.degreesToRadians(NTDouble.create(5.0,"ArmConstants/DZ/kAngleMargin",(val)->kAngleDZMargin=Units.degreesToRadians(val))); // The margin to keep in degrees for the Arm while it is in the Danger Zone (dz)
     
     public static int kCANID = 4;
     public static int kDigitalInputID = 1;
@@ -113,8 +119,8 @@ public final class Constants {
     public static int kEleLeftCANID = 11;
     public static int kEleRightCANID = 12;
 
-    public static double kLimitUnderDZ = Units.inchesToMeters(NTDouble.create(9.0,"GameConstants/DZ/kLimUnderDZ",(val)->kLimitUnderDZ=Units.inchesToMeters(val)));; // The Limit for how high the Elevator can go under the danger zone (dz / 9 - 21 inches)
-    public static double kLimitAboveDZ = Units.inchesToMeters(NTDouble.create(21.0,"GameConstants/DZ/kLimAboveDZ",(val)->kLimitAboveDZ=Units.inchesToMeters(val)));; // The Limit for how high the Elevator can go above the danger zone (dz / 9 - 21 inches)
+    public static double kLimitUnderDZ = Units.inchesToMeters(NTDouble.create(9.0,"ElevatorConstants/DZ/kLimUnderDZ",(val)->kLimitUnderDZ=Units.inchesToMeters(val)));; // The Limit for how high the Elevator can go under the danger zone (dz / 9 - 21 inches)
+    public static double kLimitAboveDZ = Units.inchesToMeters(NTDouble.create(21.0,"ElevatorConstants/DZ/kLimAboveDZ",(val)->kLimitAboveDZ=Units.inchesToMeters(val)));; // The Limit for how high the Elevator can go above the danger zone (dz / 9 - 21 inches)
 
     public static int klimitSwitchChannel = 0;
 

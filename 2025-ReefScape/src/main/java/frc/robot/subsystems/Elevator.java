@@ -13,7 +13,7 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.ElevatorConstants;
-import frc.robot.Constants.GameConstants;
+import frc.robot.Constants.ScoreConstants;
 import frc.utils.Motor;
 import frc.utils.Motor.GainSlot;
 import frc.utils.NTValues.NTBoolean;
@@ -36,7 +36,7 @@ public class Elevator extends SubsystemBase {
     boolean setupElevator = false;
     public double m_targetHeight = NTDouble.create(0, table, "targetHeight",(val)->setPosition(Units.inchesToMeters(val)));
     public double m_currentHeight = 0;
-    GameConstants.ScoreLevel m_scoreReefLevel;
+    ScoreConstants.ScoreLevel m_scoreReefLevel;
     public double armCurrentAngle;
 
     DigitalInput limitSwitch = new DigitalInput(ElevatorConstants.klimitSwitchChannel);
