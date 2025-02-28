@@ -150,65 +150,52 @@ public class Controller extends XboxController {
         )
       );
       Outtake.onTrue(
-        Commands.sequence(
-          new InstantCommand(){
-            @Override
-            public void initialize() {
+        new InstantCommand(() -> {
               switch (level) {
                 case TROUGH:
                   Elevator.getInstance().moveToTroughCommand().schedule();
                   Arm.getInstance().moveToTroughCommand().schedule();
-                break;
+                  break;
                 case LEVEL2:
                   Elevator.getInstance().moveToLevel2Command().schedule();
                   Arm.getInstance().moveToLevel2Command().schedule();
-                break;
+                  break;
                 case LEVEL3:
                   Elevator.getInstance().moveToLevel3Command().schedule();
                   Arm.getInstance().moveToLevel3Command().schedule();
-                break;
+                  break;
                 case LEVEL4:
                   Elevator.getInstance().moveToLevel4Command().schedule();
                   Arm.getInstance().moveToLevel4Command().schedule();
-                break;
+                  break;
               }
-            }
-          }
-        )
+        })
       );
       
       /* Setting Stage Dial Values */
       
     StageDial1.onTrue(
-      Commands.sequence(
-        new InstantCommand(){
-          ScoreConstants.ScoreLevel level = ScoreConstants.ScoreLevel.TROUGH;
-        }
-      )
+      Commands.runOnce(() -> {
+          level = ScoreConstants.ScoreLevel.TROUGH;
+      })
     );
 
     StageDial2.onTrue(
-      Commands.sequence(
-        new InstantCommand(){
-          ScoreConstants.ScoreLevel level = ScoreConstants.ScoreLevel.LEVEL2;
-        }
-      )
+      Commands.runOnce(() -> {
+          level = ScoreConstants.ScoreLevel.LEVEL2;
+      })
     );
 
     StageDial3.onTrue(
-      Commands.sequence(
-        new InstantCommand(){
-          ScoreConstants.ScoreLevel level = ScoreConstants.ScoreLevel.LEVEL3;
-        }
-      )
+      Commands.runOnce(() -> {
+          level = ScoreConstants.ScoreLevel.LEVEL3;
+      })
     );
 
     StageDial4.onTrue(
-      Commands.sequence(
-        new InstantCommand(){
-          ScoreConstants.ScoreLevel level = ScoreConstants.ScoreLevel.LEVEL4;
-        }
-      )
+      Commands.runOnce(() -> {
+          level = ScoreConstants.ScoreLevel.LEVEL4;
+      })
     );
 
 
