@@ -5,15 +5,20 @@
 package frc.robot.subsystems;
 
 import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.button.POVButton;
 import frc.utils.VectorUtils;
+
+import java.util.logging.Level;
+
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
+import frc.robot.Constants.GameConstants;
 import frc.robot.Constants.kDriveTrain.DriveConstants;
 public class Controller extends XboxController {
 
@@ -87,14 +92,23 @@ public class Controller extends XboxController {
   }
 
   public static class AccessoryButtons {
-    public JoystickButton Intake, Outtake, ClimberIn, ClimberOut, GMPCS, StageDial1, StageDial2, StageDial3, StageDial4, LeftScore, RightScore, RS, Home;
+    public JoystickButton Intake, Outtake, ClimberIn, ClimberOut, GMPCS, StageDial0, StageDial1, StageDial2, StageDial3, StageDial4, LeftScore, RightScore, RS, Home;
     public POVButton DPadUp, DPadRight, DPadDown, DPadLeft;
+
+    Command waitAndExpel = Commands.sequence(
+      Commands.waitUntil(() -> {return Arm.getInstance().isAtPosition() && Elevator.getInstance().isAtPosition();}),
+      EndEffector.getInstance().ExpelCommand
+    );
+
+    GameConstants.ScoreLevel level;
+
     AccessoryButtons(Controller controller){
       Intake     = new JoystickButton(controller, 1);  // Intake Button
       Outtake    = new JoystickButton(controller, 2);  // Expel Button (Outtake for those who don't know)
       ClimberIn  = new JoystickButton(controller, 3);  // Brings Climber In & Funnel Up
       ClimberOut = new JoystickButton(controller, 4);  // Brings Climber Out & Funnel Down
       GMPCS      = new JoystickButton(controller, 5);  // Game Piece Selector Button (Algae or Coral)
+      StageDial0 = new JoystickButton(controller, 6);  // Stage Dial Scoring Level 0 (Default/Human Player Intake)
       StageDial1 = new JoystickButton(controller, 6);  // Stage Dial Scoring Level 1 (Trough)
       StageDial2 = new JoystickButton(controller, 7);  // Stage Dial Scoring Level 2
       StageDial3 = new JoystickButton(controller, 8);  // Stage Dial Scoring Level 3
@@ -133,47 +147,64 @@ public class Controller extends XboxController {
       );
       Outtake.onTrue(
         Commands.sequence(
-          //Arm.getInstance().ArmPositionCommand,
-          //Elevator.getInstance().ElevatorCommand,
-          EndEffector.getInstance().ExpelCommand
+          new InstantCommand(){
+            @Override
+            public void initialize() {
+              switch (level) {
+                case TROUGH:
+                  Elevator.getInstance().moveToTroughCommand().schedule();
+                  Arm.getInstance().moveToTroughCommand().schedule();
+                break;
+                case LEVEL2:
+                  Elevator.getInstance().moveToLevel2Command().schedule();
+                  Arm.getInstance().moveToLevel2Command().schedule();
+                break;
+                case LEVEL3:
+                  Elevator.getInstance().moveToLevel3Command().schedule();
+                  Arm.getInstance().moveToLevel3Command().schedule();
+                break;
+                case LEVEL4:
+                  Elevator.getInstance().moveToLevel4Command().schedule();
+                  Arm.getInstance().moveToLevel4Command().schedule();
+                break;
+              }
+            }
+          }
         )
       );
       
-      /* Sample button bindings for Elevator and Arm, need to test */
+      /* Setting Stage Dial Values */
       
-      StageDial1.onTrue(
-        Commands.sequence(
-            // Move elevator first if needed
-            Elevator.getInstance().moveToTroughCommand(),
-            // Then move arm
-            Arm.getInstance().moveToTroughCommand()
-        )
+    StageDial1.onTrue(
+      Commands.sequence(
+        new InstantCommand(){
+          GameConstants.ScoreLevel level = GameConstants.ScoreLevel.TROUGH;
+        }
+      )
     );
 
     StageDial2.onTrue(
-        Commands.sequence(
-            // If moving to level 2, might need to coordinate movements
-            Commands.parallel(
-                Elevator.getInstance().moveToLevel2Command(),
-                Arm.getInstance().moveToLevel2Command()
-            )
-        )
+      Commands.sequence(
+        new InstantCommand(){
+          GameConstants.ScoreLevel level = GameConstants.ScoreLevel.LEVEL2;
+        }
+      )
     );
 
     StageDial3.onTrue(
-        Commands.sequence(
-            // For level 3, might want to move arm first
-            Arm.getInstance().moveToLevel3Command(),
-            Elevator.getInstance().moveToLevel3Command()
-        )
+      Commands.sequence(
+        new InstantCommand(){
+          GameConstants.ScoreLevel level = GameConstants.ScoreLevel.LEVEL3;
+        }
+      )
     );
 
     StageDial4.onTrue(
-        Commands.sequence(
-            // For level 4, elevator first then arm
-            Elevator.getInstance().moveToLevel4Command(),
-            Arm.getInstance().moveToLevel4Command()
-        )
+      Commands.sequence(
+        new InstantCommand(){
+          GameConstants.ScoreLevel level = GameConstants.ScoreLevel.LEVEL4;
+        }
+      )
     );
 
 

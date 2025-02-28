@@ -70,7 +70,6 @@ public final class Constants {
     public static double kAngleMax = Units.degreesToRadians(NTDouble.create(89, "Arm/kAngleMax", (val)->kAngleMax = Units.degreesToRadians(val)));
     public static double kAngleMin = Units.degreesToRadians(NTDouble.create(-3, "Arm/kAngleMin", (val)->kAngleMin = Units.degreesToRadians(val)));
 
-    // TODO: Change once angles are settled on.
     public static double kTargetAngleTrough = Units.degreesToRadians(NTDouble.create(67, "Arm/Target/kAngleTrough", (val)->kTargetAngleTrough = Units.degreesToRadians(val)));
     public static double kTargetAngleLevelMiddle = Units.degreesToRadians(NTDouble.create(67, "Arm/Target/kLevelMiddle", (val)->kTargetAngleLevelMiddle = Units.degreesToRadians(val)));
     public static double kTargetAngleLevel4 = Units.degreesToRadians(NTDouble.create(67, "Arm/Target/kLevel4", (val)->kTargetAngleLevel4 = Units.degreesToRadians(val)));
@@ -336,7 +335,6 @@ public final class Constants {
 
   public static class ClimberConstants {
     public static MyMotorType kMotorType = MyMotorType.NEO;
-    // TODO: Change later
     public static int kDigitalInputID = 2;
     public static int kCANID = 3;
 
@@ -347,7 +345,6 @@ public final class Constants {
     public static double kAngleIn = 0; // Change once we can test
     public static double kAngleOut = 0; // Change once we can test
 
-    // TODO: Change values of Calibration Maps.
     public static double [] kCalibrationX = new double[]{0.507191, 0.581880, 0.829728, 0.989784}; //analog values 
     public static double [] kCalibrationY = new double[]{25, 0, -90, -148}; // degrees 
     
