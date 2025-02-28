@@ -11,9 +11,6 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.button.POVButton;
 import frc.utils.VectorUtils;
-
-import java.util.logging.Level;
-
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -95,13 +92,13 @@ public class Controller extends XboxController {
     public JoystickButton Intake, Outtake, ClimberIn, ClimberOut, GMPCS, StageDial0, StageDial1, StageDial2, StageDial3, StageDial4, LeftScore, RightScore, RS, Home;
     public POVButton DPadUp, DPadRight, DPadDown, DPadLeft;
 
-    Command waitAndExpel = Commands.sequence(
+    public Command waitAndExpel = Commands.sequence(
       Commands.waitUntil(() -> {return Arm.getInstance().isAtPosition() && Elevator.getInstance().isAtPosition();}),
       EndEffector.getInstance().ExpelCommand
     );
 
     ScoreConstants.ScoreLevel level;
-    ScoreConstants.ScoreLevel pieceSelected;
+    ScoreConstants.GamePieceSelected pieceSelected;
 
     // boolean that decides which game piece we are handling
     boolean isAlgaeSelected = false;  // Initially set to false (CORAL)
@@ -151,26 +148,37 @@ public class Controller extends XboxController {
       );
       Outtake.onTrue(
         new InstantCommand(() -> {
+          switch (pieceSelected) {
+            case CORAL:
               switch (level) {
                 case TROUGH:
                   Elevator.getInstance().moveToTroughCommand().schedule();
                   Arm.getInstance().moveToTroughCommand().schedule();
+                  waitAndExpel.schedule();
                   break;
                 case LEVEL2:
                   Elevator.getInstance().moveToLevel2Command().schedule();
                   Arm.getInstance().moveToLevel2Command().schedule();
+                  waitAndExpel.schedule();
                   break;
                 case LEVEL3:
                   Elevator.getInstance().moveToLevel3Command().schedule();
                   Arm.getInstance().moveToLevel3Command().schedule();
+                  waitAndExpel.schedule();
                   break;
                 case LEVEL4:
                   Elevator.getInstance().moveToLevel4Command().schedule();
                   Arm.getInstance().moveToLevel4Command().schedule();
+                  waitAndExpel.schedule();
                   break;
               }
-        })
-      );
+              break;
+            case ALGAE:
+              EndEffector.getInstance().ExpelCommand.schedule(); // If not coral then run expel command to get rid of algae
+              break;
+          }
+        }
+      ));
       
       /* Setting Stage Dial Values */
       
@@ -215,24 +223,19 @@ public class Controller extends XboxController {
       /* Algae/Coral Selector */
 
       GMPCS.onTrue(
-        Commands.sequence(
-          new InstantCommand() {
-            @Override
-            public void initialize() {
+          Commands.runOnce(() -> {
               // Toggle the boolean variable on each press
               isAlgaeSelected = !isAlgaeSelected;
 
               // Use the boolean value to select the correct game piece
               if (isAlgaeSelected) {
                   // If the boolean is true, set to ALGAE
-                  ScoreConstants.GamePieceSelected pieceSelected = ScoreConstants.GamePieceSelected.ALGAE;
+                  pieceSelected = ScoreConstants.GamePieceSelected.ALGAE;
               } else {
                   // If the boolean is false, set to CORAL
-                  ScoreConstants.GamePieceSelected pieceSelected = ScoreConstants.GamePieceSelected.CORAL;
+                  pieceSelected = ScoreConstants.GamePieceSelected.CORAL;
               }
-            }
-          }
-        )
+          })
       );
     } 
   }
