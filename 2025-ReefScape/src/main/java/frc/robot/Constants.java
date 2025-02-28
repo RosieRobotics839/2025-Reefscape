@@ -111,16 +111,14 @@ public final class Constants {
   public static class ElevatorConstants {
 
     public static MyMotorType kMotorType = MyMotorType.KRAKEN;
-    public static int kEleLeftCANID = 11;
-    public static int kEleRightCANID = 12;
+    public static int kEleCANID = 12;
 
-    public static double kLimitUnderDZ = Units.inchesToMeters(NTDouble.create(9.0,"GameConstants/DZ/kLimUnderDZ",(val)->kLimitUnderDZ=Units.inchesToMeters(val)));; // The Limit for how high the Elevator can go under the danger zone (dz / 9 - 21 inches)
+    public static double kLimitUnderDZ = Units.inchesToMeters(NTDouble.create(4.0,"GameConstants/DZ/kLimUnderDZ",(val)->kLimitUnderDZ=Units.inchesToMeters(val)));; // The Limit for how high the Elevator can go under the danger zone (dz / 9 - 21 inches)
     public static double kLimitAboveDZ = Units.inchesToMeters(NTDouble.create(21.0,"GameConstants/DZ/kLimAboveDZ",(val)->kLimitAboveDZ=Units.inchesToMeters(val)));; // The Limit for how high the Elevator can go above the danger zone (dz / 9 - 21 inches)
 
     public static int klimitSwitchChannel = 0;
 
-    public static double kLeftElevatorMotorCurrentLimit = (NTDouble.create(30, "Elevator/kLeftCurrentLimit", (val) ->Elevator.getInstance().m_EleMotorLeft.withStatorLimit(val)));
-    public static double kRightElevatorMotorCurrentLimit = (NTDouble.create(30, "Elevator/kRightCurrentLimit", (val) ->Elevator.getInstance().m_EleMotorRight.withStatorLimit(val)));
+    public static double kElevatorMotorCurrentLimit = (NTDouble.create(30, "Elevator/kCurrentLimit", (val) ->Elevator.getInstance().m_EleMotor.withStatorLimit(val)));
 
     // Values in inches that the elevator should be raised from the bottom to score different heights of coral and algae
     // These need to be tested and adjusted
