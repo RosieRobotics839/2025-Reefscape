@@ -1,6 +1,5 @@
 package frc.robot.subsystems;
 
-import java.util.ArrayList;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -11,7 +10,6 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import frc.robot.Constants;
-import frc.robot.Robot;
 import frc.robot.Constants.AutoConstants;
 import frc.utils.VectorUtils;
 
@@ -56,11 +54,12 @@ public class AutoCommands {
             new InstantCommand(() -> Arm.getInstance().setArmAngle(0)),
             new InstantCommand(() -> Autonomous.getInstance().aimAtPoint(PathPlanning.AprilTagAtDistance(coralSourceLTag(), 0),Units.degreesToRadians(180))),
             new InstantCommand(() -> PathPlanning.getInstance().navigateTo(new Pose2d(
-                                        PathPlanning.AprilTagAtDistance( coralSourceLTag(), AutoConstants.kCoralSourceDistance).getTranslation(),
-                                        new Rotation2d(Units.degreesToRadians(270)),
-                                        ))),
-            Commands.waitUntil(() -> VectorUtils.isNear(PoseEstimator.getInstance().m_finalPose,PathPlanning.AprilTagAtDistance(coralSourceLTag,0),Units.feetToMeters(2),Math.PI)),
-        )
+                                        PathPlanning.AprilTagAtDistance( coralSourceLTag(), AutoConstants.kSourceLDistance).getTranslation(),
+                                        new Rotation2d(Units.degreesToRadians(270))
+                                    ))
+                                ),
+            Commands.waitUntil(() -> VectorUtils.isNear(PoseEstimator.getInstance().m_finalPose,PathPlanning.AprilTagAtDistance(coralSourceLTag(),0),Units.feetToMeters(2),Math.PI))
+        );
     }
     
     public static Command Score(double heightin, double anglerad){
@@ -68,7 +67,7 @@ public class AutoCommands {
             new InstantCommand(() -> Elevator.getInstance().setPosition(heightin)),
             new InstantCommand(() -> Arm.getInstance().setArmAngle(anglerad)),
             EndEffector.getInstance().ExpelCommand,
-            new InstantCommand(() -> Elevator.getInstance().setPosition(Constants.ElevatorConstants.kMinHeightInch)),
+            new InstantCommand(() -> Elevator.getInstance().setPosition(Constants.ElevatorConstants.kMinHeight)),
             new InstantCommand(() -> Arm.getInstance().setArmAngle(0))
         );
     }
