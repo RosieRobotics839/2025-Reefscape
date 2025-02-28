@@ -31,7 +31,7 @@ public class Autonomous extends SubsystemBase {
 
   public Pose2d m_aimPoint;
   public double m_aimPointRotationOffset;
-/*
+
   public static List<Translation2d> bluestage = new ArrayList<Translation2d>(){{
     add(new Translation2d(2.85,4.45));
     add(new Translation2d(2.85,3.00));
@@ -60,6 +60,8 @@ public class Autonomous extends SubsystemBase {
   //  add(new Translation2d(15.464, 4.672));
   //  add(new Translation2d(16.542, 4.119));
   //}};
+
+  // TODO: UPDATE FIELD GEOMETRY!
   public static List<List<Translation2d>> staticObstacles = new ArrayList<List<Translation2d>>(){{
     double halffield = Vision.getInstance().aprilTagFieldLayout.getFieldLength()/2.0;
     
@@ -78,7 +80,7 @@ public class Autonomous extends SubsystemBase {
       fieldobj.setPoses(it.next().stream().map(a->new Pose2d(a,new Rotation2d(0))).collect(Collectors.toList()));
     }    
   }};
-*/
+
   static NetworkTable table;
   //final BooleanPublisher nt_instage;
 
