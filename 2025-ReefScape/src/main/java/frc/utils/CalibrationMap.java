@@ -1,13 +1,12 @@
 package frc.utils;
 
 import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
-
 public class CalibrationMap extends InterpolatingDoubleTreeMap {
 
-  private double m_xmin = Double.POSITIVE_INFINITY; 
-  private double m_xmax = Double.NEGATIVE_INFINITY; 
-  private double m_ymin = Double.POSITIVE_INFINITY; 
-  private double m_ymax = Double.NEGATIVE_INFINITY; 
+  protected double m_xmin = Double.POSITIVE_INFINITY; 
+  protected double m_xmax = Double.NEGATIVE_INFINITY; 
+  protected double m_ymin = Double.POSITIVE_INFINITY; 
+  protected double m_ymax = Double.NEGATIVE_INFINITY; 
   public double xmin(){return m_xmin;};
   public double xmax(){return m_xmax;};
   public double ymin(){return m_ymin;};

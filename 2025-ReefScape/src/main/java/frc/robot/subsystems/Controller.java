@@ -90,15 +90,15 @@ public class Controller extends XboxController {
     public JoystickButton Intake, Outtake, ClimberIn, ClimberOut, GMPCS, StageDial1, StageDial2, StageDial3, StageDial4, LeftScore, RightScore, RS, Home;
     public POVButton DPadUp, DPadRight, DPadDown, DPadLeft;
     AccessoryButtons(Controller controller){
-      Intake     = new JoystickButton(controller, 1);  // Intake Button
-      Outtake    = new JoystickButton(controller, 2);  // Expel Button (Outtake for those who don't know)
+      Intake     = new JoystickButton(controller, 8);  // Intake Button
+      Outtake    = new JoystickButton(controller, 9);  // Expel Button (Outtake for those who don't know)
       ClimberIn  = new JoystickButton(controller, 3);  // Brings Climber In & Funnel Up
       ClimberOut = new JoystickButton(controller, 4);  // Brings Climber Out & Funnel Down
       GMPCS      = new JoystickButton(controller, 5);  // Game Piece Selector Button (Algae or Coral)
       StageDial1 = new JoystickButton(controller, 6);  // Stage Dial Scoring Level 1 (Trough)
       StageDial2 = new JoystickButton(controller, 7);  // Stage Dial Scoring Level 2
-      StageDial3 = new JoystickButton(controller, 8);  // Stage Dial Scoring Level 3
-      StageDial4 = new JoystickButton(controller, 9);  // Stage Dial Scoring Level 4
+      StageDial3 = new JoystickButton(controller, 1);  // Stage Dial Scoring Level 3
+      StageDial4 = new JoystickButton(controller, 2);  // Stage Dial Scoring Level 4
       LeftScore  = new JoystickButton(controller, 10); // Scoring Left of Reef Face (Switch)
       RightScore = new JoystickButton(controller, 11); // Scoring Right of Reef Face (Switch)
       //RS       = new JoystickButton(controller, 12); // Right Stick Click
@@ -133,8 +133,9 @@ public class Controller extends XboxController {
       );
       Outtake.onTrue(
         Commands.sequence(
-          //Arm.getInstance().ArmPositionCommand,
-          //Elevator.getInstance().ElevatorCommand,
+          Elevator.getInstance().moveToLevel4Command(),
+          Arm.getInstance().moveToLevel4Command(),
+          Commands.waitUntil(() -> {return Elevator.getInstance().isAtPosition() && Arm.getInstance().isAtPosition();}),
           EndEffector.getInstance().ExpelCommand
         )
       );
