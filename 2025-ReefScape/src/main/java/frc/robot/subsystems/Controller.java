@@ -104,18 +104,18 @@ public class Controller extends XboxController {
     boolean isAlgaeSelected = false;  // Initially set to false (CORAL)
 
     AccessoryButtons(Controller controller){
-      Intake     = new JoystickButton(controller, 1);  // Intake Button
-      Outtake    = new JoystickButton(controller, 2);  // Expel Button (Outtake for those who don't know)
-      ClimberIn  = new JoystickButton(controller, 3);  // Brings Climber In & Funnel Up
-      ClimberOut = new JoystickButton(controller, 4);  // Brings Climber Out & Funnel Down
-      GMPCS      = new JoystickButton(controller, 5);  // Game Piece Selector Button (Algae or Coral)
-      StageDial0 = new JoystickButton(controller, 6);  // Stage Dial Scoring Level 0 (Default/Human Player Intake)
-      StageDial1 = new JoystickButton(controller, 6);  // Stage Dial Scoring Level 1 (Trough)
-      StageDial2 = new JoystickButton(controller, 7);  // Stage Dial Scoring Level 2
-      StageDial3 = new JoystickButton(controller, 8);  // Stage Dial Scoring Level 3
-      StageDial4 = new JoystickButton(controller, 9);  // Stage Dial Scoring Level 4
-      LeftScore  = new JoystickButton(controller, 10); // Scoring Left of Reef Face (Switch)
-      RightScore = new JoystickButton(controller, 11); // Scoring Right of Reef Face (Switch)
+      StageDial0 = new JoystickButton(controller, 1);  // Stage Dial Scoring Level 0 (Default/Human Player Intake)
+      StageDial1 = new JoystickButton(controller, 2);  // Stage Dial Scoring Level 1 (Trough)
+      StageDial2 = new JoystickButton(controller, 3);  // Stage Dial Scoring Level 2
+      StageDial3 = new JoystickButton(controller, 4);  // Stage Dial Scoring Level 3
+      StageDial4 = new JoystickButton(controller, 5);  // Stage Dial Scoring Level 4
+      ClimberIn  = new JoystickButton(controller, 6);  // Brings Climber In & Funnel Up
+      ClimberOut = new JoystickButton(controller, 7);  // Brings Climber Out & Funnel Down
+      Intake     = new JoystickButton(controller, 8);  // Intake Button
+      Outtake    = new JoystickButton(controller, 9);  // Expel Button (Outtake for those who don't know)
+      GMPCS      = new JoystickButton(controller, 10);  // Game Piece Selector Button (Algae or Coral)
+      LeftScore  = new JoystickButton(controller, 11); // Scoring Left of Reef Face (Switch)
+      RightScore = new JoystickButton(controller, 12); // Scoring Right of Reef Face (Switch)
       //RS       = new JoystickButton(controller, 12); // Right Stick Click
       //Home     = new JoystickButton(controller, 13); // Home Button
       //DPadUp    = new POVButton(controller, 0);
