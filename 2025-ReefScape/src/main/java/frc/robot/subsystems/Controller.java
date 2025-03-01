@@ -11,13 +11,18 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.button.POVButton;
 import frc.utils.VectorUtils;
+import frc.utils.NTValues.NTBoolean;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.NetworkTableInstance;
 import frc.robot.Constants.ScoreConstants;
 import frc.robot.Constants.kDriveTrain.DriveConstants;
 public class Controller extends XboxController {
+
+  static NetworkTable table = NetworkTableInstance.getDefault().getTable("roboRIO/Controller");
 
   public static double forward;
   public static double left;
@@ -103,25 +108,36 @@ public class Controller extends XboxController {
     // boolean that decides which game piece we are handling
     boolean isAlgaeSelected = false;  // Initially set to false (CORAL)
 
+    NTBoolean nt_algaeSelected = new NTBoolean(false,table,"algaeSelected",(val)->{});
+
+    public boolean toggleAlgae(){
+      isAlgaeSelected = !isAlgaeSelected;
+      nt_algaeSelected.set(isAlgaeSelected);
+      return true;
+    }
+
     AccessoryButtons(Controller controller){
       StageDial0 = new JoystickButton(controller, 1);  // Stage Dial Scoring Level 0 (Default/Human Player Intake)
       StageDial1 = new JoystickButton(controller, 2);  // Stage Dial Scoring Level 1 (Trough)
       StageDial2 = new JoystickButton(controller, 3);  // Stage Dial Scoring Level 2
       StageDial3 = new JoystickButton(controller, 4);  // Stage Dial Scoring Level 3
       StageDial4 = new JoystickButton(controller, 5);  // Stage Dial Scoring Level 4
-      ClimberIn  = new JoystickButton(controller, 6);  // Brings Climber In & Funnel Up
-      ClimberOut = new JoystickButton(controller, 7);  // Brings Climber Out & Funnel Down
+      RightScore = new JoystickButton(controller, 6); // Scoring Right of Reef Face (Switch)
+      LeftScore  = new JoystickButton(controller, 7); // Scoring Left of Reef Face (Switch)
       Intake     = new JoystickButton(controller, 8);  // Intake Button
       Outtake    = new JoystickButton(controller, 9);  // Expel Button (Outtake for those who don't know)
-      GMPCS      = new JoystickButton(controller, 10);  // Game Piece Selector Button (Algae or Coral)
-      LeftScore  = new JoystickButton(controller, 11); // Scoring Left of Reef Face (Switch)
-      RightScore = new JoystickButton(controller, 12); // Scoring Right of Reef Face (Switch)
+      ClimberIn  = new JoystickButton(controller, 10);  // Brings Climber In & Funnel Up
+      ClimberOut = new JoystickButton(controller, 11);  // Brings Climber Out & Funnel Down
+      GMPCS      = new JoystickButton(controller, 12);  // Game Piece Selector Button (Algae or Coral)
       //RS       = new JoystickButton(controller, 12); // Right Stick Click
       //Home     = new JoystickButton(controller, 13); // Home Button
       //DPadUp    = new POVButton(controller, 0);
       //DPadRight    = new POVButton(controller, 90);
       //DPadDown    = new POVButton(controller, 180);
       //DPadLeft    = new POVButton(controller, 270);
+
+      // Initializing the selected game piece to be the default; coral.
+      pieceSelected = ScoreConstants.GamePieceSelected.CORAL;
 
       /* Run Climber Command Sequences */
 
@@ -147,13 +163,17 @@ public class Controller extends XboxController {
         )
       );
       Outtake.onTrue(
+        Commands.sequence(
+        Elevator.getInstance().moveToTroughCommand(),
+        Arm.getInstance().moveToTroughCommand()
+        ).unless(()->level != ScoreConstants.ScoreLevel.TROUGH));
+        /* 
         new InstantCommand(() -> {
           switch (pieceSelected) {
             case CORAL:
               switch (level) {
                 case TROUGH:
-                  Elevator.getInstance().moveToTroughCommand().schedule();
-                  Arm.getInstance().moveToTroughCommand().schedule();
+
                   waitAndExpel.schedule();
                   break;
                 case LEVEL2:
@@ -178,7 +198,7 @@ public class Controller extends XboxController {
               break;
           }
         }
-      ));
+      ));*/
       
       /* Setting Stage Dial Values */
       
@@ -223,20 +243,19 @@ public class Controller extends XboxController {
       /* Algae/Coral Selector */
 
       GMPCS.onTrue(
-          Commands.runOnce(() -> {
-              // Toggle the boolean variable on each press
-              isAlgaeSelected = !isAlgaeSelected;
-
-              // Use the boolean value to select the correct game piece
+          Commands.sequence(
+            Commands.waitUntil(() -> {return toggleAlgae();}),
+            Commands.waitUntil(() -> {
               if (isAlgaeSelected) {
-                  // If the boolean is true, set to ALGAE
                   pieceSelected = ScoreConstants.GamePieceSelected.ALGAE;
               } else {
-                  // If the boolean is false, set to CORAL
                   pieceSelected = ScoreConstants.GamePieceSelected.CORAL;
               }
-          })
+              return true;
+            })
+          )
       );
+
     } 
   }
 
