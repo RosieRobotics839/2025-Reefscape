@@ -32,13 +32,13 @@ public class Autonomous extends SubsystemBase {
   public Pose2d m_aimPoint;
   public double m_aimPointRotationOffset;
 
-  public static List<Translation2d> bluestage = new ArrayList<Translation2d>(){{
-    add(new Translation2d(2.85,4.45));
-    add(new Translation2d(2.85,3.00));
-    add(new Translation2d(5.62, 1.45));
-    add(new Translation2d(6.35, 2.25));
-    add(new Translation2d(6.35, 5.85));
-    add(new Translation2d(5.62, 6.50));
+  public static List<Translation2d> bluereef = new ArrayList<Translation2d>(){{
+    add(new Translation2d(2.875,4.820));
+    add(new Translation2d(4.561,5.838));
+    add(new Translation2d(6.138, 4.820));
+    add(new Translation2d(6.138, 3.15));
+    add(new Translation2d(4.561, 2.218));
+    add(new Translation2d(2.875, 3.15));
   }};
   //public static List<Translation2d> redstage = new ArrayList<Translation2d>(){{
   //  add(new Translation2d(13.75,4.45));
@@ -65,9 +65,9 @@ public class Autonomous extends SubsystemBase {
   public static List<List<Translation2d>> staticObstacles = new ArrayList<List<Translation2d>>(){{
     double halffield = Vision.getInstance().aprilTagFieldLayout.getFieldLength()/2.0;
     
-    List<Translation2d> redstage = bluestage.stream().map(f->new Translation2d(halffield+(halffield-f.getX()),f.getY())).collect(Collectors.toList());
-    add(bluestage);
-    add(redstage);
+    List<Translation2d> redreef = bluereef.stream().map(f->new Translation2d(halffield+(halffield-f.getX()),f.getY())).collect(Collectors.toList());
+    add(bluereef);
+    add(redreef);
     
     //List<Translation2d> redspeaker = bluespeaker.stream().map(f->new Translation2d(halffield+(halffield-f.getX()),f.getY())).collect(Collectors.toList());
     //add(bluespeaker);
