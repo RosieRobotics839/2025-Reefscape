@@ -18,7 +18,12 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
+import frc.robot.Constants.ArmConstants;
+import frc.robot.Constants.EffectorConstants;
+import frc.robot.Constants.ElevatorConstants;
 import frc.robot.Constants.ScoreConstants;
+import frc.robot.Constants.ScoreConstants.GamePieceSelected;
+import frc.robot.Constants.ScoreConstants.ScoreLevel;
 import frc.robot.Constants.kDriveTrain.DriveConstants;
 public class Controller extends XboxController {
 
@@ -101,8 +106,10 @@ public class Controller extends XboxController {
       Commands.waitUntil(() -> {return Arm.getInstance().isAtPosition() && Elevator.getInstance().isAtPosition();})
     );
 
-    ScoreConstants.ScoreLevel level;
-    ScoreConstants.GamePieceSelected pieceSelected;
+    ScoreConstants.ScoreLevel m_level;
+    Command m_expel = EndEffector.getInstance().ExpelCommand((m_level == ScoreLevel.TROUGH ? EffectorConstants.kTroughOuttakeSpeed : EffectorConstants.kOuttakeSpeed));
+      
+    ScoreConstants.GamePieceSelected m_pieceSelected;
 
     // boolean that decides which game piece we are handling
     boolean isAlgaeSelected = false;  // Initially set to false (CORAL)
@@ -137,7 +144,7 @@ public class Controller extends XboxController {
       //DPadLeft    = new POVButton(controller, 270);
 
       // Initializing the selected game piece to be the default; coral.
-      pieceSelected = ScoreConstants.GamePieceSelected.CORAL;
+      m_pieceSelected = ScoreConstants.GamePieceSelected.CORAL;
 
       /* Run Climber Command Sequences */
 
@@ -157,7 +164,7 @@ public class Controller extends XboxController {
 
       /* Intake and Outtake Command Sequences */
 
-      Intake.whileTrue(
+      Intake.onTrue(
         Commands.sequence(
           EndEffector.getInstance().IntakeCommand
         )
@@ -165,87 +172,53 @@ public class Controller extends XboxController {
 
       Outtake.onTrue(
         Commands.sequence(
-          Commands.parallel(
-            Commands.sequence(
-              Elevator.getInstance().moveToTroughCommand(),
-              Arm.getInstance().moveToTroughCommand()
-            ).onlyIf(()->level == ScoreConstants.ScoreLevel.TROUGH),
-            Commands.sequence(
-              Elevator.getInstance().moveToLevel2Command(),
-              Arm.getInstance().moveToLevel2Command()
-            ).onlyIf(()->level == ScoreConstants.ScoreLevel.LEVEL2),
-            Commands.sequence(
-              Elevator.getInstance().moveToLevel3Command(),
-              Arm.getInstance().moveToLevel3Command()
-            ).onlyIf(()->level == ScoreConstants.ScoreLevel.LEVEL3),
-            Commands.sequence(
-              Elevator.getInstance().moveToLevel4Command(),
-              Arm.getInstance().moveToLevel4Command()
-            ).onlyIf(()->level == ScoreConstants.ScoreLevel.LEVEL4)
-          ).onlyIf(() -> pieceSelected == ScoreConstants.GamePieceSelected.CORAL),
-          waitForTarget.onlyIf(() -> pieceSelected == ScoreConstants.GamePieceSelected.CORAL),
-          EndEffector.getInstance().ExpelCommand
+          waitForTarget.onlyIf(() -> m_pieceSelected == GamePieceSelected.CORAL), // Waiting for arm and elevator to reach target, will only run if coral is selected
+          new InstantCommand(()->EndEffector.getInstance().m_motor.withSpeedLimit((m_level == ScoreLevel.TROUGH && m_pieceSelected == GamePieceSelected.CORAL ? EffectorConstants.kTroughOuttakeSpeed : EffectorConstants.kOuttakeSpeed))),
+          m_expel, // Expelling either way, no matter algae or coral
+          new InstantCommand(()->EndEffector.getInstance().m_motor.withSpeedLimit(EffectorConstants.kOuttakeSpeed))
         )
       );
-        
-        /* 
-        new InstantCommand(() -> {
-          switch (pieceSelected) {
-            case CORAL:
-              switch (level) {
-                case TROUGH:
-
-                  waitAndExpel.schedule();
-                  break;
-                case LEVEL2:
-                  Elevator.getInstance().moveToLevel2Command().schedule();
-                  Arm.getInstance().moveToLevel2Command().schedule();
-                  waitAndExpel.schedule();
-                  break;
-                case LEVEL3:
-                  Elevator.getInstance().moveToLevel3Command().schedule();
-                  Arm.getInstance().moveToLevel3Command().schedule();
-                  waitAndExpel.schedule();
-                  break;
-                case LEVEL4:
-                  Elevator.getInstance().moveToLevel4Command().schedule();
-                  Arm.getInstance().moveToLevel4Command().schedule();
-                  waitAndExpel.schedule();
-                  break;
-              }
-              break;
-            case ALGAE:
-              EndEffector.getInstance().ExpelCommand.schedule(); // If not coral then run expel command to get rid of algae
-              break;
-          }
-        }
-      ));*/
       
       /* Setting Stage Dial Values */
+
+    StageDial0.onTrue(
+      Commands.runOnce(() -> {
+        Elevator.getInstance().setPosition(ElevatorConstants.kMinHeight);
+        Arm.getInstance().setArmAngle(ArmConstants.kAngleMax);
+      })
+    );
       
     StageDial1.onTrue(
-      Commands.runOnce(() -> {
-          level = ScoreConstants.ScoreLevel.TROUGH;
-      })
-    );
+      Commands.sequence(
+          new InstantCommand(()->m_level = ScoreConstants.ScoreLevel.TROUGH),
+          Elevator.getInstance().moveToTroughCommand(),
+          Arm.getInstance().moveToTroughCommand()
+      //).onlyIf(()->level == ScoreConstants.ScoreLevel.TROUGH)
+    ));
 
     StageDial2.onTrue(
-      Commands.runOnce(() -> {
-          level = ScoreConstants.ScoreLevel.LEVEL2;
-      })
-    );
+      Commands.sequence(
+          new InstantCommand(()->m_level = ScoreConstants.ScoreLevel.LEVEL2),
+          Elevator.getInstance().moveToLevel2Command(),
+          Arm.getInstance().moveToLevel2Command()
+      //).onlyIf(()->level == ScoreConstants.ScoreLevel.LEVEL2)
+    ));
 
     StageDial3.onTrue(
-      Commands.runOnce(() -> {
-          level = ScoreConstants.ScoreLevel.LEVEL3;
-      })
-    );
+      Commands.sequence(
+          new InstantCommand(()->m_level = ScoreConstants.ScoreLevel.LEVEL3),
+          Elevator.getInstance().moveToLevel3Command(),
+          Arm.getInstance().moveToLevel3Command()
+      //).onlyIf(()->level == ScoreConstants.ScoreLevel.LEVEL3)
+    ));
 
     StageDial4.onTrue(
-      Commands.runOnce(() -> {
-          level = ScoreConstants.ScoreLevel.LEVEL4;
-      })
-    );
+      Commands.sequence(
+          new InstantCommand(()->m_level = ScoreConstants.ScoreLevel.LEVEL4),
+          Elevator.getInstance().moveToLevel4Command(),
+          Arm.getInstance().moveToLevel4Command()
+      // ).onlyIf(()->level == ScoreConstants.ScoreLevel.LEVEL4)
+    ));
 
 
       /* Side Positioning for Scoring */
@@ -268,9 +241,9 @@ public class Controller extends XboxController {
             Commands.waitUntil(() -> {return toggleAlgae();}),
             Commands.waitUntil(() -> {
               if (isAlgaeSelected) {
-                  pieceSelected = ScoreConstants.GamePieceSelected.ALGAE;
+                  m_pieceSelected = ScoreConstants.GamePieceSelected.ALGAE;
               } else {
-                  pieceSelected = ScoreConstants.GamePieceSelected.CORAL;
+                  m_pieceSelected = ScoreConstants.GamePieceSelected.CORAL;
               }
               return true;
             })

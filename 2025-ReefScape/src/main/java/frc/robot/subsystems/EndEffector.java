@@ -37,17 +37,19 @@ public class EndEffector extends SubsystemBase {
     }
 
     Command IntakeCommand = Commands.sequence(
-      Commands.waitUntil(() -> {return m_motor.setSpeed(EffectorConstants.kSpeed);}), //Sets speed to intake game piece
-      Commands.waitSeconds(2),
+      Commands.waitUntil(() -> {return m_motor.setSpeed(EffectorConstants.kIntakeSpeed);}), //Sets speed to intake game piece
       Commands.waitUntil(() -> {return hasGamePiece();}), //Checking whether we have a game piece or not.
       Commands.waitUntil(() -> {return m_motor.setSpeed(0);}) //Stops motor after we have a game piece
     );
 
-    Command ExpelCommand = Commands.sequence( //Outtake for those who don't know
-      Commands.waitUntil(() -> {return m_motor.setSpeed(( m_hasCoral ? 1 : -1) * EffectorConstants.kSpeed);}), // If we have the coral ( ? ) then forward, anything else backward.
-      Commands.waitUntil(() -> {return hasGamePiece();}), //Checking whether we have a game piece or not.
-      Commands.waitUntil(() -> {return m_motor.setSpeed(0);}) //Stops motor after we have scored Coral
-    );
+    public Command ExpelCommand(double speed){
+      return Commands.sequence( //Outtake for those who don't know
+        Commands.waitUntil(() -> {return m_motor.setSpeed((m_hasCoral ? 1 : -1) * speed);}), // If we have the coral ( ? ) then forward, anything else backward.
+        Commands.waitUntil(() -> {return !hasGamePiece();}), //Checking whether we have a game piece or not.
+        Commands.waitSeconds(3),
+        Commands.waitUntil(() -> {return m_motor.setSpeed(0);}) //Stops motor after we have scored Coral
+      );
+    };
 
     public EndEffector(int CANID) {
 
@@ -55,7 +57,7 @@ public class EndEffector extends SubsystemBase {
           .withStatorLimit((int)EffectorConstants.kMotorCurrentLimit)
           .inverted(false)
           .withGearRatio((EffectorConstants.kGearRatio))
-          .withSpeedLimit(EffectorConstants.kMaxSpeed)
+          .withSpeedLimit(EffectorConstants.kOuttakeSpeed)
           .withSlowSpeedControl(true)
           .pidf(EffectorConstants.kGainPosition, Motor.GainSlot.POSITION)
           .pidf(EffectorConstants.kGainVelocity, Motor.GainSlot.SPEED);
@@ -64,6 +66,8 @@ public class EndEffector extends SubsystemBase {
     public DigitalInput m_beamBreak = new DigitalInput(EffectorConstants.kBeamBreakPin);
     public NTBoolean m_beamBreakTestSensor = (Robot.isReal() ? null : new NTBoolean(true, table, "Effector/BeamBreakTestInput", (val)->{}));
     public NTBoolean nt_beamBroken = new NTBoolean(false, table, "Effector/beamBroken", (val) -> {});
+    public NTBoolean nt_hasGamePiece = new NTBoolean(false, table, "Effector/hasGamePiece", (val) -> {});
+    public NTBoolean nt_hasCoral = new NTBoolean(false, table, "Effector/hasCoral", (val) -> {});
 
     @Override
     public void periodic() {
@@ -76,6 +80,8 @@ public class EndEffector extends SubsystemBase {
     }
 
     nt_beamBroken.set(m_beamBroken);
+    nt_hasGamePiece.set(m_hasGamePiece);
+    nt_hasCoral.set(m_hasCoral);
 
     // rising edge trigger on beam break sensor
     beam_trigger = beam_trigger && m_beamBroken;
@@ -87,12 +93,12 @@ public class EndEffector extends SubsystemBase {
     }
     
     // Coral not detected, checking to see if we have algae.
-    if (!m_beamBroken && (m_motor.getVelocity() < .1 || m_motor.getOutputCurrent() > 40)){
+  /* if (!m_beamBroken && (m_motor.getVelocity() < .1 || m_motor.getOutputCurrent() > 10)){
       m_hasGamePiece = true; 
       m_hasCoral = false;
       m_algaeRelativePosition = m_motor.getPosition();
     //Checking to see whether we have a game piece or not by checking if the beam is broken, or velocity is less than 10 RPM, or Current is greater than 40
-    }
+    } */
 
     if (m_hasCoral && !m_beamBroken){ // Checking to see if we previously had coral. Seeing is m_hasCoral is still correct because if the beam is not broken we don't have coral anymore.
       m_hasGamePiece = false;

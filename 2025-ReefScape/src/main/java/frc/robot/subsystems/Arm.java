@@ -32,8 +32,7 @@ public class Arm extends SubsystemBase{
     public Motor m_motor;
     public DutyCycleEncoder m_angleSensor;
     public double m_currentAngle = 0;
-    public double m_angleTarget = Units.degreesToRadians(NTDouble.create(0, table, "angle/targetAngle",(val)->setArmAngle(Units.degreesToRadians(val))));
-    public double targetAngle = 0;
+    public double m_angleTarget = Units.degreesToRadians(NTDouble.create(90, table, "angle/targetAngle",(val)->setArmAngle(Units.degreesToRadians(val))));
     public double elevatorCurrentHeight;
     double m_armOffset = 0; //change later
     double m_newArmOffset = 0;
@@ -126,7 +125,7 @@ public class Arm extends SubsystemBase{
     public Command createMoveToAngleCommand(double target) {
         return Commands.sequence(
             // Move to safe angle
-            Commands.runOnce(() -> setArmAngle(targetAngle))
+            Commands.runOnce(() -> setArmAngle(target))
         );
     }
 
