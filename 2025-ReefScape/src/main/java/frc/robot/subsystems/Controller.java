@@ -129,6 +129,7 @@ public class Controller extends XboxController {
       ClimberIn  = new JoystickButton(controller, 10);  // Brings Climber In & Funnel Up
       ClimberOut = new JoystickButton(controller, 11);  // Brings Climber Out & Funnel Down
       GMPCS      = new JoystickButton(controller, 12);  // Game Piece Selector Button (Algae or Coral)
+
       //RS       = new JoystickButton(controller, 12); // Right Stick Click
       //Home     = new JoystickButton(controller, 13); // Home Button
       //DPadUp    = new POVButton(controller, 0);

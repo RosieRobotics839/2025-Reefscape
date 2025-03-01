@@ -31,8 +31,7 @@ public class Elevator extends SubsystemBase {
         return instance;
     }
 
-    public Motor m_EleMotorLeft;
-    public Motor m_EleMotorRight;
+    public Motor m_EleMotor;
     boolean setupElevator = false;
     public double m_targetHeight = NTDouble.create(0, table, "targetHeight",(val)->setPosition(Units.inchesToMeters(val)));
     public double m_currentHeight = 0;
@@ -55,7 +54,7 @@ public class Elevator extends SubsystemBase {
      * @return Elevator distance in inches from bottom limit switch
      */
     public double getPosition() {
-        return m_EleMotorLeft.getPosition() * ElevatorConstants.kSprocketCircumference;
+        return m_EleMotor.getPosition() * ElevatorConstants.kSprocketCircumference;
     }
 
     // Check if elevator is at target position
@@ -87,7 +86,7 @@ public class Elevator extends SubsystemBase {
         
         // Convert inches to motor rotations and set position
         double targetRotations = safeTargetHeight / ElevatorConstants.kSprocketCircumference;
-        m_EleMotorLeft.setPosition(targetRotations);
+        m_EleMotor.setPosition(targetRotations);
     }
 
     /**
@@ -104,24 +103,14 @@ public class Elevator extends SubsystemBase {
         nt_targetHeight = table.getDoubleTopic("targetHeight").publish();
         nt_calibrated = table.getBooleanTopic("calibrated").publish();
         nt_limitSwitch = table.getBooleanTopic("limitSwitch").publish();
-        
-        m_EleMotorLeft = new Motor(ElevatorConstants.kEleLeftCANID, ElevatorConstants.kMotorType, "eleLeft")
-            .inverted(false)
-            .withStatorLimit((int)ElevatorConstants.kLeftElevatorMotorCurrentLimit)
-            .withSpeedLimit(ElevatorConstants.kMaxSpeedPositive,ElevatorConstants.kMaxSpeedNegative)
-            .withSlowSpeedControl(true)
-            .withGearRatio(ElevatorConstants.kElevatorGearRatio)
-            .pidf(ElevatorConstants.kGainPosition, GainSlot.POSITION);
 
-        m_EleMotorRight = new Motor(ElevatorConstants.kEleRightCANID, ElevatorConstants.kMotorType, "eleRight")
+        m_EleMotor = new Motor(ElevatorConstants.kEleCANID, ElevatorConstants.kMotorType, "elevator")
             .inverted(true)
-            .withStatorLimit((int)ElevatorConstants.kRightElevatorMotorCurrentLimit)
+            .withStatorLimit((int)ElevatorConstants.kElevatorMotorCurrentLimit)
             .withGearRatio(ElevatorConstants.kElevatorGearRatio)
             .withSpeedLimit(ElevatorConstants.kMaxSpeedPositive, ElevatorConstants.kMaxSpeedNegative)
             .withSlowSpeedControl(true)
-            .pidf(ElevatorConstants.kGainPosition, GainSlot.POSITION)
-            .setFollowerMode(ElevatorConstants.kEleLeftCANID, false); // not sure if we need to invert motor second time, test this
-
+            .pidf(ElevatorConstants.kGainPosition, GainSlot.POSITION);
     }
 
     public Command createMoveToHeightCommand(double targetHeight) {
@@ -160,34 +149,32 @@ public class Elevator extends SubsystemBase {
             // Prep for calibration
             new InstantCommand(()->{
                 m_isCalibrating.set(1);
-                m_EleMotorRight.stopMotor();
-                m_EleMotorLeft
+                m_EleMotor
                     .withSpeedLimit(ElevatorConstants.kCalibrationSpeed/ElevatorConstants.kSprocketCircumference)
                     .stopMotor();
             }),
             // If limit switch is pressed, move up off of it.
             Commands.sequence(
                 new InstantCommand(()->{
-                    m_EleMotorLeft
+                    m_EleMotor
                         .setRelativePosition(ElevatorConstants.kCalibrationUpTravel/ElevatorConstants.kSprocketCircumference);
                 }),
                 Commands.waitUntil(()->!limitSwitch.get())
             ).unless(()->!limitSwitch.get()),
             // Move down until limit switch is hit
-            new InstantCommand(()->m_EleMotorLeft.setRelativePosition(-(ElevatorConstants.kMaxHeight-ElevatorConstants.kMinHeight)/ElevatorConstants.kSprocketCircumference)),
-            Commands.waitUntil(()->{return limitSwitch.get();}).andThen(increment()).finallyDo(()->m_EleMotorLeft.stopMotor()),
+            new InstantCommand(()->m_EleMotor.setRelativePosition(-(ElevatorConstants.kMaxHeight-ElevatorConstants.kMinHeight)/ElevatorConstants.kSprocketCircumference)),
+            Commands.waitUntil(()->{return limitSwitch.get();}).andThen(increment()).finallyDo(()->m_EleMotor.stopMotor()),
             // Move up for slow calibration
-            new InstantCommand(()->m_EleMotorLeft.setRelativePosition((ElevatorConstants.kMaxHeight-ElevatorConstants.kMinHeight)/ElevatorConstants.kSprocketCircumference)),
-            Commands.waitUntil(()->!limitSwitch.get()).andThen(increment()).finallyDo(()->m_EleMotorLeft.stopMotor()),
+            new InstantCommand(()->m_EleMotor.setRelativePosition((ElevatorConstants.kMaxHeight-ElevatorConstants.kMinHeight)/ElevatorConstants.kSprocketCircumference)),
+            Commands.waitUntil(()->!limitSwitch.get()).andThen(increment()).finallyDo(()->m_EleMotor.stopMotor()),
             // Move down until limit switch is hit again
-            new InstantCommand(()->m_EleMotorLeft
+            new InstantCommand(()->m_EleMotor
                 .withSpeedLimit(ElevatorConstants.kCalibrationSlowSpeed/ElevatorConstants.kSprocketCircumference)
                 .setRelativePosition(-(ElevatorConstants.kMaxHeight-ElevatorConstants.kMinHeight))),
             // When limit switch is pressed, stop the motor and zero out the relative encoders.
-            Commands.waitUntil(()->limitSwitch.get()).finallyDo(()->{m_EleMotorLeft.stopMotor();}).andThen(
+            Commands.waitUntil(()->limitSwitch.get()).finallyDo(()->{m_EleMotor.stopMotor();}).andThen(
                 Commands.parallel(
-                    Commands.waitUntil(()->m_EleMotorLeft.setEncoderPosition(0)),
-                    Commands.waitUntil(()->m_EleMotorRight.setEncoderPosition(0))
+                    Commands.waitUntil(()->m_EleMotor.setEncoderPosition(0))
                 )
             ).andThen(increment()),
             new InstantCommand(()->{
@@ -196,7 +183,7 @@ public class Elevator extends SubsystemBase {
                 m_isCalibrated.set(true);
                 m_isCalibrating.set(0);
                 // Reset Elevator Speed Limits
-                m_EleMotorLeft.withSpeedLimit(ElevatorConstants.kMaxSpeedPositive/ElevatorConstants.kSprocketCircumference, ElevatorConstants.kMaxSpeedNegative/ElevatorConstants.kSprocketCircumference);
+                m_EleMotor.withSpeedLimit(ElevatorConstants.kMaxSpeedPositive/ElevatorConstants.kSprocketCircumference, ElevatorConstants.kMaxSpeedNegative/ElevatorConstants.kSprocketCircumference);
             })
         ).finallyDo(()->{c_calibrate=calibrate();});
     }
