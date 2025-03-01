@@ -334,7 +334,7 @@ public final class Constants {
 
   public static class ClimberConstants {
     public static MyMotorType kMotorType = MyMotorType.NEO;
-    // TODO: Change later
+ 
     public static int kDigitalInputID = 2;
     public static int kCANID = 3;
 
@@ -345,9 +345,8 @@ public final class Constants {
     public static double kAngleIn = 0; // Change once we can test
     public static double kAngleOut = 0; // Change once we can test
 
-    // TODO: Change values of Calibration Maps.
     public static double [] kCalibrationX = new double[]{0.507191, 0.581880, 0.829728, 0.989784}; //analog values 
-    public static double [] kCalibrationY = new double[]{25, 0, -90, -148}; // degrees 
+    public static double [] kCalibrationY = new double[]{Units.degreesToRotations(25), Units.degreesToRotations(0), Units.degreesToRotations(-90), Units.degreesToRotations(-148)}; // degrees 
     
     public static double kGearRatio = 125;
 

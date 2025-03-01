@@ -36,13 +36,12 @@ public class Climber extends SubsystemBase{
     }
 
     public double getCurrentAngle(){
-        return m_motor.getPosition(); // TODO: use calibration map for climber angle to spool rotation
+        return m_motor.getPosition()*2.0*Math.PI; // TODO: use calibration map for climber angle to spool rotation
     }
 
     public void setTargetAngle(double position){
         m_targetAngle = position;
-        double m_motorTarget = m_targetAngle; // TODO: use calibration map for spool rotations to climber angle
-        m_motor.setPosition(m_motorTarget);
+        m_motor.setPosition(m_targetAngle/(2.0*Math.PI));
     }
         
     public Command ClimberInCommand = Commands.sequence(
@@ -55,6 +54,7 @@ public class Climber extends SubsystemBase{
         Commands.waitUntil(this::atTargetAngle)
     );
 
+    public Calibrate motorCal;
     public Climber(int CANID, int analogID) {
 
         nt_positionSensor = table.getDoubleTopic("angle/positionSensor").publish();
@@ -66,9 +66,10 @@ public class Climber extends SubsystemBase{
             .inverted(true)
             .idleBrake(true)
             .withGearRatio((ClimberConstants.kGearRatio))
-            .withSpeedLimit(ClimberConstants.kMaxSpeed);
+            .withSpeedLimit(ClimberConstants.kMaxSpeed)
+            .positionWrappingEnabled(true);
 
-        Calibrate.motor("climber",
+        motorCal = Calibrate.motor("climber",
             ClimberConstants.kCalibrationX,
             ClimberConstants.kCalibrationY,
             m_motor,
