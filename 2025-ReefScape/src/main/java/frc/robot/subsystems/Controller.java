@@ -97,9 +97,8 @@ public class Controller extends XboxController {
     public JoystickButton Intake, Outtake, ClimberIn, ClimberOut, GMPCS, StageDial0, StageDial1, StageDial2, StageDial3, StageDial4, LeftScore, RightScore, RS, Home;
     public POVButton DPadUp, DPadRight, DPadDown, DPadLeft;
 
-    public Command waitAndExpel = Commands.sequence(
-      Commands.waitUntil(() -> {return Arm.getInstance().isAtPosition() && Elevator.getInstance().isAtPosition();}),
-      EndEffector.getInstance().ExpelCommand
+    public Command waitForTarget = Commands.sequence(
+      Commands.waitUntil(() -> {return Arm.getInstance().isAtPosition() && Elevator.getInstance().isAtPosition();})
     );
 
     ScoreConstants.ScoreLevel level;
@@ -158,16 +157,37 @@ public class Controller extends XboxController {
 
       /* Intake and Outtake Command Sequences */
 
-      Intake.onTrue(
+      Intake.whileTrue(
         Commands.sequence(
           EndEffector.getInstance().IntakeCommand
         )
       );
+
       Outtake.onTrue(
         Commands.sequence(
-        Elevator.getInstance().moveToTroughCommand(),
-        Arm.getInstance().moveToTroughCommand()
-        ).unless(()->level != ScoreConstants.ScoreLevel.TROUGH));
+          Commands.parallel(
+            Commands.sequence(
+              Elevator.getInstance().moveToTroughCommand(),
+              Arm.getInstance().moveToTroughCommand()
+            ).onlyIf(()->level == ScoreConstants.ScoreLevel.TROUGH),
+            Commands.sequence(
+              Elevator.getInstance().moveToLevel2Command(),
+              Arm.getInstance().moveToLevel2Command()
+            ).onlyIf(()->level == ScoreConstants.ScoreLevel.LEVEL2),
+            Commands.sequence(
+              Elevator.getInstance().moveToLevel3Command(),
+              Arm.getInstance().moveToLevel3Command()
+            ).onlyIf(()->level == ScoreConstants.ScoreLevel.LEVEL3),
+            Commands.sequence(
+              Elevator.getInstance().moveToLevel4Command(),
+              Arm.getInstance().moveToLevel4Command()
+            ).onlyIf(()->level == ScoreConstants.ScoreLevel.LEVEL4)
+          ).onlyIf(() -> pieceSelected == ScoreConstants.GamePieceSelected.CORAL),
+          waitForTarget.onlyIf(() -> pieceSelected == ScoreConstants.GamePieceSelected.CORAL),
+          EndEffector.getInstance().ExpelCommand
+        )
+      );
+        
         /* 
         new InstantCommand(() -> {
           switch (pieceSelected) {

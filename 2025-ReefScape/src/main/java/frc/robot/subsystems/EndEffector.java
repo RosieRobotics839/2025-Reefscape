@@ -38,6 +38,7 @@ public class EndEffector extends SubsystemBase {
 
     Command IntakeCommand = Commands.sequence(
       Commands.waitUntil(() -> {return m_motor.setSpeed(EffectorConstants.kSpeed);}), //Sets speed to intake game piece
+      Commands.waitSeconds(2),
       Commands.waitUntil(() -> {return hasGamePiece();}), //Checking whether we have a game piece or not.
       Commands.waitUntil(() -> {return m_motor.setSpeed(0);}) //Stops motor after we have a game piece
     );
@@ -55,12 +56,14 @@ public class EndEffector extends SubsystemBase {
           .inverted(false)
           .withGearRatio((EffectorConstants.kGearRatio))
           .withSpeedLimit(EffectorConstants.kMaxSpeed)
+          .withSlowSpeedControl(true)
           .pidf(EffectorConstants.kGainPosition, Motor.GainSlot.POSITION)
           .pidf(EffectorConstants.kGainVelocity, Motor.GainSlot.SPEED);
     }
 
     public DigitalInput m_beamBreak = new DigitalInput(EffectorConstants.kBeamBreakPin);
     public NTBoolean m_beamBreakTestSensor = (Robot.isReal() ? null : new NTBoolean(true, table, "Effector/BeamBreakTestInput", (val)->{}));
+    public NTBoolean nt_beamBroken = new NTBoolean(false, table, "Effector/beamBroken", (val) -> {});
 
     @Override
     public void periodic() {
@@ -71,6 +74,9 @@ public class EndEffector extends SubsystemBase {
     } else {
       m_beamBroken = m_beamDebouncer.calculate(!m_beamBreak.get());
     }
+
+    nt_beamBroken.set(m_beamBroken);
+
     // rising edge trigger on beam break sensor
     beam_trigger = beam_trigger && m_beamBroken;
 
@@ -81,7 +87,7 @@ public class EndEffector extends SubsystemBase {
     }
     
     // Coral not detected, checking to see if we have algae.
-    if (!m_beamBroken && (m_motor.getVelocity() < 10 || m_motor.getOutputCurrent() > 40)){
+    if (!m_beamBroken && (m_motor.getVelocity() < .1 || m_motor.getOutputCurrent() > 40)){
       m_hasGamePiece = true; 
       m_hasCoral = false;
       m_algaeRelativePosition = m_motor.getPosition();

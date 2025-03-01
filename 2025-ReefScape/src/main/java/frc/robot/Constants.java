@@ -96,20 +96,20 @@ public final class Constants {
     public static double kEffectorStage1Ratio = 5.0 / 1.0; //Starting with a 5:1 Gear Ratio.
     public static double kEffectorMotorGearReduction = kEffectorStage1Ratio;
     public static double kEffectorEncoderPositionFactor = (2.0 * Math.PI) / kEffectorMotorGearReduction;
-    public static double kSpeed = 0; //Change once we can test
+    public static double kSpeed = NTDouble.create(1, "Effector/kSpeed", val->{kSpeed=val;});
     public static double kAlgaeMotorRevolutions = 5;
 
     public static double kMaxSpeed = 1; // Mechanism rotations per second
-    public static int kBeamBreakPin = 9;
+    public static int kBeamBreakPin = 3;
     public static double kBeamBreakDebounceSec = NTDouble.create(0.010, "Intake/kBeamBreakDebounceSec", val->{kBeamBreakDebounceSec=val; EndEffector.getInstance().m_beamDebouncer = new Debouncer(val, Debouncer.DebounceType.kBoth);});
     public static boolean kIntakeIsInverted = false;
     public static double kRetractDistance = NTDouble.create(10, "Intake/kRetractDistance", val->{kRetractDistance=val;});
 
-    public static double kMotorCurrentLimit = (NTDouble.create(5, "Effector/kCurrentLimit", (val) ->EndEffector.getInstance().m_motor.withStatorLimit(val)));
+    public static double kMotorCurrentLimit = (NTDouble.create(30,"Effector/kCurrentLimit", (val) ->EndEffector.getInstance().m_motor.withStatorLimit(val)));
 
     // Position control gains
     public static Motor.Gains kGainPosition = new Motor.Gains(0.3, 0.002, 0, 0);
-    public static Motor.Gains kGainVelocity = new Motor.Gains(0, 0, 0, 0);
+    public static Motor.Gains kGainVelocity = new Motor.Gains(0, 0, 0, 0.33);
 
     public static double kGearRatio = 5;
   }
