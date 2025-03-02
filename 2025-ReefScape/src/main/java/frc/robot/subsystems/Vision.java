@@ -302,4 +302,33 @@ public class Vision extends SubsystemBase {
   public void unlockTarget(){
     targetIsLocked = false;
   }
+
+  /**
+  * Reloads the AprilTag field layout when the field layout file changes
+  */
+  public void reloadFieldLayout() {
+    try {
+        // Update field layout path
+        String fieldLayoutPath = VisionConstants.getFieldLayoutPath();
+        
+        // Load new field layout
+        aprilTagFieldLayout = new AprilTagFieldLayout(fieldLayoutPath);
+        
+        // Update pose estimators with new field layout
+        if (photonPoseEstimatorFront != null) {
+            photonPoseEstimatorFront.setFieldTags(aprilTagFieldLayout);
+        }
+        if (photonPoseEstimatorRear != null) {
+            photonPoseEstimatorRear.setFieldTags(aprilTagFieldLayout);
+        }
+        
+        // Update simulation if in sim mode
+        if (Robot.isSimulation() && simVision != null) {
+            simVision.clearAprilTags();
+            simVision.addAprilTags(aprilTagFieldLayout);
+        }
+    } catch (IOException e) {
+        e.printStackTrace();
+    }
+  }
 }
