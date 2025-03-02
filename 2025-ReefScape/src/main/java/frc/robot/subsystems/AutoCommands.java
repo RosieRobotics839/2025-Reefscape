@@ -1,8 +1,15 @@
 package frc.robot.subsystems;
 
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Transform2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
@@ -73,4 +80,15 @@ public class AutoCommands {
         );
     }
 
+    public static Command ReefOffset(){
+        Pose2d target = PoseEstimator.getInstance().m_finalPose.nearest
+            (Vision.getInstance().aprilTagFieldLayout.getTags()
+            .stream().map(tag -> tag.pose.toPose2d()).collect(Collectors.toList())); // Hopefully this is readable
+        Transform2d transform = new Transform2d(new Translation2d(0,Constants.AutoConstants.kReefOffset * (Controller.m_scoreLeft ? 1 : -1)),new Rotation2d(0));
+        return Commands.sequence(
+            new InstantCommand(() -> PathPlanning.getInstance().navigateTo(target)),
+            Commands.waitUntil(() -> VectorUtils.isNear(PoseEstimator.getInstance().m_finalPose,target,Math.PI)).withTimeout(0.5),
+            new InstantCommand(() -> PathPlanning.getInstance().navigateTo(target.plus(transform)))
+        );
+    }
 }
