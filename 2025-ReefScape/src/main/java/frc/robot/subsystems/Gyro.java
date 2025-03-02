@@ -44,7 +44,7 @@ public class Gyro extends SubsystemBase {
 
   // Constructor Function on init, set gyro yaw to zero.
   public Gyro() {
-    if (GyroConstants.kEnabled){
+    if (GyroConstants.kEnabled && !Robot.isSimulation()){
       pidgey.getConfigurator().apply(new Pigeon2Configuration());
       pidgey.getYaw().setUpdateFrequency(100);
       pidgey.setYaw(0);
@@ -72,7 +72,13 @@ public class Gyro extends SubsystemBase {
 
   @Override
   public void periodic() {
-    if (!GyroConstants.kEnabled){
+    if (!GyroConstants.kEnabled || Robot.isSimulation()) {
+      // In simulation, just use the pose estimator's rotation
+      if (Robot.isSimulation()) {
+        ypr[0] = PoseEstimator.getInstance().m_sim_actualPose.getRotation().getRadians();
+        nt_yaw.set(Units.radiansToDegrees(ypr[0]));
+        nt_status.set(false);
+      }
       return;
     }
 
@@ -117,7 +123,7 @@ public class Gyro extends SubsystemBase {
   }
 
   public double [] getypr(){
-    if (!GyroConstants.kEnabled){
+    if (!GyroConstants.kEnabled || Robot.isSimulation()){
       return new double[]{0, 0, 0};
     }
 
@@ -167,6 +173,9 @@ public class Gyro extends SubsystemBase {
   }
 
   public boolean getStatus() {
+    if (Robot.isSimulation()) {
+      return false;  // Always return false in simulation
+    }
     boolean GyroGood = false;
     if (GyroConstants.kEnabled){
         // getFault_Hardware() returns False if the hardware is good
