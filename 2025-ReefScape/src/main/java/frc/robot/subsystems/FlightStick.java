@@ -172,7 +172,7 @@ public class FlightStick extends Joystick {
     slider = this.getThrottle();
 
     Translation2d Lstick = new Translation2d(-this.getX(),-this.getY());
-    Lstick = VectorUtils.deadband(Lstick,0.1,1);
+    Lstick = VectorUtils.deadband(Lstick,0.15,1);
     forward = flipField * turboscale * Lstick.getY();  // Forward is Positive
     left = flipField * Lstick.getX();               // Left is Positive
     
