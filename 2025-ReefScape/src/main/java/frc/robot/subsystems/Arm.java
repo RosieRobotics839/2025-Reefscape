@@ -146,7 +146,7 @@ public class Arm extends SubsystemBase{
                     break;
                 default:
             }
-        });
+        }).unless(()->EndEffector.getInstance().m_intakeRunning);
     }
 
     @Override

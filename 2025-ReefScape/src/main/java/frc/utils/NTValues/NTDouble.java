@@ -30,7 +30,7 @@ public class NTDouble {
         return instance.get();
     }
 
-    public NTDouble(Double defaultValue, NetworkTable _table, String name, DoubleConsumer lambda){
+    public NTDouble(double defaultValue, NetworkTable _table, String name, DoubleConsumer lambda){
         subscriber = _table.getDoubleTopic(name).subscribe(defaultValue);
         publisher = _table.getDoubleTopic(name).publish();
         publisher.set(defaultValue);

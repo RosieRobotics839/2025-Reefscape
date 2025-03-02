@@ -1,5 +1,6 @@
 package frc.robot.subsystems;
 
+import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 
 import edu.wpi.first.math.filter.Debouncer;
@@ -8,6 +9,7 @@ import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import frc.robot.Constants.EffectorConstants;
@@ -42,16 +44,17 @@ public class EndEffector extends SubsystemBase {
 
     Command IntakeCommand = Commands.sequence(
       Commands.waitUntil(() -> {return m_motor.setSpeed(EffectorConstants.kIntakeSpeed);}), //Sets speed to intake game piece
-      Commands.waitUntil(() -> {return hasGamePiece();}) //Checking whether we have a game piece or not.
+      Commands.waitUntil(() -> {return hasGamePiece();}), //Checking whether we have a game piece or not.
+      new InstantCommand(() -> m_motor.setRelativePosition(0.1))
     )
     .beforeStarting(()->m_intakeRunning=true)
     .finallyDo(()->{m_motor.setSpeed(0); m_intakeRunning=false;});
 
-    public Command ExpelCommand(DoubleSupplier speed){
+    public Command ExpelCommand(DoubleSupplier speed, BooleanSupplier extended){
       return Commands.sequence( //Outtake for those who don't know
         Commands.waitUntil(() -> {return m_motor.setSpeed((m_hasCoral ? 1 : -1) * speed.getAsDouble());}), // If we have the coral ( ? ) then forward, anything else backward.
         Commands.waitUntil(() -> {return !hasGamePiece();}), //Checking whether we have a game piece or not.
-        Commands.waitSeconds(3)
+        Commands.waitSeconds(3).onlyIf(extended)
       ).beforeStarting(()->m_intakeRunning=false)
       .finallyDo(()->m_motor.setSpeed(0));
     };

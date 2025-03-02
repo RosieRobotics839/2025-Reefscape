@@ -11,6 +11,7 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import frc.utils.VectorUtils;
 import frc.utils.NTValues.NTBoolean;
+import frc.utils.NTValues.NTDouble;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -102,6 +103,11 @@ public class Controller extends XboxController {
 
   }
 
+  static NTDouble nt_rStickXAxis = new NTDouble(0,table,"Accessory/rStickXAxis",(val)->{});
+  static NTDouble nt_yStickXAxis = new NTDouble(0,table,"Accessory/yStickXAxis",(val)->{});
+  static NTDouble nt_rStickYAxis = new NTDouble(0,table,"Accessory/rStickYAxis",(val)->{});
+  static NTDouble nt_yStickYAxis = new NTDouble(0,table,"Accessory/yStickYAxis",(val)->{});
+
   public static class AccessoryButtons {
     public JoystickButton Intake, Outtake, ClimberIn, ClimberOut, GMPCS, StageDial0, StageDial1, StageDial2, StageDial3, StageDial4, LeftScore, RightScore, RS, Home;
 
@@ -114,7 +120,7 @@ public class Controller extends XboxController {
     }
 
     ScoreConstants.ScoreLevel m_level;
-    Command m_expel = EndEffector.getInstance().ExpelCommand(()->(m_level == ScoreLevel.TROUGH ? EffectorConstants.kTroughOuttakeSpeed : EffectorConstants.kOuttakeSpeed));
+    Command m_expel = EndEffector.getInstance().ExpelCommand(()->(m_level == ScoreLevel.TROUGH ? EffectorConstants.kTroughOuttakeSpeed : EffectorConstants.kOuttakeSpeed), ()->m_level==ScoreLevel.TROUGH);
       
     ScoreConstants.GamePieceSelected m_pieceSelected;
 
@@ -122,6 +128,7 @@ public class Controller extends XboxController {
     boolean isAlgaeSelected = false;  // Initially set to false (CORAL)
 
     NTBoolean nt_algaeSelected = new NTBoolean(false,table,"algaeSelected",(val)->{});
+
 
     public boolean toggleAlgae(){
       isAlgaeSelected = !isAlgaeSelected;
@@ -178,9 +185,7 @@ public class Controller extends XboxController {
       Outtake.onTrue(
         Commands.sequence(
           waitForTarget.onlyIf(() -> m_pieceSelected == GamePieceSelected.CORAL), // Waiting for arm and elevator to reach target, will only run if coral is selected
-          new InstantCommand(()->EndEffector.getInstance().m_motor.withSpeedLimit((m_level == ScoreLevel.TROUGH && m_pieceSelected == GamePieceSelected.CORAL ? EffectorConstants.kTroughOuttakeSpeed : EffectorConstants.kOuttakeSpeed))),
-          m_expel, // Expelling either way, no matter algae or coral
-          new InstantCommand(()->EndEffector.getInstance().m_motor.withSpeedLimit(EffectorConstants.kOuttakeSpeed))
+          m_expel // Expelling either way, no matter algae or coral
         )
       );
       
@@ -291,11 +296,16 @@ public class Controller extends XboxController {
     }
 
     if (m_directElevator){
-      Elevator.getInstance().setPosition((ElevatorConstants.kMaxHeight - ElevatorConstants.kMinHeight)*Lx + ElevatorConstants.kMinHeight);
+      Elevator.getInstance().setPosition((ElevatorConstants.kMaxHeight - ElevatorConstants.kMinHeight)*(Lx+1.0)/2.0 + ElevatorConstants.kMinHeight);
     }
 
     if (m_directArm){
-      Arm.getInstance().setPosition((ArmConstants.kAngleMax - ArmConstants.kAngleMin)*Ly + ArmConstants.kAngleMin);
+      Arm.getInstance().setPosition((ArmConstants.kAngleMax - ArmConstants.kAngleMin)*(-Ly+1.0)/2.0 + ArmConstants.kAngleMin);
     }
+
+    nt_rStickXAxis.set(Rx);
+    nt_yStickXAxis.set(Lx);
+    nt_rStickYAxis.set(Ry);
+    nt_yStickYAxis.set(Ly);
   }
 }
