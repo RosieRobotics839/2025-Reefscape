@@ -709,6 +709,17 @@ public class Motor extends SubsystemBase {
         return 0.0;
     }
 
+    public double getMotorTemperature(){
+        switch (motorType) {
+            case KRAKEN:
+                return motor_talon.getDeviceTemp().getValueAsDouble();
+            case NEO:
+                return motor_neo.getMotorTemperature();
+            default:
+        }
+        return 0.0;
+    }
+
     public boolean isSetupDone() {
         return m_setupMotorDone;
     }
