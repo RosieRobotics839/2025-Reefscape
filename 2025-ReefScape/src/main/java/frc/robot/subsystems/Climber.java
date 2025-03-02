@@ -1,5 +1,6 @@
 package frc.robot.subsystems;
 
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
@@ -11,10 +12,11 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.ClimberConstants;
 import frc.utils.Calibrate;
 import frc.utils.Motor;
+import frc.utils.NTValues.NTDouble;
 
 public class Climber extends SubsystemBase{
 
-    static NetworkTable table = NetworkTableInstance.getDefault().getTable("roboRIO/Climber/table");
+    static NetworkTable table = NetworkTableInstance.getDefault().getTable("roboRIO/Climber");
 
     private static Climber instance = new Climber(ClimberConstants.kCANID, ClimberConstants.kDigitalInputID);
 
@@ -28,36 +30,39 @@ public class Climber extends SubsystemBase{
 
     private double m_targetAngle;
 
-    DoublePublisher
-    nt_positionSensor;
+    DoublePublisher nt_positionSensor = table.getDoubleTopic("positionSensor").publish();
+    DoublePublisher nt_currentAngle = table.getDoubleTopic("currentAngle").publish();
+
+    NTDouble nt_targetAngle = new NTDouble(0,table,"targetAngle",(val)->setPosition(Units.degreesToRadians(val)));
 
     public boolean atTargetAngle(){ 
-        return Math.abs(getCurrentAngle()-m_targetAngle) < ClimberConstants.kAngleTolerance;
+        return Math.abs(getPosition()-m_targetAngle) < ClimberConstants.kAngleTolerance;
     }
 
-    public double getCurrentAngle(){
+    public double getPosition(){
         return m_motor.getPosition()*2.0*Math.PI; // TODO: use calibration map for climber angle to spool rotation
     }
 
-    public void setTargetAngle(double position){
-        m_targetAngle = position;
-        m_motor.setPosition(m_targetAngle/(2.0*Math.PI));
+    /**
+     * Sets the target position of the climber, protected by kAngleMax kAngleMin limits
+     * @param position in radians
+     */
+    public void setPosition(double radians){
+        m_targetAngle = Math.max(ClimberConstants.kAngleMin,Math.min(ClimberConstants.kAngleMax,radians));
+        double m_motorTarget = m_targetAngle/(2*Math.PI);
+        m_motor.setPosition(m_motorTarget);
     }
         
     public Command ClimberInCommand = Commands.sequence(
-        Commands.runOnce(() -> setTargetAngle(ClimberConstants.kAngleIn)),
-        Commands.waitUntil(this::atTargetAngle)
+        new InstantCommand(() -> setPosition(ClimberConstants.kAngleMin))
     );
         
     public Command ClimberOutCommand = Commands.sequence(
-        Commands.runOnce(() -> setTargetAngle(ClimberConstants.kAngleOut)),
-        Commands.waitUntil(this::atTargetAngle)
+        new InstantCommand(() -> setPosition(ClimberConstants.kAngleMax))
     );
 
     public Calibrate motorCal;
     public Climber(int CANID, int analogID) {
-
-        nt_positionSensor = table.getDoubleTopic("angle/positionSensor").publish();
 
         m_angleSensor = new DutyCycleEncoder(analogID);
 
@@ -66,8 +71,9 @@ public class Climber extends SubsystemBase{
             .inverted(true)
             .idleBrake(true)
             .withGearRatio((ClimberConstants.kGearRatio))
-            .withSpeedLimit(ClimberConstants.kMaxSpeed)
-            .positionWrappingEnabled(true);
+            .withAlternateEncoder(ClimberConstants.kRelativeEncoderCPR,true)
+            .positionWrappingEnabled(true)
+            .withSpeedLimit(ClimberConstants.kMaxSpeed);
 
         motorCal = Calibrate.motor("climber",
             ClimberConstants.kCalibrationX,
@@ -81,5 +87,7 @@ public class Climber extends SubsystemBase{
     @Override
     public void periodic() {
         nt_positionSensor.set(m_angleSensor.get());
+        nt_currentAngle.set(Units.radiansToDegrees(getPosition()));
+        nt_targetAngle.set(Units.radiansToDegrees(getPosition()));
     }
 }

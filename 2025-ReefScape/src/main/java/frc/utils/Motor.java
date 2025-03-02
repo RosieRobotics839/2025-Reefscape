@@ -56,6 +56,7 @@ public class Motor extends SubsystemBase {
     public TalonFX motor_talon;
     TalonFXConfiguration config_talon;
 
+    private Boolean m_usingAltEncoder = false;
     public MyCANSparkMax motor_neo;
     private boolean m_setupMotorDone = false;
     public double calibration = 0;
@@ -251,6 +252,20 @@ public class Motor extends SubsystemBase {
         NONE, POSITION, SPEED, SLOWSPEED;
     }
 
+    public Motor withAlternateEncoder(int cpr, boolean inverted){
+        switch (motorType) {
+            case KRAKEN:
+                break;
+            case NEO:
+                m_usingAltEncoder = true;
+                config_neo.closedLoop.feedbackSensor(FeedbackSensor.kAlternateOrExternalEncoder);
+                config_neo.encoder.countsPerRevolution(cpr).inverted(inverted);
+                if (m_setupMotorDone) scheduleSetup();
+                break;
+            default:
+        }
+        return this;
+    }
     public Motor inverted(boolean invert){
         switch (motorType) {
             case KRAKEN:
@@ -652,12 +667,21 @@ public class Motor extends SubsystemBase {
         return status;
     }
 
+    /**
+     * Sets the position of the motor or alternate encoder in rotations.
+     * @param position in rotations
+     * @return
+     */
     public boolean setEncoderPosition(double position){
         switch (motorType) {
             case KRAKEN:
                 return motor_talon.setPosition(position).isOK();
             case NEO:
-                return encoder_neo.setPosition(position) == REVLibError.kOk; // Our math is based on rotations per Minute
+                if (m_usingAltEncoder){
+                    return motor_neo.getAlternateEncoder().setPosition(position) == REVLibError.kOk;
+                } else {
+                    return encoder_neo.setPosition(position) == REVLibError.kOk;
+                }
             case SIMULATED:
                 m_simPosition = position;
                 return true;

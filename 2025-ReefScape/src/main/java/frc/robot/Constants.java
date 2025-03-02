@@ -333,24 +333,28 @@ public final class Constants {
   }
 
   public static class ClimberConstants {
+    
     public static MyMotorType kMotorType = MyMotorType.NEO;
- 
+    
     public static int kDigitalInputID = 2;
     public static int kCANID = 3;
+
+    public static final int kRelativeEncoderCPR = 8192;
 
     //public static int kCurrentInit = (int)NTDouble.create(3,"Climber/kCurrentInit",val->kCurrentInit=(int)val);
     public static int kMotorCurrentLimit = (int)NTDouble.create(50,"Climber/kCurrentLimit",(val) ->Climber.getInstance().m_motor.withStatorLimit(val));
     public static double kAngleTolerance = Units.degreesToRadians(NTDouble.create(3, "Climber/kClimberAngleTolerance", val -> kAngleTolerance = Units.degreesToRadians(val)));
 
-    public static double kAngleIn = 0; // Change once we can test
-    public static double kAngleOut = 0; // Change once we can test
+    public static double kAngleMin = Units.degreesToRadians(NTDouble.create(-120,"Climber/kAngleIn",(val) ->kAngleMin=Units.degreesToRadians(val))); // Change once we can test
+    public static double kAngleMax = Units.degreesToRadians(NTDouble.create(25,"Climber/kAngleOut",(val) ->kAngleMax=Units.degreesToRadians(val))); // Change once we can test
 
-    public static double [] kCalibrationX = new double[]{0.507191, 0.581880, 0.829728, 0.989784}; //analog values 
-    public static double [] kCalibrationY = new double[]{Units.degreesToRotations(25), Units.degreesToRotations(0), Units.degreesToRotations(-90), Units.degreesToRotations(-148)}; // degrees 
+    // TODO: Change values of Calibration Maps.
+    public static double [] kCalibrationX = new double[]{0.507191, 0.581880, 0.829728, 0.989784}; //analog values from encoder
+    public static double [] kCalibrationY = new double[]{Units.degreesToRotations(25), Units.degreesToRotations(0), Units.degreesToRotations(-90), Units.degreesToRotations(-148)};
     
-    public static double kGearRatio = 125;
+    public static double kGearRatio = 1; //125;  not sure how the closed loop control will work with the alternate encoder yet.
 
-    public static double kMaxSpeed = 1;
+    public static double kMaxSpeed = Units.degreesToRotations(10); // Is this max speed of the motor now or alternate encoder?
   }
   
   public static class AutoConstants {
