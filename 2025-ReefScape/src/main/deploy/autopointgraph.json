@@ -4,7 +4,7 @@
             {
                 "x": 2,
                 "y": 1.8,
-                "connections": [1, 2, 3]
+                "connections": [1, 2]
             },
             {
                 "x": 2.161,
@@ -14,22 +14,12 @@
             {
                 "x": 6.5,
                 "y": 1.0,
-                "connections": [0, 3, 4]
+                "connections": [0, 3]
             },
             {
                 "x": 6.5,
                 "y": 7,
-                "connections": [1, 2, 4]
-            },
-            {
-                "x": 10,
-                "y": 1.175,
-                "connections": [2, 3, 5]
-            },
-            {
-                "x": 13,
-                "y": 1.5050685405731201,
-                "connections": [4]
+                "connections": [1, 2]
             }
         ]
     }

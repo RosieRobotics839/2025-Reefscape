@@ -263,8 +263,16 @@ public final class Constants {
     public static double kMaxAmbiguity = NTDouble.create(0.2, "Vision/kMaxAmbiguity", val->kMaxAmbiguity=val);
     public static int    kPipelineIndex = NTInteger.create(0, "Vision/kPipelineIndex", val->Vision.cam1.setPipelineIndex(val));
     public static double kMinTargetArea = NTDouble.create(.05, "Vision/kMinTargetArea", val->kMinTargetArea=val);
+    
+    // Network Table boolean for switching between field layouts
+    public static boolean isChampionshipGame = NTBoolean.create(false, "isChampionshipGame", val -> {isChampionshipGame = val; Vision.getInstance().reloadFieldLayout();});
+    // Method to get the current field layout path
+    public static String getFieldLayoutPath() {
+      return Filesystem.getDeployDirectory() + "/" + 
+          (isChampionshipGame ? "2025-reefscape-welded.json" : "2025-reefscape-andymark.json");
+    }
 
-    public static String kFieldLayout = Filesystem.getDeployDirectory()+"/2025-ReefScape.json";
+    public static String kFieldLayout = getFieldLayoutPath();
 
     public static double kMaxLatencyCompensationMillis = 200; // ms
 
