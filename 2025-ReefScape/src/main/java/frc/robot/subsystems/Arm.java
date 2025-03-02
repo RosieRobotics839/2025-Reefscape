@@ -1,5 +1,7 @@
 package frc.robot.subsystems;
 
+import java.util.function.Supplier;
+
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.BooleanPublisher;
 import edu.wpi.first.networktables.DoublePublisher;
@@ -8,14 +10,13 @@ import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DutyCycleEncoder;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.ArmConstants;
 import frc.utils.Calibrate;
 import frc.utils.Motor;
 import frc.utils.NTValues.NTDouble;
-import frc.robot.Constants.ScoreConstants;
+import frc.robot.Constants.ScoreConstants.ScoreLevel;
 
 public class Arm extends SubsystemBase{
 
@@ -32,7 +33,7 @@ public class Arm extends SubsystemBase{
     public Motor m_motor;
     public DutyCycleEncoder m_angleSensor;
     public double m_currentAngle = 0;
-    public double m_angleTarget = Units.degreesToRadians(NTDouble.create(90, table, "angle/targetAngle",(val)->setArmAngle(Units.degreesToRadians(val))));
+    public double m_angleTarget = Units.degreesToRadians(NTDouble.create(90, table, "angle/targetAngle",(val)->setPosition(Units.degreesToRadians(val))));
     public double elevatorCurrentHeight;
     double m_armOffset = 0; //change later
     double m_newArmOffset = 0;
@@ -40,7 +41,6 @@ public class Arm extends SubsystemBase{
     boolean scoringTrough = false;
     boolean scoringLevels2or3 = false;
     boolean scoringLevel4 = false;
-    ScoreConstants.ScoreLevel m_scoreReefLevel;
 
     DoublePublisher
         nt_positionSensor,
@@ -92,8 +92,12 @@ public class Arm extends SubsystemBase{
         return getArmPosition() > ArmConstants.kAngleMaxDZ;
     }
 
-    public void setArmAngle(double target){
-        m_angleTarget = target;
+    /**
+     * Sets the arm position, protected by safe limits
+     * @param radians target position
+     */
+    public void setPosition(double radians){
+        m_angleTarget = radians;
     }
 
     public Arm(int CANID, int analogID) {
@@ -122,28 +126,27 @@ public class Arm extends SubsystemBase{
         );
     } 
 
-    public Command createMoveToAngleCommand(double target) {
-        return Commands.sequence(
-            // Move to safe angle
-            Commands.runOnce(() -> setArmAngle(target))
-        );
-    }
-
-    // Example commands for different positions
-    public Command moveToTroughCommand() {
-        return createMoveToAngleCommand(ArmConstants.kTargetAngleTrough);
-    }
-
-    public Command moveToLevel2Command() {
-        return createMoveToAngleCommand(ArmConstants.kTargetAngleLevelMiddle);
-    }
-
-    public Command moveToLevel3Command() {
-        return createMoveToAngleCommand(ArmConstants.kTargetAngleLevelMiddle);
-    }
-
-    public Command moveToLevel4Command() {
-        return createMoveToAngleCommand(ArmConstants.kTargetAngleLevel4);
+    public Command moveToLevelCommand(Supplier<ScoreLevel> level) {
+        return new InstantCommand(()->{
+            switch (level.get()){
+                case FUNNEL:
+                    setPosition(ArmConstants.kAngleMax);
+                    break;
+                case TROUGH:
+                    setPosition(ArmConstants.kTargetAngleTrough);
+                    break;
+                case LEVEL2:
+                    setPosition(ArmConstants.kTargetAngleLevelMiddle);
+                    break;
+                case LEVEL3:
+                    setPosition(ArmConstants.kTargetAngleLevelMiddle);
+                    break;
+                case LEVEL4:
+                    setPosition(ArmConstants.kTargetAngleLevel4);
+                    break;
+                default:
+            }
+        });
     }
 
     @Override

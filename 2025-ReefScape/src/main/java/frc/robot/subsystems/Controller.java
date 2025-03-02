@@ -9,7 +9,6 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
-import edu.wpi.first.wpilibj2.command.button.POVButton;
 import frc.utils.VectorUtils;
 import frc.utils.NTValues.NTBoolean;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -26,17 +25,23 @@ import frc.robot.Constants.ScoreConstants.GamePieceSelected;
 import frc.robot.Constants.ScoreConstants.ScoreLevel;
 import frc.robot.Constants.kDriveTrain.DriveConstants;
 public class Controller extends XboxController {
+  
+  public Controller(int port) {
+    super(port);
+    Translate();
+    storeLast();
+  }
 
   static NetworkTable table = NetworkTableInstance.getDefault().getTable("roboRIO/Controller");
 
-  public static double forward;
-  public static double left;
-  public static double extend;
-  public static double rotate;
-  public static double grab;
+  public double Ly, Lx, Ly_pre, Lx_pre;
+  public double Ry, Rx, Ry_pre, Rx_pre;
+  public boolean m_directElevator = false;
+  public boolean m_directArm = false;
+
   public static Integer speedSelect = DriveConstants.kMaxSpeedDefault;
 
-  public static Controller driveController = new Controller(0);  
+  public static Controller driveController = new Controller(0);
   public static Controller accessoryController = new Controller(1);
   
   public static AccessoryButtons accessoryButtons = new AccessoryButtons(accessoryController);
@@ -93,21 +98,23 @@ public class Controller extends XboxController {
       buttons.Triangle.onFalse(new InstantCommand(()->{
         m_autonomous.stopAiming();
       }));
-      //buttons.RS.onTrue(new InstantCommand(() -> {driveTrain.m_fieldCentricDriving = !driveTrain.m_fieldCentricDriving;}));
     }
 
   }
 
   public static class AccessoryButtons {
     public JoystickButton Intake, Outtake, ClimberIn, ClimberOut, GMPCS, StageDial0, StageDial1, StageDial2, StageDial3, StageDial4, LeftScore, RightScore, RS, Home;
-    public POVButton DPadUp, DPadRight, DPadDown, DPadLeft;
 
     public Command waitForTarget = Commands.sequence(
       Commands.waitUntil(() -> {return Arm.getInstance().isAtPosition() && Elevator.getInstance().isAtPosition();})
     );
 
+    public Command disableDirectControl(){
+      return new InstantCommand(()->{getAccessoryInstance().m_directElevator = false; getAccessoryInstance().m_directArm = false;});
+    }
+
     ScoreConstants.ScoreLevel m_level;
-    Command m_expel = EndEffector.getInstance().ExpelCommand((m_level == ScoreLevel.TROUGH ? EffectorConstants.kTroughOuttakeSpeed : EffectorConstants.kOuttakeSpeed));
+    Command m_expel = EndEffector.getInstance().ExpelCommand(()->(m_level == ScoreLevel.TROUGH ? EffectorConstants.kTroughOuttakeSpeed : EffectorConstants.kOuttakeSpeed));
       
     ScoreConstants.GamePieceSelected m_pieceSelected;
 
@@ -123,6 +130,7 @@ public class Controller extends XboxController {
     }
 
     AccessoryButtons(Controller controller){
+
       StageDial0 = new JoystickButton(controller, 1);  // Stage Dial Scoring Level 0 (Default/Human Player Intake)
       StageDial1 = new JoystickButton(controller, 2);  // Stage Dial Scoring Level 1 (Trough)
       StageDial2 = new JoystickButton(controller, 3);  // Stage Dial Scoring Level 2
@@ -163,11 +171,8 @@ public class Controller extends XboxController {
       );
 
       /* Intake and Outtake Command Sequences */
-
-      Intake.onTrue(
-        Commands.sequence(
-          EndEffector.getInstance().IntakeCommand
-        )
+      Intake.toggleOnTrue(
+        EndEffector.getInstance().IntakeCommand
       );
 
       Outtake.onTrue(
@@ -181,43 +186,45 @@ public class Controller extends XboxController {
       
       /* Setting Stage Dial Values */
 
-    StageDial0.onTrue(
-      Commands.runOnce(() -> {
-        Elevator.getInstance().setPosition(ElevatorConstants.kMinHeight);
-        Arm.getInstance().setArmAngle(ArmConstants.kAngleMax);
-      })
+    StageDial0.whileTrue(
+      Commands.sequence(
+        disableDirectControl(),
+        new InstantCommand(()->m_level = ScoreLevel.FUNNEL),
+        Elevator.getInstance().moveToLevelCommand(()->m_level),
+        Arm.getInstance().moveToLevelCommand(()->m_level)
+      )
     );
       
-    StageDial1.onTrue(
+    StageDial1.whileTrue(
       Commands.sequence(
+          disableDirectControl(),
           new InstantCommand(()->m_level = ScoreConstants.ScoreLevel.TROUGH),
-          Elevator.getInstance().moveToTroughCommand(),
-          Arm.getInstance().moveToTroughCommand()
-      //).onlyIf(()->level == ScoreConstants.ScoreLevel.TROUGH)
+          Elevator.getInstance().moveToLevelCommand(()->m_level),
+          Arm.getInstance().moveToLevelCommand(()->m_level)
     ));
 
-    StageDial2.onTrue(
+    StageDial2.whileTrue(
       Commands.sequence(
+          disableDirectControl(),
           new InstantCommand(()->m_level = ScoreConstants.ScoreLevel.LEVEL2),
-          Elevator.getInstance().moveToLevel2Command(),
-          Arm.getInstance().moveToLevel2Command()
-      //).onlyIf(()->level == ScoreConstants.ScoreLevel.LEVEL2)
+          Elevator.getInstance().moveToLevelCommand(()->m_level),
+          Arm.getInstance().moveToLevelCommand(()->m_level)
     ));
 
-    StageDial3.onTrue(
+    StageDial3.whileTrue(
       Commands.sequence(
+          disableDirectControl(),
           new InstantCommand(()->m_level = ScoreConstants.ScoreLevel.LEVEL3),
-          Elevator.getInstance().moveToLevel3Command(),
-          Arm.getInstance().moveToLevel3Command()
-      //).onlyIf(()->level == ScoreConstants.ScoreLevel.LEVEL3)
+          Elevator.getInstance().moveToLevelCommand(()->m_level),
+          Arm.getInstance().moveToLevelCommand(()->m_level)
     ));
 
-    StageDial4.onTrue(
+    StageDial4.whileTrue(
       Commands.sequence(
+          disableDirectControl(),
           new InstantCommand(()->m_level = ScoreConstants.ScoreLevel.LEVEL4),
-          Elevator.getInstance().moveToLevel4Command(),
-          Arm.getInstance().moveToLevel4Command()
-      // ).onlyIf(()->level == ScoreConstants.ScoreLevel.LEVEL4)
+          Elevator.getInstance().moveToLevelCommand(()->m_level),
+          Arm.getInstance().moveToLevelCommand(()->m_level)
     ));
 
 
@@ -253,42 +260,42 @@ public class Controller extends XboxController {
     } 
   }
 
-  public Controller(int port) {
-    super(port);
+  private void storeLast(){
+    Ly_pre = Ly;
+    Lx_pre = Lx;
+    Ry_pre = Ry;
+    Rx_pre = Rx;
   }
 
   public void Translate() {
     Translation2d Lstick = new Translation2d(this.getLeftX(),-this.getLeftY());
     Lstick = VectorUtils.deadband(Lstick,0.1,1);
-    forward = Lstick.getY(); // Forward is Positive consistent the FRC field coordinate system
-    left = -Lstick.getX();   // Left is Positive consistent the FRC field coordinate system
+    Ly = Lstick.getY();
+    Lx = Lstick.getX();
     
     Translation2d Rstick = new Translation2d(this.getRightX(),this.getRightY());
     Rstick = VectorUtils.deadband(Rstick,0.1,1);
-    rotate = -Rstick.getX(); // Counter Clockwise is Positive consistent the FRC field coordinate system
+    Ry = Rstick.getY();
+    Rx = Rstick.getX();
   }
+  
+  public void accessoryPeriodic(){
+    storeLast();
+    Translate();
+    if (Math.abs(Lx-Lx_pre) > 0.05){
+      m_directElevator = true;
+    }
 
-  /* if (DriverStation.isTeleopEnabled()){
-      IntakeShooter.getInstance().setShooterAngle(IntakeShooter.getInstance().getAngleTarget() + ShooterConstants.kManualAngleSpeed * 0.02 * forward);
+    if (Math.abs(Ly-Ly_pre) > 0.05){
+      m_directArm = true;
     }
-    // getLeftX()
-    // getLeftY()
-    // getRightX()
-    // getRightY()
-  } */
 
-  public void armThing() {
-    if (this.getLeftY() < 0.01 && this.getLeftY() > -0.01) {
-      rotate = 0;
-    } else {
-      rotate = -this.getLeftY();
+    if (m_directElevator){
+      Elevator.getInstance().setPosition((ElevatorConstants.kMaxHeight - ElevatorConstants.kMinHeight)*Lx + ElevatorConstants.kMinHeight);
     }
-    
-    if (this.getRightY() < 0.01 && this.getRightY() > -0.01) {
-      extend = 0;
-    } else {
-      extend = -this.getRightY();
+
+    if (m_directArm){
+      Arm.getInstance().setPosition((ArmConstants.kAngleMax - ArmConstants.kAngleMin)*Ly + ArmConstants.kAngleMin);
     }
-    grab = -this.getLeftTriggerAxis() + this.getRightTriggerAxis();
   }
 }

@@ -51,7 +51,7 @@ public final class Constants {
   public static class ScoreConstants {
 
     public enum ScoreLevel{
-      TROUGH, LEVEL2, LEVEL3, LEVEL4
+      FUNNEL, TROUGH, LEVEL2, LEVEL3, LEVEL4
     }
 
     public enum GamePieceSelected{

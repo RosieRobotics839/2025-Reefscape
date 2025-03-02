@@ -271,8 +271,8 @@ public class DriveTrain extends SubsystemBase {
         m_controllerInputActive = VectorUtils.SRSS(FlightStick.forward, FlightStick.left, FlightStick.rotate) > OperatorConstants.kControllerActiveThreshold;
       } else {
         driveController.Translate();
-        Drive(Controller.forward, Controller.left, Controller.rotate);
-        m_controllerInputActive = VectorUtils.SRSS(Controller.forward, Controller.left, Controller.rotate) > OperatorConstants.kControllerActiveThreshold;
+        Drive(Controller.getDriveInstance().Ly, Controller.getDriveInstance().Lx, Controller.getDriveInstance().Rx);
+        m_controllerInputActive = VectorUtils.SRSS(Controller.getDriveInstance().Ly, Controller.getDriveInstance().Lx, Controller.getDriveInstance().Rx) > OperatorConstants.kControllerActiveThreshold;
       }
     }
 

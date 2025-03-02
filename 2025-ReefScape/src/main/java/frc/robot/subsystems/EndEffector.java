@@ -1,5 +1,7 @@
 package frc.robot.subsystems;
 
+import java.util.function.DoubleSupplier;
+
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
@@ -25,6 +27,8 @@ public class EndEffector extends SubsystemBase {
     
     public Motor m_motor;
 
+    public boolean m_intakeRunning = false;
+
     private boolean m_beamBroken = false;
     private boolean m_hasGamePiece = false;
     private boolean m_hasCoral = false;
@@ -38,17 +42,18 @@ public class EndEffector extends SubsystemBase {
 
     Command IntakeCommand = Commands.sequence(
       Commands.waitUntil(() -> {return m_motor.setSpeed(EffectorConstants.kIntakeSpeed);}), //Sets speed to intake game piece
-      Commands.waitUntil(() -> {return hasGamePiece();}), //Checking whether we have a game piece or not.
-      Commands.waitUntil(() -> {return m_motor.setSpeed(0);}) //Stops motor after we have a game piece
-    );
+      Commands.waitUntil(() -> {return hasGamePiece();}) //Checking whether we have a game piece or not.
+    )
+    .beforeStarting(()->m_intakeRunning=true)
+    .finallyDo(()->{m_motor.setSpeed(0); m_intakeRunning=false;});
 
-    public Command ExpelCommand(double speed){
+    public Command ExpelCommand(DoubleSupplier speed){
       return Commands.sequence( //Outtake for those who don't know
-        Commands.waitUntil(() -> {return m_motor.setSpeed((m_hasCoral ? 1 : -1) * speed);}), // If we have the coral ( ? ) then forward, anything else backward.
+        Commands.waitUntil(() -> {return m_motor.setSpeed((m_hasCoral ? 1 : -1) * speed.getAsDouble());}), // If we have the coral ( ? ) then forward, anything else backward.
         Commands.waitUntil(() -> {return !hasGamePiece();}), //Checking whether we have a game piece or not.
-        Commands.waitSeconds(3),
-        Commands.waitUntil(() -> {return m_motor.setSpeed(0);}) //Stops motor after we have scored Coral
-      );
+        Commands.waitSeconds(3)
+      ).beforeStarting(()->m_intakeRunning=false)
+      .finallyDo(()->m_motor.setSpeed(0));
     };
 
     public EndEffector(int CANID) {
