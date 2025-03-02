@@ -40,14 +40,12 @@ public class Autonomous extends SubsystemBase {
     add(new Translation2d(4.561, 2.218));
     add(new Translation2d(2.875, 3.15));
   }};
-  //public static List<Translation2d> redstage = new ArrayList<Translation2d>(){{
-  //  add(new Translation2d(13.75,4.45));
-  //  add(new Translation2d(13.75,3.60));
-  //  add(new Translation2d(11.0, 2));
-  //  add(new Translation2d(10.35, 2.435));
-  //  add(new Translation2d(10.35, 5.625));
-  //  add(new Translation2d(11.0, 6.05));
-  //}};
+  public static List<Translation2d> bargecolumn = new ArrayList<Translation2d>(){{
+    add(new Translation2d(8.160,3.46));
+    add(new Translation2d(8.160,4.475));
+    add(new Translation2d(9.5, 4.475));
+    add(new Translation2d(9.5, 3.46));
+  }};
   //public static List<Translation2d> bluespeaker = new ArrayList<Translation2d>(){{
   //  add(new Translation2d(0,6.85));
   //  add(new Translation2d(1.112,6.175));
@@ -68,6 +66,7 @@ public class Autonomous extends SubsystemBase {
     List<Translation2d> redreef = bluereef.stream().map(f->new Translation2d(halffield+(halffield-f.getX()),f.getY())).collect(Collectors.toList());
     add(bluereef);
     add(redreef);
+    add(bargecolumn);
     
     //List<Translation2d> redspeaker = bluespeaker.stream().map(f->new Translation2d(halffield+(halffield-f.getX()),f.getY())).collect(Collectors.toList());
     //add(bluespeaker);
