@@ -157,12 +157,22 @@ public class PoseEstimator extends SubsystemBase {
       previous.distanceMeters = current.distanceMeters;
     }
 
-    m_predictedTwist = kDriveTrain.kDriveKinematics.toTwist2d(moduleDeltas);
-    m_predictedTwist = new Twist2d(m_predictedTwist.dx*PoseConstants.kDriveSlip, m_predictedTwist.dy*PoseConstants.kDriveSlip, m_predictedTwist.dtheta*PoseConstants.kDriveSlip);
+    // Zero out predicted twist when stopped
+    if (m_drivetrain.isStopped()) {
+      m_predictedTwist = new Twist2d(0, 0, 0);
+    } else {
+      m_predictedTwist = kDriveTrain.kDriveKinematics.toTwist2d(moduleDeltas);
+      m_predictedTwist = new Twist2d(m_predictedTwist.dx*PoseConstants.kDriveSlip, m_predictedTwist.dy*PoseConstants.kDriveSlip, m_predictedTwist.dtheta*PoseConstants.kDriveSlip);
+    }
     m_predictedPose = m_finalPose.exp(m_predictedTwist);
 
     if (Robot.isSimulation()){
-      m_sim_actualPose = m_sim_actualPose.exp(m_predictedTwist);
+      // Only update simulated pose if there's actual movement
+      if (Math.abs(m_predictedTwist.dx) > 0.001 || 
+          Math.abs(m_predictedTwist.dy) > 0.001 || 
+          Math.abs(m_predictedTwist.dtheta) > 0.001) {
+        m_sim_actualPose = m_sim_actualPose.exp(m_predictedTwist);
+      }
       nt_simPose_t.set(new double[]{m_sim_actualPose.getX(),m_sim_actualPose.getY(),m_sim_actualPose.getRotation().getRadians()});
     }
     
