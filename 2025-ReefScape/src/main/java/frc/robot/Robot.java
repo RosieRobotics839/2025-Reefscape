@@ -15,6 +15,7 @@ import frc.robot.Constants.AutoConstants;
 import frc.robot.subsystems.Arm;
 import frc.robot.subsystems.Autonomous;
 import frc.robot.subsystems.Climber;
+import frc.robot.subsystems.Controller;
 import frc.robot.subsystems.DriveTrain;
 import frc.robot.subsystems.EndEffector;
 import frc.robot.subsystems.FlightStick;
@@ -59,6 +60,7 @@ public class Robot extends TimedRobot {
    * initialization code.
    */
   public Robot() {
+    addPeriodic(()->Controller.getAccessoryInstance().accessoryPeriodic(),0.020,0.010);
     m_chooser.setDefaultOption("Default Auto", kDefaultAuto);
     m_chooser.addOption("My Auto", kCustomAuto);
     SmartDashboard.putData("Auto choices", m_chooser);
