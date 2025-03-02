@@ -51,7 +51,7 @@ public class AutoCommands {
     public static Command GetCorral(){ // Only written for the leftmost coral source, and all values need to be thouroughly checked and tested
         return Commands.sequence(
             new InstantCommand(() -> Elevator.getInstance().setPosition(0)),
-            new InstantCommand(() -> Arm.getInstance().setArmAngle(0)),
+            new InstantCommand(() -> Arm.getInstance().setPosition(0)),
             new InstantCommand(() -> Autonomous.getInstance().aimAtPoint(PathPlanning.AprilTagAtDistance(coralSourceLTag(), 0),Units.degreesToRadians(180))),
             new InstantCommand(() -> PathPlanning.getInstance().navigateTo(new Pose2d(
                                         PathPlanning.AprilTagAtDistance( coralSourceLTag(), AutoConstants.kSourceLDistance).getTranslation(),
@@ -65,10 +65,11 @@ public class AutoCommands {
     public static Command Score(double heightin, double anglerad){
         return Commands.sequence(
             new InstantCommand(() -> Elevator.getInstance().setPosition(heightin)),
-            new InstantCommand(() -> Arm.getInstance().setArmAngle(anglerad)),
-            EndEffector.getInstance().ExpelCommand,
+            new InstantCommand(() -> Arm.getInstance().setPosition(anglerad)),
+            // TODO: Fix this expel command
+            EndEffector.getInstance().ExpelCommand(()->2.0,()->false),
             new InstantCommand(() -> Elevator.getInstance().setPosition(Constants.ElevatorConstants.kMinHeight)),
-            new InstantCommand(() -> Arm.getInstance().setArmAngle(0))
+            new InstantCommand(() -> Arm.getInstance().setPosition(0))
         );
     }
 
