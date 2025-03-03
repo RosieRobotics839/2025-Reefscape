@@ -4,6 +4,8 @@
 
 package frc.robot;
 
+import edu.wpi.first.math.filter.Debouncer;
+import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.TimedRobot;
@@ -23,6 +25,7 @@ import frc.robot.subsystems.Funnel;
 import frc.robot.subsystems.Gyro;
 import frc.robot.subsystems.PathPlanning;
 import frc.robot.subsystems.Vision;
+import frc.utils.Action;
 import frc.robot.subsystems.PoseEstimator;
 import frc.robot.subsystems.SystemLog;
 
@@ -49,6 +52,9 @@ public class Robot extends TimedRobot {
   Alliance myAlliance = Alliance.Red;
 
   public boolean changedAlly = true;
+
+  private Debouncer m_recording = new Debouncer(10, Debouncer.DebounceType.kFalling);
+  private Action m_recordTrigger = new Action(false).onTrue(()->DataLogManager.start()).onFalse(()->DataLogManager.stop());
 
   private static final String kDefaultAuto = "Default";
   private static final String kCustomAuto = "My Auto";
@@ -78,7 +84,10 @@ public class Robot extends TimedRobot {
   @Override
   public void robotPeriodic() {
 
-  CommandScheduler.getInstance().run();
+    // Record data as long as robot is enabled (and some time after to keep recording between auto and teleop)
+    m_recordTrigger.calculate(m_recording.calculate(isEnabled()));
+    
+    CommandScheduler.getInstance().run();
     
     changedAlly = false;
     if ((noDS || myAlliance==Alliance.Blue) && DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == Alliance.Red){
