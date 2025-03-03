@@ -39,7 +39,9 @@ public class NTDouble {
             name,
             EnumSet.of(NetworkTableEvent.Kind.kValueRemote),
             (table,key,event)-> {
-                lambda.accept(event.valueData.value.getDouble());
+                if (lambda != null){
+                    lambda.accept(event.valueData.value.getDouble());
+                }
                 if (resetOnRecv){
                     set(defaultValue);
                 }

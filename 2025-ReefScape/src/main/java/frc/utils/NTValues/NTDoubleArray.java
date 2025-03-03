@@ -40,7 +40,9 @@ public class NTDoubleArray {
             name,
             EnumSet.of(NetworkTableEvent.Kind.kValueRemote),
             (t,k,e)-> {
-                lambda.accept(e.valueData.value.getDoubleArray());
+                if (lambda != null){
+                    lambda.accept(e.valueData.value.getDoubleArray());
+                }
                 if (resetOnRecv){
                     set(defaultValue);
                 }

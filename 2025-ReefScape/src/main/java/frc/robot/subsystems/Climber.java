@@ -10,7 +10,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.ClimberConstants;
-import frc.utils.Calibrate;
+import frc.utils.CalibrationMap;
 import frc.utils.Motor;
 import frc.utils.NTValues.NTDouble;
 
@@ -25,69 +25,61 @@ public class Climber extends SubsystemBase{
     }
 
     public Motor m_motor;
+    public CalibrationMap motorCal = new CalibrationMap(ClimberConstants.kCalibrationX, ClimberConstants.kCalibrationY);
     public DutyCycleEncoder m_angleSensor;
     public Boolean m_setupDone = false;
-
-    private double m_targetAngle;
-
+    public NTDouble nt_targetPosition = new NTDouble(0, table, "target", null);
+    public NTDouble nt_position = new NTDouble(0, table, "position", null);
     DoublePublisher nt_positionSensor = table.getDoubleTopic("positionSensor").publish();
     DoublePublisher nt_currentAngle = table.getDoubleTopic("currentAngle").publish();
-
-    NTDouble nt_targetAngle = new NTDouble(0,table,"targetAngle",(val)->setPosition(Units.degreesToRadians(val)));
+    NTDouble nt_relativePosition = new NTDouble(0, table, "relativePosition", (val)->setRelativePosition(Units.degreesToRadians(val)));
+    {nt_relativePosition.resetOnRecv = true;}
 
     public boolean atTargetAngle(){ 
-        return Math.abs(getPosition()-m_targetAngle) < ClimberConstants.kAngleTolerance;
-    }
-
-    public double getPosition(){
-        return m_motor.getPosition()*2.0*Math.PI; // TODO: use calibration map for climber angle to spool rotation
+        return Math.abs(m_motor.getPosition()-m_motor.getTargetPosition()) < ClimberConstants.kMotorTolerance;
     }
 
     /**
-     * Sets the target position of the climber, protected by kAngleMax kAngleMin limits
+     * Returns the position of the climber motor
+     * @return in rotations
+     */
+    public double getPosition(){
+        return m_motor.getPosition();
+    }
+
+    /**
+     * Moves the climber from the current position by a value.
      * @param position in radians
      */
-    public void setPosition(double radians){
-        m_targetAngle = Math.max(ClimberConstants.kAngleMin,Math.min(ClimberConstants.kAngleMax,radians));
-        double m_motorTarget = m_targetAngle/(2*Math.PI);
-        m_motor.setPosition(m_motorTarget);
+    public void setRelativePosition(double radians){
+        m_motor.setRelativePosition(Units.radiansToRotations(radians));
     }
-        
+    
     public Command ClimberInCommand = Commands.sequence(
-        new InstantCommand(() -> setPosition(ClimberConstants.kAngleMin))
-    );
-        
+        new InstantCommand(() -> m_motor.setRelativePosition(ClimberConstants.kAngleInLead*0.020))
+    ).repeatedly().until(()->motorCal.get(m_angleSensor.get()) <= Units.radiansToRotations(ClimberConstants.kAngleIn));
+    
     public Command ClimberOutCommand = Commands.sequence(
-        new InstantCommand(() -> setPosition(ClimberConstants.kAngleMax))
-    );
-
-    public Calibrate motorCal;
+        new InstantCommand(() -> m_motor.setRelativePosition(ClimberConstants.kAngleOutLead*0.020))
+    ).repeatedly().until(()->motorCal.get(m_angleSensor.get()) >= Units.radiansToRotations(ClimberConstants.kAngleOut));
+    
     public Climber(int CANID, int analogID) {
 
         m_angleSensor = new DutyCycleEncoder(analogID);
 
         m_motor = new Motor(ClimberConstants.kCANID, ClimberConstants.kMotorType, "climber")
-            .withStatorLimit((int)ClimberConstants.kMotorCurrentLimit)
-            .inverted(true)
+            .withStatorLimit(ClimberConstants.kMotorCurrentLimit)
+            .inverted(false)
             .idleBrake(true)
             .withGearRatio((ClimberConstants.kGearRatio))
-            .withAlternateEncoder(ClimberConstants.kRelativeEncoderCPR,true)
-            .positionWrappingEnabled(true)
             .withSpeedLimit(ClimberConstants.kMaxSpeed);
-
-        motorCal = Calibrate.motor("climber",
-            ClimberConstants.kCalibrationX,
-            ClimberConstants.kCalibrationY,
-            m_motor,
-            ()->m_angleSensor.get(),
-            new InstantCommand(()->m_setupDone = true)
-        );
     }
 
     @Override
     public void periodic() {
+        nt_targetPosition.set(m_motor.getTargetPosition());
+        nt_position.set(m_motor.getPosition());
         nt_positionSensor.set(m_angleSensor.get());
-        nt_currentAngle.set(Units.radiansToDegrees(getPosition()));
-        nt_targetAngle.set(Units.radiansToDegrees(getPosition()));
+        nt_currentAngle.set(Units.rotationsToDegrees(motorCal.get(m_angleSensor.get())));
     }
 }
