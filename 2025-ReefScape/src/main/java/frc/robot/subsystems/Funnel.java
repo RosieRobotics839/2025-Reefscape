@@ -57,12 +57,12 @@ public class Funnel extends SubsystemBase{
     {
         FunnelUpCommand = Commands.sequence(
             new InstantCommand(() -> setRelativePosition(2.0*FunnelConstants.kFunnelUp)),
-            Commands.waitUntil(this::motorStalled)
+            Commands.waitUntil(this::motorStalled).withTimeout(3)
         ).beforeStarting(()->FunnelDownCommand.cancel()).handleInterrupt(()->setPosition(getPosition()));
         
         FunnelDownCommand = Commands.sequence(
             new InstantCommand(() -> setPosition(FunnelConstants.kFunnelDown)),
-            Commands.waitUntil(this::atTargetPosition)
+            Commands.waitUntil(this::atTargetPosition).withTimeout(3)
         ).beforeStarting(()->FunnelUpCommand.cancel()).handleInterrupt(()->setPosition(getPosition()));
     }
 
