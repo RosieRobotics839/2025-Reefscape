@@ -28,6 +28,7 @@ import frc.robot.subsystems.Climber;
 import frc.robot.subsystems.Funnel;
 import frc.robot.subsystems.Vision;
 import frc.utils.Motor;
+import frc.utils.Motor.Gains;
 import frc.utils.Motor.MyMotorType;
 import frc.utils.NTValues.NTBoolean;
 import frc.utils.NTValues.NTDouble;
@@ -353,6 +354,7 @@ public final class Constants {
 
   public static class ClimberConstants {
     
+    public static final Gains kPositionGain = new Gains(10, 0, 0, 0);
     public static MyMotorType kMotorType = MyMotorType.NEO;
     public static int kDigitalInputID = 2;
     public static int kCANID = 3;
@@ -360,9 +362,9 @@ public final class Constants {
     public static int kMotorCurrentLimit = NTInteger.create(50,"Climber/kCurrentLimit",(val) ->Climber.getInstance().m_motor.withStatorLimit(val));
     public static double kMotorTolerance = Units.degreesToRadians(NTDouble.create(3, "Climber/kClimberAngleTolerance", val -> kMotorTolerance = Units.degreesToRadians(val)));
 
-    public static double kMaxSpeed = Units.degreesToRotations(36);
-    public static double kAngleInLead = Units.degreesToRadians(NTDouble.create(-36,"Climber/kAngleInLead",(val) ->kAngleInLead=Units.degreesToRadians(val))); // Change once we can test
-    public static double kAngleOutLead = Units.degreesToRadians(NTDouble.create(36,"Climber/kAngleOutLead",(val) ->kAngleOutLead=Units.degreesToRadians(val))); // Change once we can test
+    public static double kMaxSpeed = 2; // Rotations Per Second
+    public static double kRotationInLead = NTDouble.create(-2,"Climber/kAngleInLead",(val) ->kRotationInLead=val); // Change once we can test
+    public static double kRotationOutLead = NTDouble.create(.5,"Climber/kAngleOutLead",(val) ->kRotationOutLead=val); // Change once we can test
 
     public static double kAngleIn = Units.degreesToRadians(NTDouble.create(-90,"Climber/kAngleIn",(val) ->kAngleIn=Units.degreesToRadians(val))); // Change once we can test
     public static double kAngleOut = Units.degreesToRadians(NTDouble.create(15,"Climber/kAngleOut",(val) ->kAngleOut=Units.degreesToRadians(val))); // Change once we can test

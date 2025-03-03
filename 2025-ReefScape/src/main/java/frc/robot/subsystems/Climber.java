@@ -12,6 +12,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.ClimberConstants;
 import frc.utils.CalibrationMap;
 import frc.utils.Motor;
+import frc.utils.Motor.GainSlot;
 import frc.utils.NTValues.NTDouble;
 
 public class Climber extends SubsystemBase{
@@ -56,11 +57,11 @@ public class Climber extends SubsystemBase{
     }
     
     public Command ClimberInCommand = Commands.sequence(
-        new InstantCommand(() -> m_motor.setRelativePosition(ClimberConstants.kAngleInLead*0.020))
+        new InstantCommand(() -> m_motor.setRelativePosition(ClimberConstants.kRotationInLead*0.020))
     ).repeatedly().until(()->motorCal.get(m_angleSensor.get()) <= Units.radiansToRotations(ClimberConstants.kAngleIn));
     
     public Command ClimberOutCommand = Commands.sequence(
-        new InstantCommand(() -> m_motor.setRelativePosition(ClimberConstants.kAngleOutLead*0.020))
+        new InstantCommand(() -> m_motor.setRelativePosition(ClimberConstants.kRotationOutLead*0.020))
     ).repeatedly().until(()->motorCal.get(m_angleSensor.get()) >= Units.radiansToRotations(ClimberConstants.kAngleOut));
     
     public Climber(int CANID, int analogID) {
@@ -68,6 +69,7 @@ public class Climber extends SubsystemBase{
         m_angleSensor = new DutyCycleEncoder(analogID);
 
         m_motor = new Motor(ClimberConstants.kCANID, ClimberConstants.kMotorType, "climber")
+            .pidf(ClimberConstants.kPositionGain, GainSlot.POSITION)
             .withStatorLimit(ClimberConstants.kMotorCurrentLimit)
             .inverted(false)
             .idleBrake(true)
