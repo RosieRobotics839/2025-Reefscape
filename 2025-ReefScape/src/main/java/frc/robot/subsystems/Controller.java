@@ -283,7 +283,7 @@ public class Controller extends XboxController {
   }
   
   public void accessoryPeriodic(){
-    storeLast();
+    
     Translate();
     if (Math.abs(Lx-Lx_pre) > 0.05){
       m_directElevator = true;
@@ -291,6 +291,14 @@ public class Controller extends XboxController {
 
     if (Math.abs(Ly-Ly_pre) > 0.05){
       m_directArm = true;
+    }
+
+    // store manual control positions, to check if they have moved after automated control.
+    if (m_directArm){
+      Ly_pre = Ly;
+    }
+    if (m_directElevator){
+      Lx_pre = Lx;
     }
 
     if (m_directElevator){
