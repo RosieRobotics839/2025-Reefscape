@@ -144,11 +144,8 @@ public class Vision extends SubsystemBase {
     return new CamResult(numTargets,bestTarget,robotPose);
   }
 
-  @SuppressWarnings("unused")
   @Override
   public void periodic() {
-    // TODO: Remove return statement
-    if (true) return;
     // This method will be called once per scheduler run
 
     photonPoseEstimatorFront.setReferencePose(PoseEstimator.getInstance().m_finalPose3d);
