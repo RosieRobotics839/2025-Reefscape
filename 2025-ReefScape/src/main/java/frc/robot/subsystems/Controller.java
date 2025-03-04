@@ -12,6 +12,7 @@ import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import frc.utils.VectorUtils;
 import frc.utils.NTValues.NTBoolean;
 import frc.utils.NTValues.NTDouble;
+import edu.wpi.first.math.filter.Debouncer.DebounceType;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -147,8 +148,8 @@ public class Controller extends XboxController {
       LeftScore  = new JoystickButton(controller, 7); // Scoring Left of Reef Face (Switch)
       Intake     = new JoystickButton(controller, 8);  // Intake Button
       Outtake    = new JoystickButton(controller, 9);  // Expel Button (Outtake for those who don't know)
-      ClimberIn  = new JoystickButton(controller, 10);  // Brings Climber In & Funnel Up
-      ClimberOut = new JoystickButton(controller, 11);  // Brings Climber Out & Funnel Down
+      ClimberOut = new JoystickButton(controller, 10);  // Brings Climber Out & Funnel Down
+      ClimberIn  = new JoystickButton(controller, 11);  // Brings Climber In & Funnel Up
       GMPCS      = new JoystickButton(controller, 12);  // Game Piece Selector Button (Algae or Coral)
 
       //RS       = new JoystickButton(controller, 12); // Right Stick Click
@@ -162,20 +163,17 @@ public class Controller extends XboxController {
       m_pieceSelected = ScoreConstants.GamePieceSelected.CORAL;
 
       /* Run Climber Command Sequences */
-
-      ClimberIn.onTrue(
-        Commands.sequence(
-          Funnel.getInstance().FunnelUpCommand(),
+      ClimberIn.and(()->!ClimberOut.getAsBoolean()).debounce(0.25,DebounceType.kRising).whileTrue(
+          // Funnel retracts automatically when climber comes in
           Climber.getInstance().ClimberInCommand
-        )
       );
 
-      ClimberOut.onTrue(
-        Commands.sequence(
-          Funnel.getInstance().FunnelDownCommand(),
+      ClimberOut.and(()->!ClimberIn.getAsBoolean()).debounce(0.25,DebounceType.kRising).whileTrue(
           Climber.getInstance().ClimberOutCommand
-        )
       );
+
+      // Put funnel back down if both buttons are pressed.
+      ClimberIn.and(()->ClimberOut.getAsBoolean()).whileTrue(Funnel.getInstance().FunnelDownCommand);
 
       /* Intake and Outtake Command Sequences */
       Intake.toggleOnTrue(
@@ -285,7 +283,7 @@ public class Controller extends XboxController {
   }
   
   public void accessoryPeriodic(){
-    storeLast();
+    
     Translate();
     if (Math.abs(Lx-Lx_pre) > 0.05){
       m_directElevator = true;
@@ -293,6 +291,14 @@ public class Controller extends XboxController {
 
     if (Math.abs(Ly-Ly_pre) > 0.05){
       m_directArm = true;
+    }
+
+    // store manual control positions, to check if they have moved after automated control.
+    if (m_directArm){
+      Ly_pre = Ly;
+    }
+    if (m_directElevator){
+      Lx_pre = Lx;
     }
 
     if (m_directElevator){

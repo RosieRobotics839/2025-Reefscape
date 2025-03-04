@@ -40,7 +40,9 @@ public class NTInteger {
             name,
             EnumSet.of(NetworkTableEvent.Kind.kValueRemote),
             (table,key,event)-> {
-                lambda.accept((int)event.valueData.value.getInteger());
+                if (lambda != null){
+                    lambda.accept((int)event.valueData.value.getInteger());
+                }
                 if (resetOnRecv){
                     publisher.set(defaultValue);
                 }
