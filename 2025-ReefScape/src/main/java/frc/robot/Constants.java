@@ -222,7 +222,7 @@ public final class Constants {
     public static double kStallCurrentRatio = NTDouble.create(0.8, "Funnel/Stall/CurrentRatio",(val)->kStallCurrentRatio=val);
     public static double kStallSpeed = NTDouble.create(0.05, "Funnel/Stall/Speed",(val)->kStallSpeed=val);
 
-    public static MyMotorType kMotorType = MyMotorType.KRAKEN;
+    public static MyMotorType kMotorType = MyMotorType.NEO;
     public static int kFunnelCANID = 8;
 
     // Position control gains
@@ -362,9 +362,9 @@ public final class Constants {
     public static int kMotorCurrentLimit = NTInteger.create(50,"Climber/kCurrentLimit",(val) ->Climber.getInstance().m_motor.withStatorLimit(val));
     public static double kMotorTolerance = Units.degreesToRadians(NTDouble.create(3, "Climber/kClimberAngleTolerance", val -> kMotorTolerance = Units.degreesToRadians(val)));
 
-    public static double kMaxSpeed = 2; // Rotations Per Second
-    public static double kRotationInLead = NTDouble.create(-2,"Climber/kAngleInLead",(val) ->kRotationInLead=val); // Change once we can test
-    public static double kRotationOutLead = NTDouble.create(.5,"Climber/kAngleOutLead",(val) ->kRotationOutLead=val); // Change once we can test
+    public static double kMaxSpeed = 4; // Rotations Per Second
+    public static double kRotationInLead = NTDouble.create(-9,"Climber/kAngleInLead",(val) ->kRotationInLead=val); // Change once we can test
+    public static double kRotationOutLead = NTDouble.create(5,"Climber/kAngleOutLead",(val) ->kRotationOutLead=val); // Change once we can test
 
     public static double kAngleIn = Units.degreesToRadians(NTDouble.create(-90,"Climber/kAngleIn",(val) ->kAngleIn=Units.degreesToRadians(val))); // Change once we can test
     public static double kAngleOut = Units.degreesToRadians(NTDouble.create(15,"Climber/kAngleOut",(val) ->kAngleOut=Units.degreesToRadians(val))); // Change once we can test
