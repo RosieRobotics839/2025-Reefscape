@@ -180,7 +180,7 @@ public final class Constants {
     public static double kPoseResidualRot = Units.degreesToRadians(NTDouble.create(30, "LED/kPoseResidualDeg", (val)->kPoseResidualRot = Units.degreesToRadians(val)));
 
     public static int kNumberLEDs = 30;
-    public static int kLEDPortPWM = 9;
+    public static int kLEDPortPWM = 0;
 
     public static class colors {
       public static int[] red = {255,0,0};
@@ -191,7 +191,7 @@ public final class Constants {
       public static int[] purple = {150,0,255};
       public static int[] pink = {255,0,150};
       public static int[] white = {255,255,255};
-      public static int[] brown = {200,100,0};
+      public static int[] brown = {80,50,0};
       public static int[] off = {0,0,0};
     }
 
