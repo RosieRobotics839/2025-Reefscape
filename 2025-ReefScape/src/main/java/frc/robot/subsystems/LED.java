@@ -11,6 +11,7 @@ import edu.wpi.first.wpilibj.AddressableLEDBuffer;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.LEDConstants;
+import frc.robot.subsystems.Controller.AccessoryButtons;
 
 public class LED extends SubsystemBase {
 
@@ -67,7 +68,7 @@ public class LED extends SubsystemBase {
   //For setting alternating colors
   public void setAltColors(int c[], int c2[], long ... pixels){
 
-    if (c == null || pixels == null) return;
+    if (c == null || c2 == null || pixels == null) return;
     long [] pixels1 = LongStream.iterate(0, i -> i + 2).limit(pixels.length/2).toArray(); 
     long [] pixels2 = LongStream.iterate(1, i -> i + 2).limit(pixels.length-pixels1.length).toArray(); 
 
@@ -80,16 +81,54 @@ public class LED extends SubsystemBase {
 
     setAltColors(LEDConstants.kHealthyColor1, LEDConstants.kHealthyColor2, LEDConstants.kAllLEDs);
     
-    /* Intake Shooter */
+    /* Arm */
     
-    IntakeShooter intake = IntakeShooter.getInstance();
-    // Test Motor Temperatures
-    testBool = intake.m_angleMotorLeft.getMotorTemperature() > LEDConstants.kMaxMotorTemp || intake.m_angleMotorRight.getMotorTemperature() > LEDConstants.kMaxMotorTemp;
-    if (testBool) setPixels(LEDConstants.kMotorTempColor, LEDConstants.kIntakeLEDs);
+    Arm _arm = Arm.getInstance();
+    // Test Arm Motor Temperature
+    testBool = _arm.m_motor.getMotorTemperature() > LEDConstants.kMaxMotorTemp;
+    if (testBool) setPixels(LEDConstants.kMotorTempColor, LEDConstants.kArmLEDs);
 
-    // IntakeShooter Setup Detection
-    if (!intake.m_setupAngleDone || !intake.m_setupIntakeDone || !intake.m_setupShooterDone){
-      flash(()->setPixels(LEDConstants.kSetupFailColor, LEDConstants.kIntakeLEDs));
+    // Arm Setup Detection
+    if (!_arm.m_setupDone){
+      flash(()->setPixels(LEDConstants.kSetupFailColor, LEDConstants.kArmLEDs));
+    }
+
+    /* Elevator */
+    
+    Elevator _elevator = Elevator.getInstance();
+    // Test Elevator Motor Temperature
+    testBool = _elevator.m_EleMotor.getMotorTemperature() > LEDConstants.kMaxMotorTemp;
+    if (testBool) setPixels(LEDConstants.kMotorTempColor, LEDConstants.kElevatorLEDs);
+
+    // Elevator setup detection
+    if (!_elevator.setupElevator){
+      flash(()->setPixels(LEDConstants.kSetupFailColor, LEDConstants.kElevatorLEDs));
+    }
+
+    /* End Effector */
+    
+    EndEffector _effector = EndEffector.getInstance();
+    AccessoryButtons _controller = Controller.getAccessoryButtonsInstance();
+    // Test Effector Motor Temperature
+    testBool = _effector.m_motor.getMotorTemperature() > LEDConstants.kMaxMotorTemp;
+    if (testBool) setPixels(LEDConstants.kMotorTempColor, LEDConstants.kEffectorLEDs);
+
+    if (_controller.isAlgaeSelected = true){
+      flash(()->setPixels(LEDConstants.kAlgaeColor, LEDConstants.kAllLEDs));
+    } else {
+      flash(()->setPixels(LEDConstants.kCoralColor, LEDConstants.kAllLEDs));
+    }
+
+    /* Elevator */
+    
+    Climber _climber = Climber.getInstance();
+    // Test Climber Motor Temperature
+    testBool = _climber.m_motor.getMotorTemperature() > LEDConstants.kMaxMotorTemp;
+    if (testBool) setPixels(LEDConstants.kMotorTempColor, LEDConstants.kClimberLEDs);
+
+    // Climber setup detection
+    if (!_climber.m_setupDone){
+      flash(()->setPixels(LEDConstants.kSetupFailColor, LEDConstants.kClimberLEDs));
     }
 
     /* DriveTrain */
@@ -129,8 +168,9 @@ public class LED extends SubsystemBase {
       flash(()->setPixels(LEDConstants.kSetupFailColor, LEDConstants.kGyroLEDs));
     }
 
+    // Checking to see if we have a game piece
     if (EndEffector.getInstance().hasGamePiece()){
-      flash(()->setPixels(LEDConstants.kActivityColor, LEDConstants.kIntakeLEDs));
+      flash(()->setPixels(LEDConstants.kActivityColor, LEDConstants.kEffectorLEDs));
     }
     sendData();
 
