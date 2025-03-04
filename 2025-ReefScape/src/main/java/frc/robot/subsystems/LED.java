@@ -113,11 +113,11 @@ public class LED extends SubsystemBase {
     testBool = _effector.m_motor.getMotorTemperature() > LEDConstants.kMaxMotorTemp;
     if (testBool) setPixels(LEDConstants.kMotorTempColor, LEDConstants.kEffectorLEDs);
 
-    if (_controller.isAlgaeSelected = true){
+    if (_controller.isAlgaeSelected){
       flash(()->setPixels(LEDConstants.kAlgaeColor, LEDConstants.kAllLEDs));
     } else {
       flash(()->setPixels(LEDConstants.kCoralColor, LEDConstants.kAllLEDs));
-    }
+    } 
 
     /* Elevator */
     
