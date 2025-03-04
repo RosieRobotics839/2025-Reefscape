@@ -4,6 +4,7 @@
 
 package frc.robot.subsystems;
 
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -30,8 +31,6 @@ public class Controller extends XboxController {
   
   public Controller(int port) {
     super(port);
-    Translate();
-    storeLast();
   }
 
   static NetworkTable table = NetworkTableInstance.getDefault().getTable("roboRIO/Controller");
@@ -163,12 +162,12 @@ public class Controller extends XboxController {
       m_pieceSelected = ScoreConstants.GamePieceSelected.CORAL;
 
       /* Run Climber Command Sequences */
-      ClimberIn.and(()->!ClimberOut.getAsBoolean()).debounce(0.25,DebounceType.kRising).whileTrue(
+      ClimberIn.and(()->!ClimberOut.getAsBoolean()).debounce(0.06,DebounceType.kRising).whileTrue(
           // Funnel retracts automatically when climber comes in
           Climber.getInstance().ClimberInCommand
       );
 
-      ClimberOut.and(()->!ClimberIn.getAsBoolean()).debounce(0.25,DebounceType.kRising).whileTrue(
+      ClimberOut.and(()->!ClimberIn.getAsBoolean()).debounce(0.06,DebounceType.kRising).whileTrue(
           Climber.getInstance().ClimberOutCommand
       );
 
@@ -198,36 +197,36 @@ public class Controller extends XboxController {
       )
     );
       
-    StageDial1.whileTrue(
+    StageDial1.debounce(0.2,DebounceType.kRising).whileTrue(
       Commands.sequence(
-          disableDirectControl(),
-          new InstantCommand(()->m_level = ScoreConstants.ScoreLevel.TROUGH),
-          Elevator.getInstance().moveToLevelCommand(()->m_level),
-          Arm.getInstance().moveToLevelCommand(()->m_level)
+        disableDirectControl(),
+        new InstantCommand(()->m_level = ScoreConstants.ScoreLevel.TROUGH),
+        Elevator.getInstance().moveToLevelCommand(()->m_level),
+        Arm.getInstance().moveToLevelCommand(()->m_level)
     ));
 
-    StageDial2.whileTrue(
+    StageDial2.debounce(0.2,DebounceType.kRising).whileTrue(
       Commands.sequence(
-          disableDirectControl(),
-          new InstantCommand(()->m_level = ScoreConstants.ScoreLevel.LEVEL2),
-          Elevator.getInstance().moveToLevelCommand(()->m_level),
-          Arm.getInstance().moveToLevelCommand(()->m_level)
+        disableDirectControl(),
+        new InstantCommand(()->m_level = ScoreConstants.ScoreLevel.LEVEL2),
+        Elevator.getInstance().moveToLevelCommand(()->m_level),
+        Arm.getInstance().moveToLevelCommand(()->m_level)
     ));
 
-    StageDial3.whileTrue(
+    StageDial3.debounce(0.2,DebounceType.kRising).whileTrue(
       Commands.sequence(
-          disableDirectControl(),
-          new InstantCommand(()->m_level = ScoreConstants.ScoreLevel.LEVEL3),
-          Elevator.getInstance().moveToLevelCommand(()->m_level),
-          Arm.getInstance().moveToLevelCommand(()->m_level)
+        disableDirectControl(),
+        new InstantCommand(()->m_level = ScoreConstants.ScoreLevel.LEVEL3),
+        Elevator.getInstance().moveToLevelCommand(()->m_level),
+        Arm.getInstance().moveToLevelCommand(()->m_level)
     ));
 
     StageDial4.whileTrue(
       Commands.sequence(
-          disableDirectControl(),
-          new InstantCommand(()->m_level = ScoreConstants.ScoreLevel.LEVEL4),
-          Elevator.getInstance().moveToLevelCommand(()->m_level),
-          Arm.getInstance().moveToLevelCommand(()->m_level)
+        disableDirectControl(),
+        new InstantCommand(()->m_level = ScoreConstants.ScoreLevel.LEVEL4),
+        Elevator.getInstance().moveToLevelCommand(()->m_level),
+        Arm.getInstance().moveToLevelCommand(()->m_level)
     ));
 
 
@@ -266,8 +265,6 @@ public class Controller extends XboxController {
   private void storeLast(){
     Ly_pre = Ly;
     Lx_pre = Lx;
-    Ry_pre = Ry;
-    Rx_pre = Rx;
   }
 
   public void Translate() {
@@ -284,6 +281,12 @@ public class Controller extends XboxController {
   
   public void accessoryPeriodic(){
     
+    if (DriverStation.isDisabled()){
+      m_directArm = false;
+      m_directElevator = false;
+      storeLast();
+    }
+
     Translate();
     if (Math.abs(Lx-Lx_pre) > 0.05){
       m_directElevator = true;
@@ -309,9 +312,7 @@ public class Controller extends XboxController {
       Arm.getInstance().setPosition((ArmConstants.kAngleMax - ArmConstants.kAngleMin)*(-Ly+1.0)/2.0 + ArmConstants.kAngleMin);
     }
 
-    nt_rStickXAxis.set(Rx);
     nt_yStickXAxis.set(Lx);
-    nt_rStickYAxis.set(Ry);
     nt_yStickYAxis.set(Ly);
   }
 }
