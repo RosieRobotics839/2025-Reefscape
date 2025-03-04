@@ -376,7 +376,7 @@ public final class Constants {
     public static double kNoteNearDistance = Units.feetToMeters(NTDouble.create(5, "Autonomous/kNoteNearDistance", val -> kNoteNearDistance = Units.feetToMeters(val)));
     public static double kNoteDistance = Units.feetToMeters(NTDouble.create(1.9, "Autonomous/kNoteDistance", val -> kNoteDistance = Units.feetToMeters(val)));
     public static double kaimNoteGain = NTDouble.create(0.05,"Auto/kAimNoteGain",val->kaimNoteGain=val);
-    public static double kReefOffset = NTDouble.create(7,"Autonomous/kReefOffset",val -> kReefOffset = Units.inchesToMeters(7));
+    public static double kReefOffset = Units.inchesToMeters(NTDouble.create(7,"Autonomous/kReefOffset",val -> kReefOffset = Units.inchesToMeters(7)));
     public static double kTroughClearance = NTDouble.create(2, "Autonomous/kTroughClearance", val -> kTroughClearance = Units.inchesToMeters(2));
     
     public static double kFieldLength = 16.451;

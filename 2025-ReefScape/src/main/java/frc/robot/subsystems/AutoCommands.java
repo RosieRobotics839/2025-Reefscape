@@ -87,7 +87,7 @@ public class AutoCommands {
 
         return Commands.sequence(
             new InstantCommand(() -> PathPlanning.getInstance().navigateTo(target)),
-            Commands.waitUntil(() -> VectorUtils.isNear(PoseEstimator.getInstance().m_finalPose,target,Math.PI)).withTimeout(0.5),
+            Commands.waitUntil(() -> VectorUtils.isNear(PoseEstimator.getInstance().m_finalPose,target,Math.PI)),//.withTimeout(0.5),
             new InstantCommand(() -> PathPlanning.getInstance().navigateTo(target.plus(transform)))
         );
     }
