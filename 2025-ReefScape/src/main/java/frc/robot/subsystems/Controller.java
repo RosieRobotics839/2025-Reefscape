@@ -53,6 +53,9 @@ public class Controller extends XboxController {
   public static Controller getAccessoryInstance(){
     return accessoryController;
   }
+  public static AccessoryButtons getAccessoryButtonsInstance(){
+    return accessoryButtons;
+  }
 
   public class ControllerButtons {
     public JoystickButton X, O, Triangle, Square, LB, RB, LT, RT, Select, Start, LS, RS, Home;

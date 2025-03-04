@@ -32,7 +32,7 @@ public class EndEffector extends SubsystemBase {
     public boolean m_intakeRunning = false;
 
     private boolean m_beamBroken = false;
-    private boolean m_hasGamePiece = false;
+    public boolean m_hasGamePiece = false;
     private boolean m_hasCoral = false;
     private double m_algaeRelativePosition;
 

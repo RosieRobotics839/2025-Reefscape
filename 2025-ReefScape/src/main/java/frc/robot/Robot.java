@@ -23,6 +23,7 @@ import frc.robot.subsystems.EndEffector;
 import frc.robot.subsystems.FlightStick;
 import frc.robot.subsystems.Funnel;
 import frc.robot.subsystems.Gyro;
+import frc.robot.subsystems.LED;
 import frc.robot.subsystems.PathPlanning;
 import frc.robot.subsystems.Vision;
 import frc.utils.Action;
@@ -40,6 +41,7 @@ public class Robot extends TimedRobot {
   public SystemLog m_systemlog = SystemLog.getInstance();
   public DriveTrain m_drivetrain = DriveTrain.getInstance();
   public Gyro m_gyro = Gyro.getInstance();
+  public LED m_led = LED.getInstance();
   public PoseEstimator m_poseestimator = PoseEstimator.getInstance();
   public PathPlanning m_pathplanning = PathPlanning.getInstance();
   public Vision m_vision = Vision.getInstance();
