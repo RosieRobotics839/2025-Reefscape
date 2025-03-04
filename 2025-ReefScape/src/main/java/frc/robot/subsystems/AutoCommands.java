@@ -1,11 +1,7 @@
 package frc.robot.subsystems;
 
-
-import java.util.ArrayList;
-import java.util.List;
 import java.util.stream.Collectors;
 
-import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
@@ -84,7 +80,11 @@ public class AutoCommands {
         Pose2d target = PoseEstimator.getInstance().m_finalPose.nearest
             (Vision.getInstance().aprilTagFieldLayout.getTags()
             .stream().map(tag -> tag.pose.toPose2d()).collect(Collectors.toList())); // Hopefully this is readable
-        Transform2d transform = new Transform2d(new Translation2d(0,Constants.AutoConstants.kReefOffset * (Controller.m_scoreLeft ? 1 : -1)),new Rotation2d(0));
+
+        if (Controller.m_scoreLeft != true && Controller.m_scoreLeft != false) return noop(); // Incase the button is hit before switch is moved
+        Transform2d transform = new Transform2d(new Translation2d(0,Constants.AutoConstants.kReefOffset
+         * (Controller.m_scoreLeft ? 1 : -1)),new Rotation2d(0));
+
         return Commands.sequence(
             new InstantCommand(() -> PathPlanning.getInstance().navigateTo(target)),
             Commands.waitUntil(() -> VectorUtils.isNear(PoseEstimator.getInstance().m_finalPose,target,Math.PI)).withTimeout(0.5),

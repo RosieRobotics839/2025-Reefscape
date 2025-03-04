@@ -25,6 +25,7 @@ import frc.robot.subsystems.PathPlanning;
 import frc.robot.subsystems.Vision;
 import frc.robot.subsystems.PoseEstimator;
 import frc.robot.subsystems.SystemLog;
+import frc.robot.subsystems.AutoCommands;
 
 /**
  * The methods in this class are called automatically corresponding to each mode, as described in
@@ -118,6 +119,7 @@ public class Robot extends TimedRobot {
     m_autoSelected = m_chooser.getSelected();
     // m_autoSelected = SmartDashboard.getString("Auto Selector", kDefaultAuto);
     System.out.println("Auto selected: " + m_autoSelected);
+    AutoCommands.GetCorral().schedule();
   }
 
   /** This function is called periodically during autonomous. */

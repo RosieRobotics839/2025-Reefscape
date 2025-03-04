@@ -108,7 +108,7 @@ public class Controller extends XboxController {
   static NTDouble nt_yStickXAxis = new NTDouble(0,table,"Accessory/yStickXAxis",(val)->{});
   static NTDouble nt_rStickYAxis = new NTDouble(0,table,"Accessory/rStickYAxis",(val)->{});
   static NTDouble nt_yStickYAxis = new NTDouble(0,table,"Accessory/yStickYAxis",(val)->{});
-  static NTBoolean nt_scoreLeft = new NTBoolean(null,table,"scoreleft",(val)->{});
+  static NTBoolean nt_scoreLeft = new NTBoolean(true,table,"scoreleft",(val)->{});
 
   public static class AccessoryButtons {
     public JoystickButton Intake, Outtake, ClimberIn, ClimberOut, GMPCS, StageDial0, StageDial1, StageDial2, StageDial3, StageDial4, LeftScore, RightScore, RS, Home;
