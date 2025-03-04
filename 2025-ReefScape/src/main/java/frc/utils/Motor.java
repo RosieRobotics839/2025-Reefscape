@@ -33,6 +33,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import com.revrobotics.spark.config.ClosedLoopConfig.FeedbackSensor;
 
 import frc.robot.Constants.MotorDefaults;
+import frc.robot.Robot;
 import frc.utils.CANSparkMax.MyCANSparkMax;
 import frc.utils.NTValues.NTBoolean;
 import frc.utils.NTValues.NTDouble;
@@ -177,7 +178,8 @@ public class Motor extends SubsystemBase {
     public Motor (int CANID_, MyMotorType motorType_, String name_) {
         m_inConstructor = true;
         CANID = CANID_;
-        motorType = motorType_;
+        // Override motor type to SIMULATED when in simulation mode
+        motorType = Robot.isSimulation() ? MyMotorType.SIMULATED : motorType_;
         name = name_;
         nt_angleinit = table.getDoubleTopic("angle/init/"+name).publish();
         nt_speedcmd = table.getDoubleTopic("motor/speedcmd/"+name).publish();
@@ -761,6 +763,7 @@ public class Motor extends SubsystemBase {
                 _setTargetPosition(posRequest, m_gainslot);
             }
         }
+
         nt_controltype.set(m_controlType.ordinal());
         nt_position.set(getPosition());
         nt_speed.set(getVelocity());
