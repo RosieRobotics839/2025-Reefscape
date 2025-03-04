@@ -1,5 +1,6 @@
 package frc.robot.subsystems;
 
+import java.util.function.Supplier;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.BooleanPublisher;
 import edu.wpi.first.networktables.DoublePublisher;
@@ -13,7 +14,8 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.ElevatorConstants;
-import frc.robot.Constants.GameConstants;
+import frc.robot.Constants.ScoreConstants;
+import frc.robot.Constants.ScoreConstants.ScoreLevel;
 import frc.utils.Motor;
 import frc.utils.Motor.GainSlot;
 import frc.utils.NTValues.NTBoolean;
@@ -35,7 +37,7 @@ public class Elevator extends SubsystemBase {
     boolean setupElevator = false;
     public double m_targetHeight = NTDouble.create(0, table, "targetHeight",(val)->setPosition(Units.inchesToMeters(val)));
     public double m_currentHeight = 0;
-    GameConstants.ScoreLevel m_scoreReefLevel;
+    ScoreConstants.ScoreLevel m_scoreReefLevel;
     public double armCurrentAngle;
 
     DigitalInput limitSwitch = new DigitalInput(ElevatorConstants.klimitSwitchChannel);
@@ -45,7 +47,7 @@ public class Elevator extends SubsystemBase {
      * Sets the target elevator position. It may not go there due to arm and elevator safety protections.
      * @param position Target height in meters
      */
-    public void setPosition(Double position) {
+    public void setPosition(double position) {
         m_targetHeight = position;
     }
 
@@ -89,14 +91,6 @@ public class Elevator extends SubsystemBase {
         m_EleMotor.setPosition(targetRotations);
     }
 
-    /**
-     * Sets the elevator target height
-     * @param target (meters)
-     */
-    public void setPosition(double target) {
-        m_targetHeight = target;
-    }
-
     public Elevator (){
 
         nt_currentHeight = table.getDoubleTopic("currentHeight").publish();
@@ -113,28 +107,27 @@ public class Elevator extends SubsystemBase {
             .pidf(ElevatorConstants.kGainPosition, GainSlot.POSITION);
     }
 
-    public Command createMoveToHeightCommand(double targetHeight) {
-        return Commands.sequence(
-            // move elevator
-            Commands.runOnce(() -> setPosition(targetHeight))
-        );
-    }
-
-    // Example commands for different heights
-    public Command moveToTroughCommand() {
-        return createMoveToHeightCommand(ElevatorConstants.kHeight1);
-    }
-
-    public Command moveToLevel2Command() {
-        return createMoveToHeightCommand(ElevatorConstants.kHeight2);
-    }
-
-    public Command moveToLevel3Command() {
-        return createMoveToHeightCommand(ElevatorConstants.kHeight3);
-    }
-
-    public Command moveToLevel4Command() {
-        return createMoveToHeightCommand(ElevatorConstants.kMaxHeight);
+    public Command moveToLevelCommand(Supplier<ScoreLevel> level) {
+        return new InstantCommand(()->{
+            switch (level.get()){
+                case FUNNEL:
+                    setPosition(ElevatorConstants.kMinHeight);
+                    break;
+                case TROUGH:
+                    setPosition(ElevatorConstants.kHeight1);
+                    break;
+                case LEVEL2:
+                    setPosition(ElevatorConstants.kHeight2);
+                    break;
+                case LEVEL3:
+                    setPosition(ElevatorConstants.kHeight3);
+                    break;
+                case LEVEL4:
+                    setPosition(ElevatorConstants.kMaxHeight);
+                    break;
+                default:
+            }
+        }).unless(()->EndEffector.getInstance().m_intakeRunning);
     }
 
     NTBoolean m_isCalibrated = new NTBoolean(false,table,"isCalibrated",(val)->{});

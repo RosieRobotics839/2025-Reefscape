@@ -9,14 +9,11 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.networktables.BooleanPublisher;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.Constants.AutoConstants;
 import frc.robot.Constants.kDriveTrain.DriveConstants;
 import frc.utils.VectorUtils;
-import frc.utils.pathfinding.astar.PathfindingUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -32,22 +29,20 @@ public class Autonomous extends SubsystemBase {
   public Pose2d m_aimPoint;
   public double m_aimPointRotationOffset;
 
-  public static List<Translation2d> bluestage = new ArrayList<Translation2d>(){{
-    add(new Translation2d(2.85,4.45));
-    add(new Translation2d(2.85,3.00));
-    add(new Translation2d(5.62, 1.45));
-    add(new Translation2d(6.35, 2.25));
-    add(new Translation2d(6.35, 5.85));
-    add(new Translation2d(5.62, 6.50));
+  public static List<Translation2d> bluereef = new ArrayList<Translation2d>(){{
+    add(new Translation2d(2.875,4.820));
+    add(new Translation2d(4.561,5.838));
+    add(new Translation2d(6.138, 4.820));
+    add(new Translation2d(6.138, 3.15));
+    add(new Translation2d(4.561, 2.218));
+    add(new Translation2d(2.875, 3.15));
   }};
-  //public static List<Translation2d> redstage = new ArrayList<Translation2d>(){{
-  //  add(new Translation2d(13.75,4.45));
-  //  add(new Translation2d(13.75,3.60));
-  //  add(new Translation2d(11.0, 2));
-  //  add(new Translation2d(10.35, 2.435));
-  //  add(new Translation2d(10.35, 5.625));
-  //  add(new Translation2d(11.0, 6.05));
-  //}};
+  public static List<Translation2d> bargecolumn = new ArrayList<Translation2d>(){{
+    add(new Translation2d(8.160,3.46));
+    add(new Translation2d(8.160,4.475));
+    add(new Translation2d(9.5, 4.475));
+    add(new Translation2d(9.5, 3.46));
+  }};
   //public static List<Translation2d> bluespeaker = new ArrayList<Translation2d>(){{
   //  add(new Translation2d(0,6.85));
   //  add(new Translation2d(1.112,6.175));
@@ -61,12 +56,14 @@ public class Autonomous extends SubsystemBase {
   //  add(new Translation2d(16.542, 4.119));
   //}};
 
+  // TODO: UPDATE FIELD GEOMETRY!
   public static List<List<Translation2d>> staticObstacles = new ArrayList<List<Translation2d>>(){{
     double halffield = Vision.getInstance().aprilTagFieldLayout.getFieldLength()/2.0;
     
-    List<Translation2d> redstage = bluestage.stream().map(f->new Translation2d(halffield+(halffield-f.getX()),f.getY())).collect(Collectors.toList());
-    add(bluestage);
-    add(redstage);
+    List<Translation2d> redreef = bluereef.stream().map(f->new Translation2d(halffield+(halffield-f.getX()),f.getY())).collect(Collectors.toList());
+    add(bluereef);
+    add(redreef);
+    add(bargecolumn);
     
     //List<Translation2d> redspeaker = bluespeaker.stream().map(f->new Translation2d(halffield+(halffield-f.getX()),f.getY())).collect(Collectors.toList());
     //add(bluespeaker);
@@ -81,18 +78,7 @@ public class Autonomous extends SubsystemBase {
   }};
 
   static NetworkTable table;
-  final BooleanPublisher nt_instage;
-
-  public void aimAtNote(){
-
-    Vision.getInstance().findPixyTarget();
-    
-    double angleDiff = Vision.getInstance().m_pixyTargetAngle/AutoConstants.kaimNoteGain;
-    double curAngle = PoseEstimator.getInstance().m_finalPose.getRotation().getRadians();
-
-    DriveTrain.getInstance().setTargetHeading(curAngle + angleDiff*(Math.PI/180.0));
-    // might need: DriveConstants.kAutoMaxRotAcceleration*(Vision.getInstance().frameCenterOffset /  + Math.signum(targetOffset) * 0.20));
-  }
+  //final BooleanPublisher nt_instage;
 
   public void aimAtPoint(Pose2d aimPoint){
     aimAtPoint(aimPoint, 0);
@@ -110,7 +96,7 @@ public class Autonomous extends SubsystemBase {
   /** Creates a new Autonomous. */
   public Autonomous() {
     table = NetworkTableInstance.getDefault().getTable("roboRIO/Autonomous");
-    nt_instage = table.getBooleanTopic("isInStage").publish();
+    //nt_instage = table.getBooleanTopic("isInStage").publish();
   }
 
   List<AprilTag> allTags;
@@ -152,7 +138,7 @@ public class Autonomous extends SubsystemBase {
       DriveTrain.getInstance().setTargetHeading(heading + m_aimPointRotationOffset);
     }
 
-    boolean insideStage = PathfindingUtils.PointInPolygon(PoseEstimator.getInstance().m_finalPose.getTranslation(), bluestage);
-    nt_instage.set(insideStage);
+    //boolean insideStage = PathfindingUtils.PointInPolygon(PoseEstimator.getInstance().m_finalPose.getTranslation(), bluestage);
+    //nt_instage.set(insideStage);
   }
 }

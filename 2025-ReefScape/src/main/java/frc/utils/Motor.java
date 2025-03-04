@@ -56,6 +56,7 @@ public class Motor extends SubsystemBase {
     public TalonFX motor_talon;
     TalonFXConfiguration config_talon;
 
+    private Boolean m_usingAltEncoder = false;
     public MyCANSparkMax motor_neo;
     private boolean m_setupMotorDone = false;
     public double calibration = 0;
@@ -106,6 +107,7 @@ public class Motor extends SubsystemBase {
 
     NTInteger
     nt_slot,
+    nt_curLimit,
     nt_controltype;
 
     NTBoolean
@@ -120,7 +122,6 @@ public class Motor extends SubsystemBase {
     nt_position,
     nt_speed,
     nt_current,
-    nt_curLimit,
     nt_izone,
     nt_speedLim,
     nt_speedLimPos,
@@ -197,7 +198,7 @@ public class Motor extends SubsystemBase {
         nt_inverted     = new NTBoolean(MotorDefaults.kInverted,testtable,"motors/"+name+"/inverted",(val)->inverted(val));
         nt_idleBrake    = new NTBoolean(MotorDefaults.kIdleBrake, testtable,"motors/"+name+"/idlebrake",(val)->idleBrake(val));
         nt_outputRange  = new NTDouble(MotorDefaults.kOutputRange, testtable,"motors/"+name+"/outrange",(val)->withOutputRange(-val,val));
-        nt_curLimit     = new NTDouble(MotorDefaults.kCurrentLimit,testtable,"motors/"+name+"/currentLimit",(val)->withStatorLimit(val));
+        nt_curLimit     = new NTInteger(MotorDefaults.kCurrentLimit,testtable,"motors/"+name+"/currentLimit",(val)->withStatorLimit(val));
         nt_current      = new NTDouble(0.0,testtable,"motors/"+name+"/current",(val)->{});
         nt_slot         = new NTInteger(0, testtable,"motors/"+name+"/gains/slot",(val)->{nt_Kp.set(m_gains[val].Kp);nt_Ki.set(m_gains[val].Ki);nt_Kd.set(m_gains[val].Kd);nt_Kff.set(m_gains[val].Kff);});
         nt_controltype  = new NTInteger(-1, testtable,"motors/"+name+"/controltype",(val)->{});
@@ -316,7 +317,7 @@ public class Motor extends SubsystemBase {
         return this;
     }
 
-    public Motor withStatorLimit(double stallLimit){
+    public Motor withStatorLimit(int stallLimit){
         switch (motorType) {
             case KRAKEN:
                 config_talon.CurrentLimits
@@ -324,7 +325,7 @@ public class Motor extends SubsystemBase {
                     .withStatorCurrentLimitEnable(true);
                 break;
             case NEO:
-                config_neo.smartCurrentLimit((int)stallLimit);
+                config_neo.smartCurrentLimit(stallLimit);
                 break;
             default:
         }
@@ -652,12 +653,37 @@ public class Motor extends SubsystemBase {
         return status;
     }
 
+    /**
+     * Returns the motor target position.
+     * @return rotations
+     */
+    public double getTargetPosition(){
+        return m_positionTarget;
+    }
+
+    /**
+     * Returns the motor target speed.
+     * @return rotations per second
+     */
+    public double getTargetSpeed(){
+        return m_speedTarget;
+    }
+
+    /**
+     * Sets the position of the motor or alternate encoder in rotations.
+     * @param position in rotations
+     * @return
+     */
     public boolean setEncoderPosition(double position){
         switch (motorType) {
             case KRAKEN:
                 return motor_talon.setPosition(position).isOK();
             case NEO:
-                return encoder_neo.setPosition(position) == REVLibError.kOk; // Our math is based on rotations per Minute
+                if (m_usingAltEncoder){
+                    return motor_neo.getAlternateEncoder().setPosition(position) == REVLibError.kOk;
+                } else {
+                    return encoder_neo.setPosition(position) == REVLibError.kOk;
+                }
             case SIMULATED:
                 m_simPosition = position;
                 return true;

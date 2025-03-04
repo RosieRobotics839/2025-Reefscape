@@ -5,26 +5,45 @@
 package frc.robot.subsystems;
 
 import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
-import edu.wpi.first.wpilibj2.command.button.POVButton;
 import frc.utils.VectorUtils;
+import frc.utils.NTValues.NTBoolean;
+import frc.utils.NTValues.NTDouble;
+import edu.wpi.first.math.filter.Debouncer.DebounceType;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.NetworkTableInstance;
+import frc.robot.Constants.ArmConstants;
+import frc.robot.Constants.EffectorConstants;
+import frc.robot.Constants.ElevatorConstants;
+import frc.robot.Constants.ScoreConstants;
+import frc.robot.Constants.ScoreConstants.GamePieceSelected;
+import frc.robot.Constants.ScoreConstants.ScoreLevel;
 import frc.robot.Constants.kDriveTrain.DriveConstants;
 public class Controller extends XboxController {
+  
+  public Controller(int port) {
+    super(port);
+    Translate();
+    storeLast();
+  }
 
-  public static double forward;
-  public static double left;
-  public static double extend;
-  public static double rotate;
-  public static double grab;
+  static NetworkTable table = NetworkTableInstance.getDefault().getTable("roboRIO/Controller");
+
+  public double Ly, Lx, Ly_pre, Lx_pre;
+  public double Ry, Rx, Ry_pre, Rx_pre;
+  public boolean m_directElevator = false;
+  public boolean m_directArm = false;
+
   public static Integer speedSelect = DriveConstants.kMaxSpeedDefault;
 
-  public static Controller driveController = new Controller(0);  
+  public static Controller driveController = new Controller(0);
   public static Controller accessoryController = new Controller(1);
   
   public static AccessoryButtons accessoryButtons = new AccessoryButtons(accessoryController);
@@ -81,26 +100,58 @@ public class Controller extends XboxController {
       buttons.Triangle.onFalse(new InstantCommand(()->{
         m_autonomous.stopAiming();
       }));
-      //buttons.RS.onTrue(new InstantCommand(() -> {driveTrain.m_fieldCentricDriving = !driveTrain.m_fieldCentricDriving;}));
     }
 
   }
 
+  static NTDouble nt_rStickXAxis = new NTDouble(0,table,"Accessory/rStickXAxis",(val)->{});
+  static NTDouble nt_yStickXAxis = new NTDouble(0,table,"Accessory/yStickXAxis",(val)->{});
+  static NTDouble nt_rStickYAxis = new NTDouble(0,table,"Accessory/rStickYAxis",(val)->{});
+  static NTDouble nt_yStickYAxis = new NTDouble(0,table,"Accessory/yStickYAxis",(val)->{});
+
   public static class AccessoryButtons {
-    public JoystickButton Intake, Outtake, ClimberIn, ClimberOut, GMPCS, StageDial1, StageDial2, StageDial3, StageDial4, LeftScore, RightScore, RS, Home;
-    public POVButton DPadUp, DPadRight, DPadDown, DPadLeft;
+    public JoystickButton Intake, Outtake, ClimberIn, ClimberOut, GMPCS, StageDial0, StageDial1, StageDial2, StageDial3, StageDial4, LeftScore, RightScore, RS, Home;
+
+    public Command waitForTarget = Commands.sequence(
+      Commands.waitUntil(() -> {return Arm.getInstance().isAtPosition() && Elevator.getInstance().isAtPosition();})
+    );
+
+    public Command disableDirectControl(){
+      return new InstantCommand(()->{getAccessoryInstance().m_directElevator = false; getAccessoryInstance().m_directArm = false;});
+    }
+
+    ScoreConstants.ScoreLevel m_level;
+    Command m_expel = EndEffector.getInstance().ExpelCommand(()->(m_level == ScoreLevel.TROUGH ? EffectorConstants.kTroughOuttakeSpeed : EffectorConstants.kOuttakeSpeed), ()->m_level==ScoreLevel.TROUGH);
+      
+    ScoreConstants.GamePieceSelected m_pieceSelected;
+
+    // boolean that decides which game piece we are handling
+    boolean isAlgaeSelected = false;  // Initially set to false (CORAL)
+
+    NTBoolean nt_algaeSelected = new NTBoolean(false,table,"algaeSelected",(val)->{});
+
+
+    public boolean toggleAlgae(){
+      isAlgaeSelected = !isAlgaeSelected;
+      nt_algaeSelected.set(isAlgaeSelected);
+      return true;
+    }
+
     AccessoryButtons(Controller controller){
+
+      StageDial0 = new JoystickButton(controller, 1);  // Stage Dial Scoring Level 0 (Default/Human Player Intake)
+      StageDial1 = new JoystickButton(controller, 2);  // Stage Dial Scoring Level 1 (Trough)
+      StageDial2 = new JoystickButton(controller, 3);  // Stage Dial Scoring Level 2
+      StageDial3 = new JoystickButton(controller, 4);  // Stage Dial Scoring Level 3
+      StageDial4 = new JoystickButton(controller, 5);  // Stage Dial Scoring Level 4
+      RightScore = new JoystickButton(controller, 6); // Scoring Right of Reef Face (Switch)
+      LeftScore  = new JoystickButton(controller, 7); // Scoring Left of Reef Face (Switch)
       Intake     = new JoystickButton(controller, 8);  // Intake Button
       Outtake    = new JoystickButton(controller, 9);  // Expel Button (Outtake for those who don't know)
-      ClimberIn  = new JoystickButton(controller, 3);  // Brings Climber In & Funnel Up
-      ClimberOut = new JoystickButton(controller, 4);  // Brings Climber Out & Funnel Down
-      GMPCS      = new JoystickButton(controller, 5);  // Game Piece Selector Button (Algae or Coral)
-      StageDial1 = new JoystickButton(controller, 6);  // Stage Dial Scoring Level 1 (Trough)
-      StageDial2 = new JoystickButton(controller, 7);  // Stage Dial Scoring Level 2
-      StageDial3 = new JoystickButton(controller, 1);  // Stage Dial Scoring Level 3
-      StageDial4 = new JoystickButton(controller, 2);  // Stage Dial Scoring Level 4
-      LeftScore  = new JoystickButton(controller, 10); // Scoring Left of Reef Face (Switch)
-      RightScore = new JoystickButton(controller, 11); // Scoring Right of Reef Face (Switch)
+      ClimberOut = new JoystickButton(controller, 10);  // Brings Climber Out & Funnel Down
+      ClimberIn  = new JoystickButton(controller, 11);  // Brings Climber In & Funnel Up
+      GMPCS      = new JoystickButton(controller, 12);  // Game Piece Selector Button (Algae or Coral)
+
       //RS       = new JoystickButton(controller, 12); // Right Stick Click
       //Home     = new JoystickButton(controller, 13); // Home Button
       //DPadUp    = new POVButton(controller, 0);
@@ -108,74 +159,76 @@ public class Controller extends XboxController {
       //DPadDown    = new POVButton(controller, 180);
       //DPadLeft    = new POVButton(controller, 270);
 
+      // Initializing the selected game piece to be the default; coral.
+      m_pieceSelected = ScoreConstants.GamePieceSelected.CORAL;
+
       /* Run Climber Command Sequences */
-
-      ClimberIn.onTrue(
-        Commands.sequence(
-          Funnel.getInstance().FunnelUpCommand(),
+      ClimberIn.and(()->!ClimberOut.getAsBoolean()).debounce(0.25,DebounceType.kRising).whileTrue(
+          // Funnel retracts automatically when climber comes in
           Climber.getInstance().ClimberInCommand
-        )
       );
 
-      ClimberOut.onTrue(
-        Commands.sequence(
-          Funnel.getInstance().FunnelDownCommand(),
+      ClimberOut.and(()->!ClimberIn.getAsBoolean()).debounce(0.25,DebounceType.kRising).whileTrue(
           Climber.getInstance().ClimberOutCommand
-        )
       );
+
+      // Put funnel back down if both buttons are pressed.
+      ClimberIn.and(()->ClimberOut.getAsBoolean()).whileTrue(Funnel.getInstance().FunnelDownCommand);
 
       /* Intake and Outtake Command Sequences */
-
-      Intake.onTrue(
-        Commands.sequence(
-          EndEffector.getInstance().IntakeCommand
-        )
+      Intake.toggleOnTrue(
+        EndEffector.getInstance().IntakeCommand
       );
+
       Outtake.onTrue(
         Commands.sequence(
-          Elevator.getInstance().moveToLevel4Command(),
-          Arm.getInstance().moveToLevel4Command(),
-          Commands.waitUntil(() -> {return Elevator.getInstance().isAtPosition() && Arm.getInstance().isAtPosition();}),
-          EndEffector.getInstance().ExpelCommand
+          waitForTarget.onlyIf(() -> m_pieceSelected == GamePieceSelected.CORAL), // Waiting for arm and elevator to reach target, will only run if coral is selected
+          m_expel // Expelling either way, no matter algae or coral
         )
       );
       
-      /* Sample button bindings for Elevator and Arm, need to test */
+      /* Setting Stage Dial Values */
+
+    StageDial0.whileTrue(
+      Commands.sequence(
+        disableDirectControl(),
+        new InstantCommand(()->m_level = ScoreLevel.FUNNEL),
+        Elevator.getInstance().moveToLevelCommand(()->m_level),
+        Arm.getInstance().moveToLevelCommand(()->m_level)
+      )
+    );
       
-      StageDial1.onTrue(
-        Commands.sequence(
-            // Move elevator first if needed
-            Elevator.getInstance().moveToTroughCommand(),
-            // Then move arm
-            Arm.getInstance().moveToTroughCommand()
-        )
-    );
+    StageDial1.whileTrue(
+      Commands.sequence(
+          disableDirectControl(),
+          new InstantCommand(()->m_level = ScoreConstants.ScoreLevel.TROUGH),
+          Elevator.getInstance().moveToLevelCommand(()->m_level),
+          Arm.getInstance().moveToLevelCommand(()->m_level)
+    ));
 
-    StageDial2.onTrue(
-        Commands.sequence(
-            // If moving to level 2, might need to coordinate movements
-            Commands.parallel(
-                Elevator.getInstance().moveToLevel2Command(),
-                Arm.getInstance().moveToLevel2Command()
-            )
-        )
-    );
+    StageDial2.whileTrue(
+      Commands.sequence(
+          disableDirectControl(),
+          new InstantCommand(()->m_level = ScoreConstants.ScoreLevel.LEVEL2),
+          Elevator.getInstance().moveToLevelCommand(()->m_level),
+          Arm.getInstance().moveToLevelCommand(()->m_level)
+    ));
 
-    StageDial3.onTrue(
-        Commands.sequence(
-            // For level 3, might want to move arm first
-            Arm.getInstance().moveToLevel3Command(),
-            Elevator.getInstance().moveToLevel3Command()
-        )
-    );
+    StageDial3.whileTrue(
+      Commands.sequence(
+          disableDirectControl(),
+          new InstantCommand(()->m_level = ScoreConstants.ScoreLevel.LEVEL3),
+          Elevator.getInstance().moveToLevelCommand(()->m_level),
+          Arm.getInstance().moveToLevelCommand(()->m_level)
+    ));
 
-    StageDial4.onTrue(
-        Commands.sequence(
-            // For level 4, elevator first then arm
-            Elevator.getInstance().moveToLevel4Command(),
-            Arm.getInstance().moveToLevel4Command()
-        )
-    );
+    StageDial4.whileTrue(
+      Commands.sequence(
+          disableDirectControl(),
+          new InstantCommand(()->m_level = ScoreConstants.ScoreLevel.LEVEL4),
+          Elevator.getInstance().moveToLevelCommand(()->m_level),
+          Arm.getInstance().moveToLevelCommand(()->m_level)
+    ));
 
 
       /* Side Positioning for Scoring */
@@ -194,54 +247,71 @@ public class Controller extends XboxController {
       /* Algae/Coral Selector */
 
       GMPCS.onTrue(
-        Commands.sequence(
-        // TODO: Add code to select Algae
-        )
+          Commands.sequence(
+            Commands.waitUntil(() -> {return toggleAlgae();}),
+            Commands.waitUntil(() -> {
+              if (isAlgaeSelected) {
+                  m_pieceSelected = ScoreConstants.GamePieceSelected.ALGAE;
+              } else {
+                  m_pieceSelected = ScoreConstants.GamePieceSelected.CORAL;
+              }
+              return true;
+            })
+          )
       );
-      GMPCS.onFalse(
-        Commands.sequence(
-        // TODO: Add code to select Coral
-        )
-      );
+
     } 
   }
 
-  public Controller(int port) {
-    super(port);
+  private void storeLast(){
+    Ly_pre = Ly;
+    Lx_pre = Lx;
+    Ry_pre = Ry;
+    Rx_pre = Rx;
   }
 
   public void Translate() {
     Translation2d Lstick = new Translation2d(this.getLeftX(),-this.getLeftY());
     Lstick = VectorUtils.deadband(Lstick,0.1,1);
-    forward = Lstick.getY(); // Forward is Positive consistent the FRC field coordinate system
-    left = -Lstick.getX();   // Left is Positive consistent the FRC field coordinate system
+    Ly = Lstick.getY();
+    Lx = Lstick.getX();
     
     Translation2d Rstick = new Translation2d(this.getRightX(),this.getRightY());
     Rstick = VectorUtils.deadband(Rstick,0.1,1);
-    rotate = -Rstick.getX(); // Counter Clockwise is Positive consistent the FRC field coordinate system
+    Ry = Rstick.getY();
+    Rx = Rstick.getX();
   }
-
-  /* if (DriverStation.isTeleopEnabled()){
-      IntakeShooter.getInstance().setShooterAngle(IntakeShooter.getInstance().getAngleTarget() + ShooterConstants.kManualAngleSpeed * 0.02 * forward);
-    }
-    // getLeftX()
-    // getLeftY()
-    // getRightX()
-    // getRightY()
-  } */
-
-  public void armThing() {
-    if (this.getLeftY() < 0.01 && this.getLeftY() > -0.01) {
-      rotate = 0;
-    } else {
-      rotate = -this.getLeftY();
-    }
+  
+  public void accessoryPeriodic(){
     
-    if (this.getRightY() < 0.01 && this.getRightY() > -0.01) {
-      extend = 0;
-    } else {
-      extend = -this.getRightY();
+    Translate();
+    if (Math.abs(Lx-Lx_pre) > 0.05){
+      m_directElevator = true;
     }
-    grab = -this.getLeftTriggerAxis() + this.getRightTriggerAxis();
+
+    if (Math.abs(Ly-Ly_pre) > 0.05){
+      m_directArm = true;
+    }
+
+    // store manual control positions, to check if they have moved after automated control.
+    if (m_directArm){
+      Ly_pre = Ly;
+    }
+    if (m_directElevator){
+      Lx_pre = Lx;
+    }
+
+    if (m_directElevator){
+      Elevator.getInstance().setPosition((ElevatorConstants.kMaxHeight - ElevatorConstants.kMinHeight)*(Lx+1.0)/2.0 + ElevatorConstants.kMinHeight);
+    }
+
+    if (m_directArm){
+      Arm.getInstance().setPosition((ArmConstants.kAngleMax - ArmConstants.kAngleMin)*(-Ly+1.0)/2.0 + ArmConstants.kAngleMin);
+    }
+
+    nt_rStickXAxis.set(Rx);
+    nt_yStickXAxis.set(Lx);
+    nt_rStickYAxis.set(Ry);
+    nt_yStickYAxis.set(Ly);
   }
 }

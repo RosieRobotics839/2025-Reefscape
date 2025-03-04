@@ -4,6 +4,8 @@
 
 package frc.robot;
 
+import edu.wpi.first.math.filter.Debouncer;
+import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.TimedRobot;
@@ -15,6 +17,7 @@ import frc.robot.Constants.AutoConstants;
 import frc.robot.subsystems.Arm;
 import frc.robot.subsystems.Autonomous;
 import frc.robot.subsystems.Climber;
+import frc.robot.subsystems.Controller;
 import frc.robot.subsystems.DriveTrain;
 import frc.robot.subsystems.EndEffector;
 import frc.robot.subsystems.FlightStick;
@@ -22,6 +25,7 @@ import frc.robot.subsystems.Funnel;
 import frc.robot.subsystems.Gyro;
 import frc.robot.subsystems.PathPlanning;
 import frc.robot.subsystems.Vision;
+import frc.utils.Action;
 import frc.robot.subsystems.PoseEstimator;
 import frc.robot.subsystems.SystemLog;
 
@@ -49,6 +53,9 @@ public class Robot extends TimedRobot {
 
   public boolean changedAlly = true;
 
+  private Debouncer m_recording = new Debouncer(10, Debouncer.DebounceType.kFalling);
+  private Action m_recordTrigger = new Action(false).onTrue(()->DataLogManager.start()).onFalse(()->DataLogManager.stop());
+
   private static final String kDefaultAuto = "Default";
   private static final String kCustomAuto = "My Auto";
   private String m_autoSelected;
@@ -59,6 +66,7 @@ public class Robot extends TimedRobot {
    * initialization code.
    */
   public Robot() {
+    addPeriodic(()->Controller.getAccessoryInstance().accessoryPeriodic(),0.020,0.010);
     m_chooser.setDefaultOption("Default Auto", kDefaultAuto);
     m_chooser.addOption("My Auto", kCustomAuto);
     SmartDashboard.putData("Auto choices", m_chooser);
@@ -76,7 +84,10 @@ public class Robot extends TimedRobot {
   @Override
   public void robotPeriodic() {
 
-  CommandScheduler.getInstance().run();
+    // Record data as long as robot is enabled (and some time after to keep recording between auto and teleop)
+    m_recordTrigger.calculate(m_recording.calculate(isEnabled()));
+    
+    CommandScheduler.getInstance().run();
     
     changedAlly = false;
     if ((noDS || myAlliance==Alliance.Blue) && DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == Alliance.Red){

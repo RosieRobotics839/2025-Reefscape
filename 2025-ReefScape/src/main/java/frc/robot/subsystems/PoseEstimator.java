@@ -11,6 +11,7 @@ import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.FieldObject2d;
@@ -44,6 +45,8 @@ public class PoseEstimator extends SubsystemBase {
   DoublePublisher nt_vision_resx = table.getDoubleTopic("vis_res_x").publish();
   DoublePublisher nt_vision_resy = table.getDoubleTopic("vis_res_y").publish();
   DoublePublisher nt_vision_rest = table.getDoubleTopic("vis_res_t").publish();
+
+  StructPublisher<Pose2d> nt_posepublisher = table.getStructTopic("RobotPose", Pose2d.struct).publish();
 
   DoubleArrayPublisher nt_simPose_t = table.getDoubleArrayTopic("simPose").publish();
 
@@ -216,6 +219,7 @@ public class PoseEstimator extends SubsystemBase {
       m_fieldsimpose.setPose(m_sim_actualPose);
     }
 
+    nt_posepublisher.set(m_finalPose);
     nt_final_x.set(m_finalPose.getX());
     nt_final_y.set(m_finalPose.getY());
     nt_final_t.set(m_finalPose.getRotation().getRadians());
