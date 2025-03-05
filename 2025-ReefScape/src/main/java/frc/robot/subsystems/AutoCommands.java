@@ -71,11 +71,13 @@ public class AutoCommands {
             new InstantCommand(() -> Elevator.getInstance().setPosition(0)),
             new InstantCommand(() -> Arm.getInstance().setPosition(0)),
             Commands.sequence(
-                new InstantCommand(() -> PathPlanning.getInstance().navigateTo(PathPlanning.AprilTagAtDistance(tagId,AutoConstants.kSourceDistance*1.5+Constants.kChassis.kWheelBase/2.0, Math.PI))),
+                new InstantCommand(() -> PathPlanning.getInstance().navigateTo(PathPlanning.AprilTagAtDistance(tagId,AutoConstants.kSourceDistance*3+Constants.kChassis.kWheelBase/2.0, Math.PI))),
                 new InstantCommand(() -> PathPlanning.getInstance().navigateTo(PathPlanning.AprilTagAtDistance(tagId,AutoConstants.kSourceDistance+Constants.kChassis.kWheelBase/2.0, Math.PI))),
-                Commands.waitUntil(() -> VectorUtils.isNear(PoseEstimator.getInstance().m_finalPose,PathPlanning.AprilTagAtDistance(tagId,AutoConstants.kSourceDistance), AutoConstants.kSourceNearDistance)),
-                Commands.waitSeconds(2),
-                wiggle.asProxy().alongWith(EndEffector.getInstance().IntakeCommand().asProxy()).withTimeout(5)
+                Commands.waitUntil(() -> VectorUtils.isNear(PoseEstimator.getInstance().m_finalPose,PathPlanning.AprilTagAtDistance(tagId,AutoConstants.kSourceDistance+Constants.kChassis.kWheelBase/2.0), AutoConstants.kSourceNearDistance)),
+                Commands.parallel(
+                    EndEffector.getInstance().IntakeCommand().asProxy(),
+                    wiggle.asProxy()
+                ).withTimeout(5)
             ).repeatedly().handleInterrupt(()->DriveTrain.getInstance().m_poseQueue.clear())
         ).until(()->EndEffector.getInstance().hasGamePiece());
     }
@@ -93,6 +95,17 @@ public class AutoCommands {
             new InstantCommand(() -> Elevator.getInstance().moveToLevelCommand(()->level)),
             new InstantCommand(() -> Arm.getInstance().moveToLevelCommand(()->level)),
             Controller.accessoryButtons.m_expel.asProxy()
+        );
+    }
+
+    public static Command ReefOffset(int tagId, boolean left){
+        Pose2d target = PathPlanning.AprilTagAtDistance(tagId,AutoConstants.kSourceDistance*1.5+Constants.kChassis.kWheelBase/2.0, Math.PI);
+        
+        Transform2d transform = new Transform2d(new Translation2d(0,Constants.AutoConstants.kReefOffset * (left ? 1 : -1)),new Rotation2d(0));
+
+        return Commands.sequence(
+            new InstantCommand(() -> PathPlanning.getInstance().navigateTo(target.plus(transform))),
+            Commands.waitUntil(() -> VectorUtils.isNear(PoseEstimator.getInstance().m_finalPose, target.plus(transform), AutoConstants.kReefTolerance)) //.withTimeout(0.5),
         );
     }
 

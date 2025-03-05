@@ -10,7 +10,6 @@ import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import frc.robot.Constants.EffectorConstants;
@@ -50,7 +49,7 @@ public class EndEffector extends SubsystemBase {
       ).onlyWhile(()->DriverStation.isEnabled())
       .beforeStarting(()->{m_intakeRunning=true;})
       .andThen(()->m_motor.setRelativePosition(0.1))
-      .finallyDo(()->m_intakeRunning=false);
+      .finallyDo(()->{m_motor.setSpeed(0); m_intakeRunning=false;});
     }
 
     public Command ExpelCommand(DoubleSupplier speed, BooleanSupplier extended){
