@@ -1,26 +1,23 @@
 package frc.robot.subsystems;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.stream.Collectors;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import frc.robot.Constants;
-import frc.robot.Constants.AutoConstants;
 import frc.robot.Constants.ScoreConstants;
 import frc.utils.VectorUtils;
 
 public class AutoCommands {
-    static public Command noop(){return new InstantCommand(()->{});};
+    static public Command noop(){return new InstantCommand(()->{});}; //noop
 
     // Helper functions for april tag selection on blue vs red alliance.
     static public int coralSourceLTag(){ return (DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == Alliance.Blue ? 13 : 1 ); }
@@ -54,7 +51,7 @@ public class AutoCommands {
         );
     }
 
-    public static Command GetCorral(){
+    public static Command GetCorral(){ // if anybody fixes the spelling i am quitting programming - Dean
         Pose2d target = PoseEstimator.getInstance().m_finalPose.nearest(new ArrayList<Pose2d>(){{
             Vision.getInstance().aprilTagFieldLayout.getTagPose(coralSourceLTag()).get().toPose2d();
             Vision.getInstance().aprilTagFieldLayout.getTagPose(coralSourceRTag()).get().toPose2d();
@@ -62,8 +59,8 @@ public class AutoCommands {
         return Commands.sequence(
             new InstantCommand(() -> Elevator.getInstance().setPosition(0)),
             new InstantCommand(() -> Arm.getInstance().setPosition(0)),
-            new InstantCommand(() -> PathPlanning.getInstance().navigateTo(target)),
-            Commands.waitUntil(() -> VectorUtils.isNear(PoseEstimator.getInstance().m_finalPose,PathPlanning.AprilTagAtDistance(coralSourceLTag(),0),Units.feetToMeters(2),Math.PI))
+            new InstantCommand(() -> PathPlanning.getInstance().navigateTo(target.plus(new Transform2d(0,Constants.kChassis.kWheelBase,new Rotation2d(Math.PI))))),
+            Commands.waitUntil(() -> VectorUtils.isNear(PoseEstimator.getInstance().m_finalPose,target.plus(new Transform2d(0,Constants.kChassis.kWheelBase/2,new Rotation2d(Math.PI))),Math.PI))
         );
     }
     
@@ -87,9 +84,9 @@ public class AutoCommands {
          * (Controller.m_scoreLeft ? 1 : -1)),new Rotation2d(0));
 
         return Commands.sequence(
-            new InstantCommand(() -> PathPlanning.getInstance().navigateTo(target)),
+            new InstantCommand(() -> PathPlanning.getInstance().navigateTo(target.plus(new Transform2d(0,Constants.kChassis.kWheelBase/2,new Rotation2d(Math.PI))))),
             Commands.waitUntil(() -> VectorUtils.isNear(PoseEstimator.getInstance().m_finalPose,target,Math.PI)),//.withTimeout(0.5),
-            new InstantCommand(() -> PathPlanning.getInstance().navigateTo(target.plus(transform)))
+            new InstantCommand(() -> PathPlanning.getInstance().navigateTo(target.plus(new Transform2d(0,Constants.kChassis.kWheelBase/2,new Rotation2d(Math.PI))).plus(transform)))
         );
     }
 }
