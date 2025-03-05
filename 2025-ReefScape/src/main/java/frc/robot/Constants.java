@@ -285,8 +285,8 @@ public final class Constants {
     public static boolean isChampionshipGame = NTBoolean.create(false, "isChampionshipGame", val -> {isChampionshipGame = val; Vision.getInstance().reloadFieldLayout();});
     // Method to get the current field layout path
     public static String getFieldLayoutPath() {
-      return Filesystem.getDeployDirectory() + "/" + 
-          (isChampionshipGame ? "2025-reefscape-welded.json" : "2025-reefscape-andymark.json");
+      return Filesystem.getDeployDirectory() + "/" + "2025-rosiecarpet.json";
+          //(isChampionshipGame ? "2025-reefscape-welded.json" : "2025-reefscape-andymark.json");
     }
 
     public static String kFieldLayout = getFieldLayoutPath();
@@ -301,8 +301,8 @@ public final class Constants {
       // TODO: Update Camera Positions
       public static final String kCameraName = "FrontCam";
 
-      public static double kCamYawLeft = Math.toRadians(NTDouble.create(0, "Vision/"+kCameraName+"/kCamYawLeft_deg", val->{kCamYawLeft=Math.toRadians(val); Vision.photonPoseEstimatorFront.setRobotToCameraTransform(kCameraToRobot().inverse());}));
-      public static double kCamPitchUp = Math.toRadians(NTDouble.create(15, "Vision/"+kCameraName+"/kCamPitchUp_deg", val->{kCamPitchUp=Math.toRadians(val); Vision.photonPoseEstimatorFront.setRobotToCameraTransform(kCameraToRobot().inverse());}));
+      public static double kCamYawRight = Math.toRadians(NTDouble.create(15, "Vision/"+kCameraName+"/kCamYawRight_deg", val->{kCamYawRight=Math.toRadians(val); Vision.photonPoseEstimatorFront.setRobotToCameraTransform(kCameraToRobot().inverse());}));
+      public static double kCamPitchUp = Math.toRadians(NTDouble.create(0, "Vision/"+kCameraName+"/kCamPitchUp_deg", val->{kCamPitchUp=Math.toRadians(val); Vision.photonPoseEstimatorFront.setRobotToCameraTransform(kCameraToRobot().inverse());}));
       public static double kCamDiagFOV = Math.toRadians(NTDouble.create(77.2, "Vision/"+kCameraName+"/kCamDiagFOV_deg", val->{kCamDiagFOV=Math.toRadians(val); Vision.photonPoseEstimatorFront.setRobotToCameraTransform(kCameraToRobot().inverse());}));
       public static double kCamForwardOffset = Units.inchesToMeters(NTDouble.create(-2, "Vision/"+kCameraName+"/kCamForwardOffset_in", val->{kCamForwardOffset=Units.inchesToMeters(val); Vision.photonPoseEstimatorFront.setRobotToCameraTransform(kCameraToRobot().inverse());}));
       public static double kCamLeftOffset = Units.inchesToMeters(NTDouble.create(-11.5, "Vision/"+kCameraName+"/kCamLeftOffset_in", val->{kCamLeftOffset=Units.inchesToMeters(val); Vision.photonPoseEstimatorFront.setRobotToCameraTransform(kCameraToRobot().inverse());}));
@@ -319,7 +319,7 @@ public final class Constants {
             -kCamLeftOffset,
             -kCamHeightOffGround
           ),
-          new Rotation3d(0.0, kCamPitchUp, kCamYawLeft)
+          new Rotation3d(0.0, kCamPitchUp, kCamYawRight)
         );
       }
     }
@@ -327,7 +327,7 @@ public final class Constants {
     public static class rearCamera{
       public static final String kCameraName = "RearCam";
     
-      public static double kCamYawLeft = Math.toRadians(NTDouble.create(180, "Vision/"+kCameraName+"/kCamYawLeft_deg", val->{kCamYawLeft=Math.toRadians(val); Vision.photonPoseEstimatorRear.setRobotToCameraTransform(kCameraToRobot().inverse());}));
+      public static double kCamYawRight = Math.toRadians(NTDouble.create(180, "Vision/"+kCameraName+"/kCamYawRight_deg", val->{kCamYawRight=Math.toRadians(val); Vision.photonPoseEstimatorRear.setRobotToCameraTransform(kCameraToRobot().inverse());}));
       public static double kCamPitchUp = Math.toRadians(NTDouble.create(-35, "Vision/"+kCameraName+"/kCamPitchUp_deg", val->{kCamPitchUp=Math.toRadians(val); Vision.photonPoseEstimatorRear.setRobotToCameraTransform(kCameraToRobot().inverse());}));
       public static double kCamDiagFOV = Math.toRadians(NTDouble.create(76.06, "Vision/"+kCameraName+"/kCamDiagFOV_deg", val->{kCamDiagFOV=Math.toRadians(val); Vision.photonPoseEstimatorRear.setRobotToCameraTransform(kCameraToRobot().inverse());}));
       public static double kCamForwardOffset = Units.inchesToMeters(NTDouble.create(-6, "Vision/"+kCameraName+"/kCamForwardOffset_in", val->{kCamForwardOffset=Units.inchesToMeters(val); Vision.photonPoseEstimatorRear.setRobotToCameraTransform(kCameraToRobot().inverse());}));
@@ -345,7 +345,7 @@ public final class Constants {
             -kCamLeftOffset,
             -kCamHeightOffGround
           ),
-          new Rotation3d(0.0, kCamPitchUp, kCamYawLeft)
+          new Rotation3d(0.0, kCamPitchUp, kCamYawRight)
         );
       }
     }

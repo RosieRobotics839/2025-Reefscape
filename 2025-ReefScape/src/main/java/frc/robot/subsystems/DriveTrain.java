@@ -248,6 +248,15 @@ public class DriveTrain extends SubsystemBase {
     return m_targetHeading;
   }
 
+  public void clearAutoTraj() {
+    if (isStopped()) {
+      // Clear the trajectory visualization
+      PoseEstimator.getInstance().m_field.getObject("AutoTraj").setPoses(
+        List.of(PoseEstimator.getInstance().m_finalPose)
+      );
+    }
+  }
+
   Boolean m_motorSetupDone = false;
   boolean testBool = true;
   @Override
@@ -280,6 +289,11 @@ public class DriveTrain extends SubsystemBase {
     if (m_controllerInputActive){
       m_poseQueue.clear();
       PublishPoseQueue();
+    }
+
+    // If stopped, clear the trajectory visualization
+    if (isStopped() && m_poseQueue.isEmpty()) {
+      clearAutoTraj();
     }
 
     // Reset drive inputs if Robot becomes disabled. Must be last change before RunDrive();
