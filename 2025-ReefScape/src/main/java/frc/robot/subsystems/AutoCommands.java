@@ -1,5 +1,7 @@
 package frc.robot.subsystems;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.stream.Collectors;
 
 import edu.wpi.first.math.geometry.Pose2d;
@@ -14,6 +16,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import frc.robot.Constants;
 import frc.robot.Constants.AutoConstants;
+import frc.robot.Constants.ScoreConstants;
 import frc.utils.VectorUtils;
 
 public class AutoCommands {
@@ -51,24 +54,23 @@ public class AutoCommands {
         );
     }
 
-    public static Command GetCorral(){ // Only written for the leftmost coral source, and all values need to be thouroughly checked and tested
+    public static Command GetCorral(){
+        Pose2d target = PoseEstimator.getInstance().m_finalPose.nearest(new ArrayList<Pose2d>(){{
+            Vision.getInstance().aprilTagFieldLayout.getTagPose(coralSourceLTag()).get().toPose2d();
+            Vision.getInstance().aprilTagFieldLayout.getTagPose(coralSourceRTag()).get().toPose2d();
+        }});
         return Commands.sequence(
             new InstantCommand(() -> Elevator.getInstance().setPosition(0)),
             new InstantCommand(() -> Arm.getInstance().setPosition(0)),
-            new InstantCommand(() -> Autonomous.getInstance().aimAtPoint(PathPlanning.AprilTagAtDistance(coralSourceLTag(), 0),Units.degreesToRadians(180))),
-            new InstantCommand(() -> PathPlanning.getInstance().navigateTo(new Pose2d(
-                                        PathPlanning.AprilTagAtDistance( coralSourceLTag(), AutoConstants.kSourceLDistance).getTranslation(),
-                                        new Rotation2d(Units.degreesToRadians(270))
-                                    ))
-                                ),
+            new InstantCommand(() -> PathPlanning.getInstance().navigateTo(target)),
             Commands.waitUntil(() -> VectorUtils.isNear(PoseEstimator.getInstance().m_finalPose,PathPlanning.AprilTagAtDistance(coralSourceLTag(),0),Units.feetToMeters(2),Math.PI))
         );
     }
     
-    public static Command Score(double heightin, double anglerad){
+    public static Command Score(ScoreConstants.ScoreLevel level){
         return Commands.sequence(
-            new InstantCommand(() -> Elevator.getInstance().setPosition(heightin)),
-            new InstantCommand(() -> Arm.getInstance().setPosition(anglerad)),
+            new InstantCommand(() -> Elevator.getInstance().moveToLevelCommand(()->level)),
+            new InstantCommand(() -> Arm.getInstance().moveToLevelCommand(()->level)),
             // TODO: Fix this expel command
             EndEffector.getInstance().ExpelCommand(()->2.0,()->false),
             new InstantCommand(() -> Elevator.getInstance().setPosition(Constants.ElevatorConstants.kMinHeight)),
@@ -81,7 +83,6 @@ public class AutoCommands {
             (Vision.getInstance().aprilTagFieldLayout.getTags()
             .stream().map(tag -> tag.pose.toPose2d()).collect(Collectors.toList())); // Hopefully this is readable
 
-        if (Controller.m_scoreLeft != true && Controller.m_scoreLeft != false) return noop(); // Incase the button is hit before switch is moved
         Transform2d transform = new Transform2d(new Translation2d(0,Constants.AutoConstants.kReefOffset
          * (Controller.m_scoreLeft ? 1 : -1)),new Rotation2d(0));
 

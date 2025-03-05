@@ -371,8 +371,7 @@ public final class Constants {
     public static double kSpeakerMaxAngle = Units.degreesToRadians(NTDouble.create(38, "Autonomous/kSpeakerMaxAngle", val -> kSpeakerMaxAngle = Units.degreesToRadians(val)));
     public static double kAmpDistance = Units.feetToMeters(NTDouble.create(0.4, "Autonomous/kAmpDistance", val -> kAmpDistance = Units.feetToMeters(val)));
     public static double kAmpDistanceInitial = Units.feetToMeters(NTDouble.create(2.5, "Autonomous/kAmpDistanceInitial", val -> kAmpDistanceInitial = Units.feetToMeters(val)));
-    public static double kSourceLDistance = Units.feetToMeters(NTDouble.create(4, "Autonomous/kSourceLDistance", val -> kSourceLDistance = Units.feetToMeters(val)));
-    public static double kSourceRDistance = Units.feetToMeters(NTDouble.create(4, "Autonomous/kSourceRDistance", val -> kSourceRDistance = Units.feetToMeters(val)));
+    public static double kSourceDistance = Units.feetToMeters(NTDouble.create(4, "Autonomous/kSourceLDistance", val -> kSourceDistance = Units.feetToMeters(val)));
     public static double kNoteNearDistance = Units.feetToMeters(NTDouble.create(5, "Autonomous/kNoteNearDistance", val -> kNoteNearDistance = Units.feetToMeters(val)));
     public static double kNoteDistance = Units.feetToMeters(NTDouble.create(1.9, "Autonomous/kNoteDistance", val -> kNoteDistance = Units.feetToMeters(val)));
     public static double kaimNoteGain = NTDouble.create(0.05,"Auto/kAimNoteGain",val->kaimNoteGain=val);
