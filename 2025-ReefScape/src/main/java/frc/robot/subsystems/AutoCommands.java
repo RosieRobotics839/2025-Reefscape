@@ -7,12 +7,14 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import frc.robot.Constants;
+import frc.robot.Constants.AutoConstants;
 import frc.robot.Constants.ScoreConstants;
 import frc.utils.VectorUtils;
 
@@ -51,27 +53,46 @@ public class AutoCommands {
         );
     }
 
-    public static Command GetCorral(){ // if anybody fixes the spelling i am quitting programming - Dean
-        Pose2d target = PoseEstimator.getInstance().m_finalPose.nearest(new ArrayList<Pose2d>(){{
-            Vision.getInstance().aprilTagFieldLayout.getTagPose(coralSourceLTag()).get().toPose2d();
-            Vision.getInstance().aprilTagFieldLayout.getTagPose(coralSourceRTag()).get().toPose2d();
-        }});
+    public static Command GetCoral(){ // "if anybody fixes the spelling i am NOT quitting programming :)" - Dean.
+                                      // "Either you run the day, or the day runs you" - Dean.
+                                      // "Change your thoughts and you change your world" - Dean.
+        ArrayList<Integer> tagIds = new ArrayList<Integer>();
+        { 
+            tagIds.add(coralSourceRTag());
+            tagIds.add(coralSourceLTag());
+        }
+        
+        ArrayList<Pose2d> tags = tagIds.stream().map(id->Vision.getInstance().aprilTagFieldLayout.getTagPose(id).get().toPose2d()).collect(Collectors.toCollection(ArrayList::new));
+        
+        Pose2d target = PoseEstimator.getInstance().m_finalPose.nearest(tags);
+        int tagId = tagIds.get(tags.indexOf(target));
+        
         return Commands.sequence(
             new InstantCommand(() -> Elevator.getInstance().setPosition(0)),
             new InstantCommand(() -> Arm.getInstance().setPosition(0)),
-            new InstantCommand(() -> PathPlanning.getInstance().navigateTo(target.plus(new Transform2d(0,Constants.kChassis.kWheelBase,new Rotation2d(Math.PI))))),
-            Commands.waitUntil(() -> VectorUtils.isNear(PoseEstimator.getInstance().m_finalPose,target.plus(new Transform2d(0,Constants.kChassis.kWheelBase/2,new Rotation2d(Math.PI))),Math.PI))
-        );
+            Commands.sequence(
+                new InstantCommand(() -> PathPlanning.getInstance().navigateTo(PathPlanning.AprilTagAtDistance(tagId,AutoConstants.kSourceDistance*1.5+Constants.kChassis.kWheelBase/2.0, Math.PI))),
+                new InstantCommand(() -> PathPlanning.getInstance().navigateTo(PathPlanning.AprilTagAtDistance(tagId,AutoConstants.kSourceDistance+Constants.kChassis.kWheelBase/2.0, Math.PI))),
+                Commands.waitUntil(() -> VectorUtils.isNear(PoseEstimator.getInstance().m_finalPose,PathPlanning.AprilTagAtDistance(tagId,AutoConstants.kSourceDistance), AutoConstants.kSourceNearDistance)),
+                Commands.waitSeconds(2),
+                wiggle.asProxy().alongWith(EndEffector.getInstance().IntakeCommand().asProxy()).withTimeout(5)
+            ).repeatedly().handleInterrupt(()->DriveTrain.getInstance().m_poseQueue.clear())
+        ).until(()->EndEffector.getInstance().hasGamePiece());
     }
-    
+    public static Command wiggle = Commands.sequence(
+        Commands.waitSeconds(0.1),
+        new InstantCommand(()->DriveTrain.getInstance().m_targetHeading += Units.degreesToRadians(10)),
+        Commands.waitSeconds(0.1),
+        new InstantCommand(()->DriveTrain.getInstance().m_targetHeading -= Units.degreesToRadians(20)),
+        Commands.waitSeconds(0.1),
+        new InstantCommand(()->DriveTrain.getInstance().m_targetHeading += Units.degreesToRadians(10))
+    ).repeatedly().until(()->EndEffector.getInstance().hasGamePiece());
+
     public static Command Score(ScoreConstants.ScoreLevel level){
         return Commands.sequence(
             new InstantCommand(() -> Elevator.getInstance().moveToLevelCommand(()->level)),
             new InstantCommand(() -> Arm.getInstance().moveToLevelCommand(()->level)),
-            // TODO: Fix this expel command
-            EndEffector.getInstance().ExpelCommand(()->2.0,()->false),
-            new InstantCommand(() -> Elevator.getInstance().setPosition(Constants.ElevatorConstants.kMinHeight)),
-            new InstantCommand(() -> Arm.getInstance().setPosition(0))
+            Controller.accessoryButtons.m_expel.asProxy()
         );
     }
 

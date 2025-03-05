@@ -59,10 +59,7 @@ public class Robot extends TimedRobot {
   private Debouncer m_recording = new Debouncer(10, Debouncer.DebounceType.kFalling);
   private Action m_recordTrigger = new Action(false).onTrue(()->DataLogManager.start()).onFalse(()->DataLogManager.stop());
 
-  private static final String kDefaultAuto = "Default";
-  private static final String kCustomAuto = "My Auto";
   private String m_autoSelected;
-  private final SendableChooser<String> m_chooser = new SendableChooser<>();
 
   /**
    * This function is run when the robot is first started up and should be used for any
@@ -70,9 +67,6 @@ public class Robot extends TimedRobot {
    */
   public Robot() {
     addPeriodic(()->Controller.getAccessoryInstance().accessoryPeriodic(),0.020,0.010);
-    m_chooser.setDefaultOption("Default Auto", kDefaultAuto);
-    m_chooser.addOption("My Auto", kCustomAuto);
-    SmartDashboard.putData("Auto choices", m_chooser);
   }
 
   /**
@@ -115,6 +109,12 @@ public class Robot extends TimedRobot {
   
   }
 
+  String[] autoArray = {"Do Nothing"
+  , "Get Coral"
+  , "Build Your Own A(uto)dventure"};
+
+  {SmartDashboard.putStringArray("Auto List", autoArray);}
+
   /**
    * This autonomous (along with the chooser code above) shows how to select between different
    * autonomous modes using the dashboard. The sendable chooser code works with the Java
@@ -127,24 +127,21 @@ public class Robot extends TimedRobot {
    */
   @Override
   public void autonomousInit() {
-    m_autoSelected = m_chooser.getSelected();
-    // m_autoSelected = SmartDashboard.getString("Auto Selector", kDefaultAuto);
-    System.out.println("Auto selected: " + m_autoSelected);
-    AutoCommands.ReefOffset().schedule();
+
+    switch(SmartDashboard.getString("Auto Selector", "Get Coral")) {
+      case "Get Coral":
+        m_autonomousCommand = AutoCommands.GetCoral();
+        break;
+      case "Build Your Own A(uto)dventure":
+        m_autonomousCommand = Dashboard.getInstance().BuildYourOwnAutoCommands();
+        break;
+   }
+    CommandScheduler.getInstance().schedule(m_autonomousCommand);
   }
 
   /** This function is called periodically during autonomous. */
   @Override
   public void autonomousPeriodic() {
-    switch (m_autoSelected) {
-      case kCustomAuto:
-        // Put custom auto code here
-        break;
-      case kDefaultAuto:
-      default:
-        // Put default auto code here
-        break;
-    }
   }
 
   /** This function is called once when teleop is enabled. */
@@ -165,7 +162,10 @@ public class Robot extends TimedRobot {
 
   /** This function is called once when the robot is disabled. */
   @Override
-  public void disabledInit() {}
+  public void disabledInit() {
+    DriveTrain.getInstance().m_poseQueue.clear();
+    Autonomous.getInstance().stopAiming();
+  }
 
   /** This function is called periodically when disabled. */
   @Override

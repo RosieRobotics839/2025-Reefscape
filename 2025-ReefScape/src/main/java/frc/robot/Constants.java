@@ -298,20 +298,19 @@ public final class Constants {
 
     // Simulated Vision System
     public static class frontCamera{
-      // TODO: Update Camera Positions
       public static final String kCameraName = "FrontCam";
 
       public static double kCamYawRight = Math.toRadians(NTDouble.create(15, "Vision/"+kCameraName+"/kCamYawRight_deg", val->{kCamYawRight=Math.toRadians(val); Vision.photonPoseEstimatorFront.setRobotToCameraTransform(kCameraToRobot().inverse());}));
       public static double kCamPitchUp = Math.toRadians(NTDouble.create(0, "Vision/"+kCameraName+"/kCamPitchUp_deg", val->{kCamPitchUp=Math.toRadians(val); Vision.photonPoseEstimatorFront.setRobotToCameraTransform(kCameraToRobot().inverse());}));
       public static double kCamDiagFOV = Math.toRadians(NTDouble.create(77.2, "Vision/"+kCameraName+"/kCamDiagFOV_deg", val->{kCamDiagFOV=Math.toRadians(val); Vision.photonPoseEstimatorFront.setRobotToCameraTransform(kCameraToRobot().inverse());}));
-      public static double kCamForwardOffset = Units.inchesToMeters(NTDouble.create(-2, "Vision/"+kCameraName+"/kCamForwardOffset_in", val->{kCamForwardOffset=Units.inchesToMeters(val); Vision.photonPoseEstimatorFront.setRobotToCameraTransform(kCameraToRobot().inverse());}));
-      public static double kCamLeftOffset = Units.inchesToMeters(NTDouble.create(-11.5, "Vision/"+kCameraName+"/kCamLeftOffset_in", val->{kCamLeftOffset=Units.inchesToMeters(val); Vision.photonPoseEstimatorFront.setRobotToCameraTransform(kCameraToRobot().inverse());}));
+      public static double kCamForwardOffset = Units.inchesToMeters(NTDouble.create(6.875, "Vision/"+kCameraName+"/kCamForwardOffset_in", val->{kCamForwardOffset=Units.inchesToMeters(val); Vision.photonPoseEstimatorFront.setRobotToCameraTransform(kCameraToRobot().inverse());}));
+      public static double kCamLeftOffset = Units.inchesToMeters(NTDouble.create(7.375, "Vision/"+kCameraName+"/kCamLeftOffset_in", val->{kCamLeftOffset=Units.inchesToMeters(val); Vision.photonPoseEstimatorFront.setRobotToCameraTransform(kCameraToRobot().inverse());}));
 
       public static double kSimMaxLEDRange = 20; // meters
       public static int    kSimCamResolutionW = 1280; // pixels
       public static int    kSimCamResolutionH = 720; // pixels
       
-      public static double kCamHeightOffGround = Units.inchesToMeters(18.375);
+      public static double kCamHeightOffGround = Units.inchesToMeters(18.0);
       public static Transform3d kCameraToRobot(){
         return new Transform3d(
           new Translation3d(
@@ -328,7 +327,7 @@ public final class Constants {
       public static final String kCameraName = "RearCam";
     
       public static double kCamYawRight = Math.toRadians(NTDouble.create(180, "Vision/"+kCameraName+"/kCamYawRight_deg", val->{kCamYawRight=Math.toRadians(val); Vision.photonPoseEstimatorRear.setRobotToCameraTransform(kCameraToRobot().inverse());}));
-      public static double kCamPitchUp = Math.toRadians(NTDouble.create(0, "Vision/"+kCameraName+"/kCamPitchUp_deg", val->{kCamPitchUp=Math.toRadians(val); Vision.photonPoseEstimatorRear.setRobotToCameraTransform(kCameraToRobot().inverse());}));
+      public static double kCamPitchUp = Math.toRadians(NTDouble.create(-5, "Vision/"+kCameraName+"/kCamPitchUp_deg", val->{kCamPitchUp=Math.toRadians(val); Vision.photonPoseEstimatorRear.setRobotToCameraTransform(kCameraToRobot().inverse());}));
       public static double kCamDiagFOV = Math.toRadians(NTDouble.create(76.06, "Vision/"+kCameraName+"/kCamDiagFOV_deg", val->{kCamDiagFOV=Math.toRadians(val); Vision.photonPoseEstimatorRear.setRobotToCameraTransform(kCameraToRobot().inverse());}));
       public static double kCamForwardOffset = Units.inchesToMeters(NTDouble.create(0, "Vision/"+kCameraName+"/kCamForwardOffset_in", val->{kCamForwardOffset=Units.inchesToMeters(val); Vision.photonPoseEstimatorRear.setRobotToCameraTransform(kCameraToRobot().inverse());}));
       public static double kCamRightOffset = Units.inchesToMeters(NTDouble.create(2, "Vision/"+kCameraName+"/kCamLeftOffset_in", val->{kCamRightOffset=Units.inchesToMeters(val); Vision.photonPoseEstimatorRear.setRobotToCameraTransform(kCameraToRobot().inverse());}));
@@ -337,7 +336,7 @@ public final class Constants {
       public static int    kSimCamResolutionW = 1280; // pixels
       public static int    kSimCamResolutionH = 720; // pixels
       
-      public static double kCamHeightOffGround = Units.inchesToMeters(7);
+      public static double kCamHeightOffGround = Units.inchesToMeters(41);
       public static Transform3d kCameraToRobot(){
         return new Transform3d(
           new Translation3d(
@@ -384,15 +383,9 @@ public final class Constants {
   
   public static class AutoConstants {
 
-    public static double kSpeakerNearDistance = Units.feetToMeters(NTDouble.create(6.5, "Autonomous/kSpeakerNearDistance", val -> kSpeakerNearDistance = Units.feetToMeters(val)));
-    public static double kSpeakerDistance = Units.feetToMeters(NTDouble.create(6, "Autonomous/kSpeakerDistance", val -> kSpeakerDistance = Units.feetToMeters(val)));
-    public static double kSpeakerMaxAngle = Units.degreesToRadians(NTDouble.create(38, "Autonomous/kSpeakerMaxAngle", val -> kSpeakerMaxAngle = Units.degreesToRadians(val)));
-    public static double kAmpDistance = Units.feetToMeters(NTDouble.create(0.4, "Autonomous/kAmpDistance", val -> kAmpDistance = Units.feetToMeters(val)));
-    public static double kAmpDistanceInitial = Units.feetToMeters(NTDouble.create(2.5, "Autonomous/kAmpDistanceInitial", val -> kAmpDistanceInitial = Units.feetToMeters(val)));
-    public static double kSourceDistance = Units.feetToMeters(NTDouble.create(4, "Autonomous/kSourceLDistance", val -> kSourceDistance = Units.feetToMeters(val)));
-    public static double kNoteNearDistance = Units.feetToMeters(NTDouble.create(5, "Autonomous/kNoteNearDistance", val -> kNoteNearDistance = Units.feetToMeters(val)));
-    public static double kNoteDistance = Units.feetToMeters(NTDouble.create(1.9, "Autonomous/kNoteDistance", val -> kNoteDistance = Units.feetToMeters(val)));
-    public static double kaimNoteGain = NTDouble.create(0.05,"Auto/kAimNoteGain",val->kaimNoteGain=val);
+    public static double kReefTolerance = Units.inchesToMeters(NTDouble.create(1.0, "Autonomous/kReefToleranceInch", val -> kReefTolerance = Units.inchesToMeters(val)));
+    public static double kSourceNearDistance = Units.inchesToMeters(NTDouble.create(2.0, "Autonomous/kSourceNearDistanceInch", val -> kSourceNearDistance = Units.inchesToMeters(val)));
+    public static double kSourceDistance = Units.inchesToMeters(NTDouble.create(6, "Autonomous/kSourceLDistanceInch", val -> kSourceDistance = Units.inchesToMeters(val)));
     public static double kReefOffset = Units.inchesToMeters(NTDouble.create(7,"Autonomous/kReefOffset",val -> kReefOffset = Units.inchesToMeters(7)));
     public static double kTroughClearance = NTDouble.create(2, "Autonomous/kTroughClearance", val -> kTroughClearance = Units.inchesToMeters(2));
     
@@ -448,11 +441,11 @@ public final class Constants {
       public static double kMaxSpeed = Units.feetToMeters(NTDouble.create(4, "DriveConstants/MaxSpeed",val -> DriveTrain.getInstance().setMaxSpeed(Units.feetToMeters(val))));
       public static boolean kAutoTurnToBestTag = NTBoolean.create(false,"DriveConstants/kAuto/TurnToBestTag",val->kAutoTurnToBestTag=val);
       public static double kAutoMaxSpeed = Units.feetToMeters(NTDouble.create(8,"DriveConstants/kAuto/MaxSpeedFPS", val->kAutoMaxSpeed = Units.feetToMeters(val)));
-      public static double kAutoMinSpeed = Units.feetToMeters(NTDouble.create(1.25,"DriveConstants/kAuto/MinSpeedFPS", val->kAutoMinSpeed = Units.feetToMeters(val)));
+      public static double kAutoMinSpeed = Units.feetToMeters(NTDouble.create(1,"DriveConstants/kAuto/MinSpeedFPS", val->kAutoMinSpeed = Units.feetToMeters(val)));
       public static double kAutoAccelLimiter = Units.feetToMeters(NTDouble.create(8,"DriveConstants/kAuto/AccelLimiterFPS2", val->DriveTrain.getInstance().m_autoAccelLimiter = new SlewRateLimiter(Units.feetToMeters(val),-1E9,DriveTrain.getInstance().m_autoSpeed)));
       public static double kAutoMaxRotSpeed = Units.degreesToRadians(NTDouble.create(120,"DriveConstants/kAuto/MaxRotSpeedDPS", val->kAutoMaxRotSpeed = Units.degreesToRadians(val)));
       public static double kAutoTurnToPoseDistance = Units.feetToMeters(NTDouble.create(10, "DriveConstants/kAuto/TurnToPoseDistanceFt", val->kAutoTurnToPoseDistance = Units.feetToMeters(val)));
-      public static double kAutoSlowDist = Units.feetToMeters(NTDouble.create(4,"DriveConstants/kAuto/SlowDistFt",val->kAutoSlowDist=Units.feetToMeters(val)));
+      public static double kAutoSlowDist = Units.feetToMeters(NTDouble.create(3,"DriveConstants/kAuto/SlowDistFt",val->kAutoSlowDist=Units.feetToMeters(val)));
       public static double kAutoToleranceDistance = Units.feetToMeters(NTDouble.create(0.15,"DriveConstants/kAuto/ToleranceDistance",val->kAutoToleranceDistance=Units.feetToMeters(val)));
       public static double kAutoToleranceAngle = Units.degreesToRadians(NTDouble.create(2,"DriveConstants/kAuto/ToleranceAngle",val->kAutoToleranceAngle=Units.degreesToRadians(val)));
 

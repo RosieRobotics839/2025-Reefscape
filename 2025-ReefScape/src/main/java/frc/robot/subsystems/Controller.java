@@ -125,7 +125,7 @@ public class Controller extends XboxController {
     }
 
     ScoreConstants.ScoreLevel m_level;
-    Command m_expel = EndEffector.getInstance().ExpelCommand(()->(m_level == ScoreLevel.TROUGH ? EffectorConstants.kTroughOuttakeSpeed : EffectorConstants.kOuttakeSpeed), ()->m_level==ScoreLevel.TROUGH);
+    public Command m_expel = EndEffector.getInstance().ExpelCommand(()->(m_level == ScoreLevel.TROUGH ? EffectorConstants.kTroughOuttakeSpeed : EffectorConstants.kOuttakeSpeed), ()->m_level==ScoreLevel.TROUGH);
       
     ScoreConstants.GamePieceSelected m_pieceSelected;
 
@@ -181,7 +181,7 @@ public class Controller extends XboxController {
 
       /* Intake and Outtake Command Sequences */
       Intake.toggleOnTrue(
-        EndEffector.getInstance().IntakeCommand
+        EndEffector.getInstance().IntakeCommand()
       );
 
       Outtake.onTrue(

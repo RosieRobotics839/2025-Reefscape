@@ -149,7 +149,6 @@ public class DriveTrain extends SubsystemBase {
       Twist2d movement;
       if (VectorUtils.isNear(PoseEstimator.getInstance().m_finalPose, m_poseQueue.peek(), (m_poseQueue.size() > 1 ? DriveConstants.kMidPointAccuracyFactor : 1) * DriveConstants.kAutoToleranceDistance, (m_poseQueue.size() > 1 ? DriveConstants.kMidPointAccuracyFactor : 1) * DriveConstants.kAutoToleranceAngle)){
         // Reached Target Pose
-        PublishPoseQueue();
         m_poseQueue.poll();
         movement = new Twist2d(0,0,0);
         Drive(movement);
@@ -222,6 +221,7 @@ public class DriveTrain extends SubsystemBase {
       rearRight.setState(swerveModuleStates[3]);
     }
     
+    PublishPoseQueue();
     /* Update drive commands on network tables */
     nt_forward.set(m_forward);
     nt_left.set(m_left);

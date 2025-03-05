@@ -9,6 +9,7 @@ import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.AnalogInput;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -17,6 +18,7 @@ import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.util.Units;
 import frc.robot.Constants.kDriveTrain.DriveConstants;
 import frc.robot.Constants.kDriveTrain.kSwerveModule;
+import frc.robot.Robot;
 import frc.utils.FirstOrderLag;
 import frc.utils.Motor;
 import frc.utils.NTValues.NTDouble;
@@ -69,6 +71,7 @@ public class SwerveModule extends SubsystemBase {
         .inverted(false)
         .idleBrake(true)
         .withStatorLimit((int)kSwerveModule.kDrivingMotorCurrentLimit)
+        .withSlowSpeedControl((Robot.isSimulation() ? false : true))
         .withGearRatio(kSwerveModule.kDriveMotorGearReduction)
         .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
         .pidf(kSwerveModule.kDriveKp, kSwerveModule.kDriveKi, kSwerveModule.kDriveKd, kSwerveModule.kDriveKff, Motor.GainSlot.SPEED)

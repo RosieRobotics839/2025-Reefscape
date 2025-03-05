@@ -231,5 +231,9 @@ public class PathPlanning {
       Pose2d tagLocation = Vision.getInstance().aprilTagFieldLayout.getTagPose(id).get().toPose2d();
       return tagLocation.plus(new Transform2d(distance,0,new Rotation2d(Math.PI)));
     }
+    public static Pose2d AprilTagAtDistance(int id, double distance, double radians) {
+        Pose2d tagLocation = Vision.getInstance().aprilTagFieldLayout.getTagPose(id).get().toPose2d().plus(new Transform2d(distance,0,new Rotation2d(Math.PI)));
+        return new Pose2d(tagLocation.getTranslation(),new Rotation2d(tagLocation.getRotation().getRadians()+radians));
+      }
 
 }

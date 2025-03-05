@@ -7,6 +7,7 @@ import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.DigitalInput;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
@@ -42,20 +43,23 @@ public class EndEffector extends SubsystemBase {
       return m_hasGamePiece;
     }
 
-    Command IntakeCommand = Commands.sequence(
-      Commands.waitUntil(() -> {return m_motor.setSpeed(EffectorConstants.kIntakeSpeed);}), //Sets speed to intake game piece
-      Commands.waitUntil(() -> {return hasGamePiece();}), //Checking whether we have a game piece or not.
-      new InstantCommand(() -> m_motor.setRelativePosition(0.1))
-    )
-    .beforeStarting(()->m_intakeRunning=true)
-    .finallyDo(()->{m_motor.setSpeed(0); m_intakeRunning=false;});
+    public Command IntakeCommand(){
+      return Commands.sequence(
+        Commands.waitUntil(() -> {return m_motor.setSpeed(EffectorConstants.kIntakeSpeed);}), //Sets speed to intake game piece
+        Commands.waitUntil(() -> {return hasGamePiece();}) //Checking whether we have a game piece or not.
+      ).onlyWhile(()->DriverStation.isEnabled())
+      .beforeStarting(()->{m_intakeRunning=true;})
+      .andThen(()->m_motor.setRelativePosition(0.1))
+      .finallyDo(()->m_intakeRunning=false);
+    }
 
     public Command ExpelCommand(DoubleSupplier speed, BooleanSupplier extended){
       return Commands.sequence( //Outtake for those who don't know
         Commands.waitUntil(() -> {return m_motor.setSpeed((m_hasCoral ? 1 : -1) * speed.getAsDouble());}), // If we have the coral ( ? ) then forward, anything else backward.
         Commands.waitUntil(() -> {return !hasGamePiece();}), //Checking whether we have a game piece or not.
         Commands.waitSeconds(3).onlyIf(extended)
-      ).beforeStarting(()->m_intakeRunning=false)
+      ).onlyWhile(()->DriverStation.isEnabled())
+      .beforeStarting(()->m_intakeRunning=false)
       .finallyDo(()->m_motor.setSpeed(0));
     };
 
@@ -72,7 +76,7 @@ public class EndEffector extends SubsystemBase {
     }
 
     public DigitalInput m_beamBreak = new DigitalInput(EffectorConstants.kBeamBreakPin);
-    public NTBoolean m_beamBreakTestSensor = (Robot.isReal() ? null : new NTBoolean(true, table, "Effector/BeamBreakTestInput", (val)->{}));
+    public NTBoolean m_beamBreakTestSensor = (Robot.isReal() ? null : new NTBoolean(false, table, "Effector/BeamBreakTestInput", (val)->{}));
     public NTBoolean nt_beamBroken = new NTBoolean(false, table, "Effector/beamBroken", (val) -> {});
     public NTBoolean nt_hasGamePiece = new NTBoolean(false, table, "Effector/hasGamePiece", (val) -> {});
     public NTBoolean nt_hasCoral = new NTBoolean(false, table, "Effector/hasCoral", (val) -> {});
@@ -82,7 +86,7 @@ public class EndEffector extends SubsystemBase {
 
     boolean beam_trigger = !m_beamBroken;
     if (m_beamBreakTestSensor != null){
-      m_beamBroken = m_beamDebouncer.calculate(!m_beamBreakTestSensor.get());
+      m_beamBroken = m_beamDebouncer.calculate(m_beamBreakTestSensor.get());
     } else {
       m_beamBroken = m_beamDebouncer.calculate(!m_beamBreak.get());
     }
