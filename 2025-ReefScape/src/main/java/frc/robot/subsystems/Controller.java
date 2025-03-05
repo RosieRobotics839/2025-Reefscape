@@ -39,6 +39,7 @@ public class Controller extends XboxController {
   public double Ry, Rx, Ry_pre, Rx_pre;
   public boolean m_directElevator = false;
   public boolean m_directArm = false;
+  public static boolean m_scoreLeft;
 
   public static Integer speedSelect = DriveConstants.kMaxSpeedDefault;
 
@@ -110,6 +111,7 @@ public class Controller extends XboxController {
   static NTDouble nt_yStickXAxis = new NTDouble(0,table,"Accessory/yStickXAxis",(val)->{});
   static NTDouble nt_rStickYAxis = new NTDouble(0,table,"Accessory/rStickYAxis",(val)->{});
   static NTDouble nt_yStickYAxis = new NTDouble(0,table,"Accessory/yStickYAxis",(val)->{});
+  static NTBoolean nt_scoreLeft = new NTBoolean(true,table,"scoreleft",(val)->{});
 
   public static class AccessoryButtons {
     public JoystickButton Intake, Outtake, ClimberIn, ClimberOut, GMPCS, StageDial0, StageDial1, StageDial2, StageDial3, StageDial4, LeftScore, RightScore, RS, Home;
@@ -237,12 +239,12 @@ public class Controller extends XboxController {
 
       LeftScore.onTrue(
         Commands.sequence(
-          // TODO: Sequence Commands once branches tested and merged
+          new InstantCommand(()->m_scoreLeft = true)
         )
       );
       RightScore.onTrue(
         Commands.sequence(
-          // TODO: Sequence Commands once branches tested and merged
+          new InstantCommand(()->m_scoreLeft = false)
         )
       );
 
@@ -317,5 +319,6 @@ public class Controller extends XboxController {
 
     nt_yStickXAxis.set(Lx);
     nt_yStickYAxis.set(Ly);
+    nt_scoreLeft.set(m_scoreLeft);
   }
 }

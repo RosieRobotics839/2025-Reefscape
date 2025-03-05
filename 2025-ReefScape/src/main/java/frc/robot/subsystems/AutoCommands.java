@@ -1,20 +1,23 @@
 package frc.robot.subsystems;
 
+import java.util.ArrayList;
+import java.util.stream.Collectors;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.util.Units;
+import edu.wpi.first.math.geometry.Transform2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import frc.robot.Constants;
-import frc.robot.Constants.AutoConstants;
+import frc.robot.Constants.ScoreConstants;
 import frc.utils.VectorUtils;
 
 public class AutoCommands {
-    static public Command noop(){return new InstantCommand(()->{});};
+    static public Command noop(){return new InstantCommand(()->{});}; //noop
 
     // Helper functions for april tag selection on blue vs red alliance.
     static public int coralSourceLTag(){ return (DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == Alliance.Blue ? 13 : 1 ); }
@@ -48,24 +51,23 @@ public class AutoCommands {
         );
     }
 
-    public static Command GetCorral(){ // Only written for the leftmost coral source, and all values need to be thouroughly checked and tested
+    public static Command GetCorral(){ // if anybody fixes the spelling i am quitting programming - Dean
+        Pose2d target = PoseEstimator.getInstance().m_finalPose.nearest(new ArrayList<Pose2d>(){{
+            Vision.getInstance().aprilTagFieldLayout.getTagPose(coralSourceLTag()).get().toPose2d();
+            Vision.getInstance().aprilTagFieldLayout.getTagPose(coralSourceRTag()).get().toPose2d();
+        }});
         return Commands.sequence(
             new InstantCommand(() -> Elevator.getInstance().setPosition(0)),
             new InstantCommand(() -> Arm.getInstance().setPosition(0)),
-            new InstantCommand(() -> Autonomous.getInstance().aimAtPoint(PathPlanning.AprilTagAtDistance(coralSourceLTag(), 0),Units.degreesToRadians(180))),
-            new InstantCommand(() -> PathPlanning.getInstance().navigateTo(new Pose2d(
-                                        PathPlanning.AprilTagAtDistance( coralSourceLTag(), AutoConstants.kSourceLDistance).getTranslation(),
-                                        new Rotation2d(Units.degreesToRadians(270))
-                                    ))
-                                ),
-            Commands.waitUntil(() -> VectorUtils.isNear(PoseEstimator.getInstance().m_finalPose,PathPlanning.AprilTagAtDistance(coralSourceLTag(),0),Units.feetToMeters(2),Math.PI))
+            new InstantCommand(() -> PathPlanning.getInstance().navigateTo(target.plus(new Transform2d(0,Constants.kChassis.kWheelBase,new Rotation2d(Math.PI))))),
+            Commands.waitUntil(() -> VectorUtils.isNear(PoseEstimator.getInstance().m_finalPose,target.plus(new Transform2d(0,Constants.kChassis.kWheelBase/2,new Rotation2d(Math.PI))),Math.PI))
         );
     }
     
-    public static Command Score(double heightin, double anglerad){
+    public static Command Score(ScoreConstants.ScoreLevel level){
         return Commands.sequence(
-            new InstantCommand(() -> Elevator.getInstance().setPosition(heightin)),
-            new InstantCommand(() -> Arm.getInstance().setPosition(anglerad)),
+            new InstantCommand(() -> Elevator.getInstance().moveToLevelCommand(()->level)),
+            new InstantCommand(() -> Arm.getInstance().moveToLevelCommand(()->level)),
             // TODO: Fix this expel command
             EndEffector.getInstance().ExpelCommand(()->2.0,()->false),
             new InstantCommand(() -> Elevator.getInstance().setPosition(Constants.ElevatorConstants.kMinHeight)),
@@ -73,4 +75,18 @@ public class AutoCommands {
         );
     }
 
+    public static Command ReefOffset(){
+        Pose2d target = PoseEstimator.getInstance().m_finalPose.nearest
+            (Vision.getInstance().aprilTagFieldLayout.getTags()
+            .stream().map(tag -> tag.pose.toPose2d()).collect(Collectors.toList())); // Hopefully this is readable
+
+        Transform2d transform = new Transform2d(new Translation2d(0,Constants.AutoConstants.kReefOffset
+         * (Controller.m_scoreLeft ? 1 : -1)),new Rotation2d(0));
+
+        return Commands.sequence(
+            new InstantCommand(() -> PathPlanning.getInstance().navigateTo(target.plus(new Transform2d(0,Constants.kChassis.kWheelBase/2,new Rotation2d(Math.PI))))),
+            Commands.waitUntil(() -> VectorUtils.isNear(PoseEstimator.getInstance().m_finalPose,target,Math.PI)),//.withTimeout(0.5),
+            new InstantCommand(() -> PathPlanning.getInstance().navigateTo(target.plus(new Transform2d(0,Constants.kChassis.kWheelBase/2,new Rotation2d(Math.PI))).plus(transform)))
+        );
+    }
 }
