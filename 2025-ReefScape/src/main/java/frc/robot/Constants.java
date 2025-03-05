@@ -328,10 +328,10 @@ public final class Constants {
       public static final String kCameraName = "RearCam";
     
       public static double kCamYawRight = Math.toRadians(NTDouble.create(180, "Vision/"+kCameraName+"/kCamYawRight_deg", val->{kCamYawRight=Math.toRadians(val); Vision.photonPoseEstimatorRear.setRobotToCameraTransform(kCameraToRobot().inverse());}));
-      public static double kCamPitchUp = Math.toRadians(NTDouble.create(-35, "Vision/"+kCameraName+"/kCamPitchUp_deg", val->{kCamPitchUp=Math.toRadians(val); Vision.photonPoseEstimatorRear.setRobotToCameraTransform(kCameraToRobot().inverse());}));
+      public static double kCamPitchUp = Math.toRadians(NTDouble.create(0, "Vision/"+kCameraName+"/kCamPitchUp_deg", val->{kCamPitchUp=Math.toRadians(val); Vision.photonPoseEstimatorRear.setRobotToCameraTransform(kCameraToRobot().inverse());}));
       public static double kCamDiagFOV = Math.toRadians(NTDouble.create(76.06, "Vision/"+kCameraName+"/kCamDiagFOV_deg", val->{kCamDiagFOV=Math.toRadians(val); Vision.photonPoseEstimatorRear.setRobotToCameraTransform(kCameraToRobot().inverse());}));
-      public static double kCamForwardOffset = Units.inchesToMeters(NTDouble.create(-6, "Vision/"+kCameraName+"/kCamForwardOffset_in", val->{kCamForwardOffset=Units.inchesToMeters(val); Vision.photonPoseEstimatorRear.setRobotToCameraTransform(kCameraToRobot().inverse());}));
-      public static double kCamLeftOffset = Units.inchesToMeters(NTDouble.create(-0.25, "Vision/"+kCameraName+"/kCamLeftOffset_in", val->{kCamLeftOffset=Units.inchesToMeters(val); Vision.photonPoseEstimatorRear.setRobotToCameraTransform(kCameraToRobot().inverse());}));
+      public static double kCamForwardOffset = Units.inchesToMeters(NTDouble.create(0, "Vision/"+kCameraName+"/kCamForwardOffset_in", val->{kCamForwardOffset=Units.inchesToMeters(val); Vision.photonPoseEstimatorRear.setRobotToCameraTransform(kCameraToRobot().inverse());}));
+      public static double kCamRightOffset = Units.inchesToMeters(NTDouble.create(2, "Vision/"+kCameraName+"/kCamLeftOffset_in", val->{kCamRightOffset=Units.inchesToMeters(val); Vision.photonPoseEstimatorRear.setRobotToCameraTransform(kCameraToRobot().inverse());}));
 
       public static double kSimMaxLEDRange = 20; // meters
       public static int    kSimCamResolutionW = 1280; // pixels
@@ -342,7 +342,7 @@ public final class Constants {
         return new Transform3d(
           new Translation3d(
             -kCamForwardOffset,
-            -kCamLeftOffset,
+            -kCamRightOffset,
             -kCamHeightOffGround
           ),
           new Rotation3d(0.0, kCamPitchUp, kCamYawRight)
