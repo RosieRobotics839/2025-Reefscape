@@ -181,8 +181,8 @@ public final class Constants {
     public static double kPoseResidualDist = Units.feetToMeters(NTDouble.create(2.0, "LED/kPoseResidualFeet", (val)->kPoseResidualDist = Units.feetToMeters(val)));
     public static double kPoseResidualRot = Units.degreesToRadians(NTDouble.create(30, "LED/kPoseResidualDeg", (val)->kPoseResidualRot = Units.degreesToRadians(val)));
 
-    public static int kNumberLEDs = 96;
-    public static int kLEDPortPWM = 9;
+    public static int kNumberLEDs = 30;
+    public static int kLEDPortPWM = 0;
 
     public static class colors {
       public static int[] red = {255,0,0};
@@ -193,22 +193,28 @@ public final class Constants {
       public static int[] purple = {150,0,255};
       public static int[] pink = {255,0,150};
       public static int[] white = {255,255,255};
+      public static int[] brown = {80,50,0};
       public static int[] off = {0,0,0};
     }
 
-    public static int[] kMotorTempColor = colors.red; 
-    public static int[] kSetupFailColor = colors.yellow; 
+    public static int[] kMotorTempColor = colors.red;
+    public static int[] kSetupFailColor = colors.yellow;
     public static int[] kHealthyColor1 = colors.orange; 
     public static int[] kHealthyColor2 = colors.white; 
     public static int[] kActivityColor = colors.blue;
+    public static int[] kAlgaeColor = colors.green;
+    public static int[] kCoralColor = colors.white;
  
-    public static long[] kAllLEDs = LongStream.range(0,96).toArray();
+    public static long[] kAllLEDs = LongStream.range(0,30).toArray();
     
-    public static long[] kIntakeLEDs = LongStream.concat(LongStream.range(0,10),LongStream.range(48,58)).toArray();
-    public static long[] kSwerveLEDs = LongStream.concat(LongStream.range(10,21),LongStream.range(58,69)).toArray();
-    public static long[] kGyroLEDs = LongStream.concat(LongStream.range(21,32),LongStream.range(69,80)).toArray();
-    public static long[] kPhotonVisionLEDs = LongStream.concat(LongStream.range(32,40),LongStream.range(88,96)).toArray();
-    public static long[] kPoseEstimatorLEDs = LongStream.concat(LongStream.range(40,48),LongStream.range(80,88)).toArray();
+    public static long[] kArmLEDs = LongStream.concat(LongStream.range(0,3),LongStream.range(16,18)).toArray();
+    public static long[] kElevatorLEDs = LongStream.concat(LongStream.range(3,5),LongStream.range(18,20)).toArray();
+    public static long[] kEffectorLEDs = LongStream.concat(LongStream.range(5,7),LongStream.range(20,22)).toArray();
+    public static long[] kClimberLEDs = LongStream.concat(LongStream.range(7,9),LongStream.range(22,24)).toArray();
+    public static long[] kSwerveLEDs = LongStream.concat(LongStream.range(9,11),LongStream.range(24,26)).toArray();
+    public static long[] kGyroLEDs = LongStream.concat(LongStream.range(11,12),LongStream.range(26,27)).toArray();
+    public static long[] kPhotonVisionLEDs = LongStream.concat(LongStream.range(12,14),LongStream.range(27,29)).toArray();
+    public static long[] kPoseEstimatorLEDs = LongStream.concat(LongStream.range(14,16),LongStream.range(29,30)).toArray();
 
     public static double kUpdateTime = NTDouble.create(0.100, "LED/kUpdateTime", (val)->kUpdateTime=val);
     public static double kBrightness = NTDouble.create(0.1, "LED/kBrightness", (val)->kBrightness=val);
