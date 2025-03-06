@@ -8,6 +8,7 @@ import java.util.stream.LongStream;
 
 import edu.wpi.first.wpilibj.AddressableLED;
 import edu.wpi.first.wpilibj.AddressableLEDBuffer;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.LEDConstants;
@@ -76,20 +77,27 @@ public class LED extends SubsystemBase {
     setPixels(c2, pixels2);
   }
 
+  boolean m_systemhealthy;
+
   @Override
   public void periodic() {
 
-    setAltColors(LEDConstants.kHealthyColor1, LEDConstants.kHealthyColor2, LEDConstants.kAllLEDs);
+    m_systemhealthy = true;
+    setPixels(LEDConstants.kUnhealthyColor, LEDConstants.kAllLEDs);
     
     /* Arm */
     
     Arm _arm = Arm.getInstance();
     // Test Arm Motor Temperature
     testBool = _arm.m_motor.getMotorTemperature() > LEDConstants.kMaxMotorTemp;
-    if (testBool) setPixels(LEDConstants.kMotorTempColor, LEDConstants.kArmLEDs);
+    if (testBool){
+      m_systemhealthy = false;
+      setPixels(LEDConstants.kMotorTempColor, LEDConstants.kArmLEDs);
+    }
 
     // Arm Setup Detection
     if (!_arm.m_setupDone){
+      m_systemhealthy = false;
       flash(()->setPixels(LEDConstants.kSetupFailColor, LEDConstants.kArmLEDs));
     }
 
@@ -98,10 +106,14 @@ public class LED extends SubsystemBase {
     Elevator _elevator = Elevator.getInstance();
     // Test Elevator Motor Temperature
     testBool = _elevator.m_EleMotor.getMotorTemperature() > LEDConstants.kMaxMotorTemp;
-    if (testBool) setPixels(LEDConstants.kMotorTempColor, LEDConstants.kElevatorLEDs);
+    if (testBool) {
+      m_systemhealthy = false;
+      setPixels(LEDConstants.kMotorTempColor, LEDConstants.kElevatorLEDs);
+    }
 
     // Elevator setup detection
-    if (!_elevator.setupElevator){
+    if (!_elevator.setupElevator || (DriverStation.isEnabled() && !_elevator.m_isCalibrated.get())){
+      m_systemhealthy = false;
       flash(()->setPixels(LEDConstants.kSetupFailColor, LEDConstants.kElevatorLEDs));
     }
 
@@ -111,12 +123,9 @@ public class LED extends SubsystemBase {
     AccessoryButtons _controller = Controller.getAccessoryButtonsInstance();
     // Test Effector Motor Temperature
     testBool = _effector.m_motor.getMotorTemperature() > LEDConstants.kMaxMotorTemp;
-    if (testBool) setPixels(LEDConstants.kMotorTempColor, LEDConstants.kEffectorLEDs);
-
-    if (_controller.isAlgaeSelected){
-      flash(()->setPixels(LEDConstants.kAlgaeColor, LEDConstants.kAllLEDs));
-    } else {
-      flash(()->setPixels(LEDConstants.kCoralColor, LEDConstants.kAllLEDs));
+    if (testBool){
+      m_systemhealthy = false;
+      setPixels(LEDConstants.kMotorTempColor, LEDConstants.kEffectorLEDs);
     } 
 
     /* Elevator */
@@ -124,10 +133,14 @@ public class LED extends SubsystemBase {
     Climber _climber = Climber.getInstance();
     // Test Climber Motor Temperature
     testBool = _climber.m_motor.getMotorTemperature() > LEDConstants.kMaxMotorTemp;
-    if (testBool) setPixels(LEDConstants.kMotorTempColor, LEDConstants.kClimberLEDs);
+    if (testBool){
+      m_systemhealthy = false;
+      setPixels(LEDConstants.kMotorTempColor, LEDConstants.kClimberLEDs);
+    }
 
     // Climber setup detection
     if (!_climber.m_setupDone){
+      m_systemhealthy = false;
       flash(()->setPixels(LEDConstants.kSetupFailColor, LEDConstants.kClimberLEDs));
     }
 
@@ -136,41 +149,58 @@ public class LED extends SubsystemBase {
     // Test Motor Temperatures
     testBool = false;
     DriveTrain.forEachSwerveModule((s)->testBool = testBool || s.m_motorDrive.getMotorTemperature() > LEDConstants.kMaxMotorTemp || s.m_motorSteer.getMotorTemperature() > LEDConstants.kMaxMotorTemp);
-    if (testBool) setPixels(LEDConstants.kMotorTempColor, LEDConstants.kSwerveLEDs);
+    if (testBool){
+      m_systemhealthy = false;
+      setPixels(LEDConstants.kMotorTempColor, LEDConstants.kSwerveLEDs);
+    }
 
     // Swerve Setup Detection 
     if (!DriveTrain.getInstance().m_motorSetupDone){
       // Swerve motors not configured
+      m_systemhealthy = false;
       flash(()->setPixels(LEDConstants.kSetupFailColor, LEDConstants.kSwerveLEDs));
-    }
-
-    /* Photonvision */
-    // Photonvision Detected AprilTag
-    if (Vision.getInstance().m_numTargets > 0){
-      setPixels(LEDConstants.kActivityColor, LEDConstants.kPhotonVisionLEDs);
     }
 
     // Test Cameras Connected
     if (!Vision.cam1.isConnected() || !Vision.cam2.isConnected()){
+      m_systemhealthy = false;
       flash(()->setPixels(LEDConstants.kSetupFailColor, LEDConstants.kPhotonVisionLEDs));
-    }
-
-    // Check PoseEstimator Updating
-    PoseEstimator pe = PoseEstimator.getInstance();
-    if (pe.m_gyroResidual > LEDConstants.kPoseResidualRot || 
-        pe.m_visionPoseResidual.getTranslation().getNorm() > LEDConstants.kPoseResidualDist ||
-        pe.m_visionPoseResidual.getRotation().getRadians() > LEDConstants.kPoseResidualRot){
-      setPixels(LEDConstants.kActivityColor, LEDConstants.kPoseEstimatorLEDs);
     }
 
     // Check Gyro Status
     if (Gyro.getInstance().getStatus() == false){
+      m_systemhealthy = false;
       flash(()->setPixels(LEDConstants.kSetupFailColor, LEDConstants.kGyroLEDs));
     }
 
-    // Checking to see if we have a game piece
-    if (EndEffector.getInstance().hasGamePiece()){
-      flash(()->setPixels(LEDConstants.kActivityColor, LEDConstants.kEffectorLEDs));
+    if (m_systemhealthy){
+      if (DriverStation.isDisabled()){
+        setAltColors(LEDConstants.kHealthyColor1, LEDConstants.kHealthyColor2, LEDConstants.kAllLEDs);
+      } else {
+        if (_controller.isAlgaeSelected){
+          setPixels(LEDConstants.kAlgaeColor, LEDConstants.kAllLEDs);
+        } else {
+          setPixels(LEDConstants.kCoralColor, LEDConstants.kAllLEDs);
+        }
+      }
+      
+      // Checking to see if we have a game piece
+      if (EndEffector.getInstance().hasGamePiece()){
+        flash(()->setPixels(LEDConstants.kActivityColor, LEDConstants.kEffectorLEDs));
+      }
+
+      // Check PoseEstimator Updating
+      PoseEstimator pe = PoseEstimator.getInstance();
+      if (pe.m_gyroResidual > LEDConstants.kPoseResidualRot || 
+          pe.m_visionPoseResidual.getTranslation().getNorm() > LEDConstants.kPoseResidualDist ||
+          pe.m_visionPoseResidual.getRotation().getRadians() > LEDConstants.kPoseResidualRot){
+          setPixels(LEDConstants.kActivityColor, LEDConstants.kPoseEstimatorLEDs);
+      }
+      
+      // Photonvision Detected AprilTag
+      if (Vision.getInstance().m_numTargets > 0){
+        setPixels(LEDConstants.kActivityColor, LEDConstants.kPhotonVisionLEDs);
+      }
     }
     sendData();
 
