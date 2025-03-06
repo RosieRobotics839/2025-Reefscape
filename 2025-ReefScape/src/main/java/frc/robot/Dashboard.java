@@ -38,7 +38,24 @@ public class Dashboard{
         return BuildYourOwnAutoCommands;
     }
     
-
+/*
+ * SCORE command to drive to the reef and score should look like this
+ * Score.SS.Left.4     The period are not required but help seperate the arguments for accessibility
+ * ENSURE THAT THE SCORING LEVEL IS THE LAST CHAR IN THE STRING
+ * 0 = trough, 4 = highest level
+ * 
+ * GET or SOURCE command to drive to the source to get a coral
+ * Get.left || Source.right
+ * 
+ * WAIT command to wait a time in integer seconds
+ * Wait.3
+ * ENSURE THAT THE WAIT TIME IS THE LAST CHAR IN THE STRING
+ * 
+ * STORE command and RETURN command to store and return to a stored pose
+ * Store
+ * Return
+ * Neither have any extra arguments
+ */
     private class Argument{
         private int type;
         private int var0;
