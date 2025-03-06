@@ -56,6 +56,7 @@ public class AutoCommands {
     public static Command GetCoral(){ // "if anybody fixes the spelling i am NOT quitting programming :)" - Dean.
                                       // "Either you run the day, or the day runs you" - Dean.
                                       // "Change your thoughts and you change your world" - Dean.
+                                      // I don't think i said that - Dean.
         ArrayList<Integer> tagIds = new ArrayList<Integer>();
         { 
             tagIds.add(coralSourceRTag());
@@ -66,6 +67,24 @@ public class AutoCommands {
         
         Pose2d target = PoseEstimator.getInstance().m_finalPose.nearest(tags);
         int tagId = tagIds.get(tags.indexOf(target));
+        
+        return Commands.sequence(
+            new InstantCommand(() -> Elevator.getInstance().setPosition(0)),
+            new InstantCommand(() -> Arm.getInstance().setPosition(0)),
+            Commands.sequence(
+                new InstantCommand(() -> PathPlanning.getInstance().navigateTo(PathPlanning.AprilTagAtDistance(tagId,AutoConstants.kSourceDistance*3+Constants.kChassis.kWheelBase/2.0, Math.PI))),
+                new InstantCommand(() -> PathPlanning.getInstance().navigateTo(PathPlanning.AprilTagAtDistance(tagId,AutoConstants.kSourceDistance+Constants.kChassis.kWheelBase/2.0, Math.PI))),
+                Commands.waitUntil(() -> VectorUtils.isNear(PoseEstimator.getInstance().m_finalPose,PathPlanning.AprilTagAtDistance(tagId,AutoConstants.kSourceDistance+Constants.kChassis.kWheelBase/2.0), AutoConstants.kSourceNearDistance)),
+                Commands.parallel(
+                    EndEffector.getInstance().IntakeCommand().asProxy(),
+                    wiggle.asProxy()
+                ).withTimeout(5)
+            ).repeatedly().handleInterrupt(()->DriveTrain.getInstance().m_poseQueue.clear())
+        ).until(()->EndEffector.getInstance().hasGamePiece());
+    }
+
+    public static Command GetCoral(boolean left){
+        int tagId = left ? coralSourceLTag() : coralSourceRTag();
         
         return Commands.sequence(
             new InstantCommand(() -> Elevator.getInstance().setPosition(0)),
@@ -98,14 +117,40 @@ public class AutoCommands {
         );
     }
 
-    public static Command ReefOffset(int tagId, boolean left){
+    public static Command AutoScore(String tag, boolean left, int level){
+        int tagId;
+        switch (tag){
+            case("NW"):
+                tagId = reefNWTag(); 
+                break;
+            case("NN"):
+                tagId = reefNNTag(); 
+                break;
+            case("NE"):
+                tagId = reefNETag(); 
+                break;
+            case("SW"):
+                tagId = reefSWTag(); 
+                break;
+            case("SS"):
+                tagId = reefSSTag(); 
+                break;
+            case("SE"):
+                tagId = reefSETag(); 
+                break;
+            default:
+                return noop();
+        }
+
         Pose2d target = PathPlanning.AprilTagAtDistance(tagId,AutoConstants.kSourceDistance*1.5+Constants.kChassis.kWheelBase/2.0, Math.PI);
-        
         Transform2d transform = new Transform2d(new Translation2d(0,Constants.AutoConstants.kReefOffset * (left ? 1 : -1)),new Rotation2d(0));
 
         return Commands.sequence(
             new InstantCommand(() -> PathPlanning.getInstance().navigateTo(target.plus(transform))),
-            Commands.waitUntil(() -> VectorUtils.isNear(PoseEstimator.getInstance().m_finalPose, target.plus(transform), AutoConstants.kReefTolerance)) //.withTimeout(0.5),
+            Commands.waitUntil(() -> VectorUtils.isNear(PoseEstimator.getInstance().m_finalPose, target.plus(transform), AutoConstants.kReefTolerance)),
+            new InstantCommand(() -> Elevator.getInstance().moveToLevelCommand(()->Constants.ScoreConstants.ScoreLevel.values()[level])),
+            new InstantCommand(() -> Arm.getInstance().moveToLevelCommand(()->Constants.ScoreConstants.ScoreLevel.values()[level])),
+            Controller.accessoryButtons.m_expel.asProxy()
         );
     }
 
