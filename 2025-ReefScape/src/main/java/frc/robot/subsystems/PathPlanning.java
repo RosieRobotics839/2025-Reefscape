@@ -23,7 +23,6 @@ import org.json.simple.parser.JSONParser;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.Filesystem;
 import frc.utils.VectorUtils;
@@ -227,13 +226,32 @@ public class PathPlanning {
         navigateTo(closestPose);
 
     }
-    public static Pose2d AprilTagAtDistance(int id, double distance) {
-      Pose2d tagLocation = Vision.getInstance().aprilTagFieldLayout.getTagPose(id).get().toPose2d();
-      return tagLocation.plus(new Transform2d(distance,0,new Rotation2d(Math.PI)));
+    
+    /**
+     * Provides a way to get the Pose that the robot should be in relative to an apriltag
+     * @param id Apriltag ID
+     * @param translation to move relative to the apriltag, if looking at it.
+     * @param radians angle to rotate the robot applied after translating it.
+     * @return
+     */
+    public static Pose2d AprilTagAtDistance(int id, Translation2d translation, double radians) {
+        Pose2d tagPose = Vision.getInstance().aprilTagFieldLayout.getTagPose(id).get().toPose2d();
+        Pose2d result = new Pose2d(
+            tagPose.getTranslation().plus(translation.rotateBy(new Rotation2d(tagPose.getRotation().getRadians()+Math.PI))),
+            tagPose.getRotation().plus(new Rotation2d(radians+Math.PI))
+        );
+        return result;
     }
-    public static Pose2d AprilTagAtDistance(int id, double distance, double radians) {
-        Pose2d tagLocation = Vision.getInstance().aprilTagFieldLayout.getTagPose(id).get().toPose2d().plus(new Transform2d(distance,0,new Rotation2d(Math.PI)));
-        return new Pose2d(tagLocation.getTranslation(),new Rotation2d(tagLocation.getRotation().getRadians()+radians));
-      }
+    
+    public static Pose2d AprilTagAtDistance(int id, Translation2d translation) {
+        return AprilTagAtDistance(id, translation, 0);
+    }
 
+    public static Pose2d AprilTagAtDistance(int id, double distance) {
+        return AprilTagAtDistance(id, new Translation2d(distance, 0), 0);
+    }
+    
+    public static Pose2d AprilTagAtDistance(int id, double distance, double radians) {
+        return AprilTagAtDistance(id, new Translation2d(distance, 0), radians);
+    }
 }

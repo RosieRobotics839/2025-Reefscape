@@ -12,16 +12,16 @@ public class Dashboard{
         return instance;
     }
 
-    Argument arg0 = new Argument(SmartDashboard.getString("DB/String 0", "null"));
-    Argument arg1 = new Argument(SmartDashboard.getString("DB/String 1", "null"));
-    Argument arg2 = new Argument(SmartDashboard.getString("DB/String 2", "null"));
-    Argument arg3 = new Argument(SmartDashboard.getString("DB/String 3", "null"));
-    Argument arg4 = new Argument(SmartDashboard.getString("DB/String 4", "null"));
-    Argument arg5 = new Argument(SmartDashboard.getString("DB/String 5", "null"));
-    Argument arg6 = new Argument(SmartDashboard.getString("DB/String 6", "null"));
-    Argument arg7 = new Argument(SmartDashboard.getString("DB/String 7", "null"));
-    Argument arg8 = new Argument(SmartDashboard.getString("DB/String 8", "null"));
-    Argument arg9 = new Argument(SmartDashboard.getString("DB/String 9", "null"));
+    Argument arg0 = new Argument("DB/String 0");
+    Argument arg1 = new Argument("DB/String 1");
+    Argument arg2 = new Argument("DB/String 2");
+    Argument arg3 = new Argument("DB/String 3");
+    Argument arg4 = new Argument("DB/String 4");
+    Argument arg5 = new Argument("DB/String 5");
+    Argument arg6 = new Argument("DB/String 6");
+    Argument arg7 = new Argument("DB/String 7");
+    Argument arg8 = new Argument("DB/String 8");
+    Argument arg9 = new Argument("DB/String 9");
 
     public Command BuildYourOwnAutoCommands(){
         Command BuildYourOwnAutoCommands = Commands.sequence(
@@ -57,41 +57,48 @@ public class Dashboard{
  * Neither have any extra arguments
  */
     private class Argument{
-        private int type;
+        public enum TASK {
+            INVALID, SCORE, GETCORAL, WAIT, POSERETURN, POSESTORE
+        }
+        private TASK type;
         private int var0;
         private String var1;
         private boolean left = true;
 
-        public Argument(String input){
-            input = input.toUpperCase();
-            if (input.contains("SCO") || input.contains("ORE")) type = 1; // Scoring ID
-            else if (input.contains("GET") || input.contains("SOURCE")) type = 2; // Get Coral ID
-            else if (input.contains("WAI") || input.contains("AIT")) type = 5; // Wait type ID
-            else if (input.contains("RET") || input.contains("URN")) type = 6; // Return to pose type ID
-            else if (input.contains("STO") || input.contains("ORE")) type = 7; // Store pose type ID
-            else type = -1;
+        private String path;
+
+        public Argument(String string){
+            path = string;
+        }
+
+        public Command getCommand(){
+            String input = SmartDashboard.getString(path, "null").toUpperCase();
+            if (input.contains("SCO") || input.contains("CORE")) type = TASK.SCORE; // Scoring ID
+            else if (input.contains("GET") || input.contains("SOURCE")) type = TASK.GETCORAL; // Get Coral ID
+            else if (input.contains("WAI") || input.contains("AIT")) type = TASK.WAIT; // Wait type ID
+            else if (input.contains("RET") || input.contains("URN")) type = TASK.POSERETURN; // Return to pose type ID
+            else if (input.contains("STO") || input.contains("TOR")) type = TASK.POSESTORE; // Store pose type ID
+            else type = TASK.INVALID;
             try { 
                 if (input.contains("LEF") || input.contains("EFT")) left = true;
                 else if (input.contains("RIG") || input.contains("GHT")) left = false;
                 var0 = Integer.parseInt(input.substring(input.length()-1)); // Set var to hopefully the score level or wait time
-                var1 = input.substring(input.indexOf("."),input.indexOf(".")+2);
+                var1 = input.substring(input.indexOf(".")+1,input.indexOf(".")+3);
             } // Set var to hopefully the note ID
                 catch (NumberFormatException e) {var0 = -1;}
                 catch (StringIndexOutOfBoundsException e) {var0 = -1;}
-        }
 
-        public Command getCommand(){
             // if (!isReal()) return Commands.waitSeconds(0);
             switch (type){
-                case(7):
+                case POSESTORE:
                     return AutoCommands.StorePose();
-                case(6):
+                case POSERETURN:
                     return AutoCommands.ReturnToPose();
-                case(5):
+                case WAIT:
                     return Commands.waitSeconds(var0);
-                case(2):
+                case GETCORAL:
                     return AutoCommands.GetCoral(left);
-                case(1):
+                case SCORE:
                     return AutoCommands.AutoScore(var1,left,var0);
                 default:
                     return AutoCommands.noop(); //noop noop

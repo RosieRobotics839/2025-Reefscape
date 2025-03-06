@@ -5,8 +5,10 @@
 package frc.robot.subsystems;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.ListIterator;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.photonvision.EstimatedRobotPose;
 import org.photonvision.PhotonCamera;
@@ -20,6 +22,7 @@ import org.photonvision.targeting.PhotonPipelineResult;
 import org.photonvision.targeting.PhotonTrackedTarget;
 
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.networktables.DoublePublisher;
@@ -59,9 +62,19 @@ public class Vision extends SubsystemBase {
   static Pose3d farTargetPose;
   static VisionTargetSim farTarget;
 
+  public void PublishAprilTags(){
+    List<Pose2d> tags = aprilTagFieldLayout.getTags().stream().map(
+          (a)->new Pose2d(a.pose.getTranslation().toTranslation2d(),
+                          a.pose.getRotation().toRotation2d()
+                          )).collect(Collectors.toList()
+    );
+    PoseEstimator.getInstance().m_field.getObject("AprilTags").setPoses(tags);
+  }
+
   public Vision() {
     try {
       aprilTagFieldLayout = new AprilTagFieldLayout(VisionConstants.kFieldLayout);
+      PublishAprilTags();
     } catch (IOException e) {
       e.printStackTrace();
     }

@@ -4,8 +4,6 @@ import java.util.ArrayList;
 import java.util.stream.Collectors;
 
 import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -14,8 +12,11 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import frc.robot.Constants;
+import frc.robot.Constants.ArmConstants;
 import frc.robot.Constants.AutoConstants;
+import frc.robot.Constants.EffectorConstants;
 import frc.robot.Constants.ScoreConstants;
+import frc.robot.Constants.ScoreConstants.ScoreLevel;
 import frc.utils.VectorUtils;
 
 public class AutoCommands {
@@ -67,14 +68,21 @@ public class AutoCommands {
         
         Pose2d target = PoseEstimator.getInstance().m_finalPose.nearest(tags);
         int tagId = tagIds.get(tags.indexOf(target));
-        
+        return GetCoral(tagId);
+    }
+
+    public static Command GetCoral(boolean left){
+        return GetCoral(left ? coralSourceLTag() : coralSourceRTag());
+    }
+    
+    public static Command GetCoral(int tagId){
         return Commands.sequence(
             new InstantCommand(() -> Elevator.getInstance().setPosition(0)),
-            new InstantCommand(() -> Arm.getInstance().setPosition(0)),
+            new InstantCommand(() -> Arm.getInstance().setPosition(ArmConstants.kAngleMax)),
             Commands.sequence(
-                new InstantCommand(() -> PathPlanning.getInstance().navigateTo(PathPlanning.AprilTagAtDistance(tagId,AutoConstants.kSourceDistance*3+Constants.kChassis.kWheelBase/2.0, Math.PI))),
-                new InstantCommand(() -> PathPlanning.getInstance().navigateTo(PathPlanning.AprilTagAtDistance(tagId,AutoConstants.kSourceDistance+Constants.kChassis.kWheelBase/2.0, Math.PI))),
-                Commands.waitUntil(() -> VectorUtils.isNear(PoseEstimator.getInstance().m_finalPose,PathPlanning.AprilTagAtDistance(tagId,AutoConstants.kSourceDistance+Constants.kChassis.kWheelBase/2.0), AutoConstants.kSourceNearDistance)),
+                new InstantCommand(() -> PathPlanning.getInstance().navigateTo(PathPlanning.AprilTagAtDistance(tagId, -AutoConstants.kSourceStartingDistance - Constants.kChassis.kWheelBase/2.0, Math.PI))),
+                new InstantCommand(() -> PathPlanning.getInstance().navigateTo(PathPlanning.AprilTagAtDistance(tagId, -AutoConstants.kSourceDistance - Constants.kChassis.kWheelBase/2.0, Math.PI))),
+                Commands.waitUntil(() -> VectorUtils.isNear(PoseEstimator.getInstance().m_finalPose,PathPlanning.AprilTagAtDistance(tagId, -AutoConstants.kSourceDistance - Constants.kChassis.kWheelBase/2.0), AutoConstants.kSourceTolerance)),
                 Commands.parallel(
                     EndEffector.getInstance().IntakeCommand().asProxy(),
                     wiggle.asProxy()
@@ -83,23 +91,6 @@ public class AutoCommands {
         ).until(()->EndEffector.getInstance().hasGamePiece());
     }
 
-    public static Command GetCoral(boolean left){
-        int tagId = left ? coralSourceLTag() : coralSourceRTag();
-        
-        return Commands.sequence(
-            new InstantCommand(() -> Elevator.getInstance().setPosition(0)),
-            new InstantCommand(() -> Arm.getInstance().setPosition(0)),
-            Commands.sequence(
-                new InstantCommand(() -> PathPlanning.getInstance().navigateTo(PathPlanning.AprilTagAtDistance(tagId,AutoConstants.kSourceDistance*3+Constants.kChassis.kWheelBase/2.0, Math.PI))),
-                new InstantCommand(() -> PathPlanning.getInstance().navigateTo(PathPlanning.AprilTagAtDistance(tagId,AutoConstants.kSourceDistance+Constants.kChassis.kWheelBase/2.0, Math.PI))),
-                Commands.waitUntil(() -> VectorUtils.isNear(PoseEstimator.getInstance().m_finalPose,PathPlanning.AprilTagAtDistance(tagId,AutoConstants.kSourceDistance+Constants.kChassis.kWheelBase/2.0), AutoConstants.kSourceNearDistance)),
-                Commands.parallel(
-                    EndEffector.getInstance().IntakeCommand().asProxy(),
-                    wiggle.asProxy()
-                ).withTimeout(5)
-            ).repeatedly().handleInterrupt(()->DriveTrain.getInstance().m_poseQueue.clear())
-        ).until(()->EndEffector.getInstance().hasGamePiece());
-    }
     public static Command wiggle = Commands.sequence(
         Commands.waitSeconds(0.1),
         new InstantCommand(()->DriveTrain.getInstance().m_targetHeading += Units.degreesToRadians(10)),
@@ -118,6 +109,9 @@ public class AutoCommands {
     }
 
     public static Command AutoScore(String tag, boolean left, int level){
+        return AutoScore(tag, left, Constants.ScoreConstants.ScoreLevel.values()[level]);
+    }
+    public static Command AutoScore(String tag, boolean left, ScoreLevel level){
         int tagId;
         switch (tag){
             case("NW"):
@@ -142,30 +136,29 @@ public class AutoCommands {
                 return noop();
         }
 
-        Pose2d target = PathPlanning.AprilTagAtDistance(tagId,AutoConstants.kSourceDistance*1.5+Constants.kChassis.kWheelBase/2.0, Math.PI);
-        Transform2d transform = new Transform2d(new Translation2d(0,Constants.AutoConstants.kReefOffset * (left ? 1 : -1)),new Rotation2d(0));
-
-        return Commands.sequence(
-            new InstantCommand(() -> PathPlanning.getInstance().navigateTo(target.plus(transform))),
-            Commands.waitUntil(() -> VectorUtils.isNear(PoseEstimator.getInstance().m_finalPose, target.plus(transform), AutoConstants.kReefTolerance)),
-            new InstantCommand(() -> Elevator.getInstance().moveToLevelCommand(()->Constants.ScoreConstants.ScoreLevel.values()[level])),
-            new InstantCommand(() -> Arm.getInstance().moveToLevelCommand(()->Constants.ScoreConstants.ScoreLevel.values()[level])),
-            Controller.accessoryButtons.m_expel.asProxy()
+        Pose2d target1 = PathPlanning.AprilTagAtDistance(
+            tagId,
+            new Translation2d(
+                - AutoConstants.kReefStartingDistance - Constants.kChassis.kWheelBase/2.0,
+                Constants.AutoConstants.kReefOffset * (left ? 1 : -1)
+            )
         );
-    }
 
-    public static Command ReefOffset(){
-        Pose2d target = PoseEstimator.getInstance().m_finalPose.nearest
-            (Vision.getInstance().aprilTagFieldLayout.getTags()
-            .stream().map(tag -> tag.pose.toPose2d()).collect(Collectors.toList())); // Hopefully this is readable
-
-        Transform2d transform = new Transform2d(new Translation2d(0,Constants.AutoConstants.kReefOffset
-         * (Controller.m_scoreLeft ? 1 : -1)),new Rotation2d(0));
+        Pose2d target2 = PathPlanning.AprilTagAtDistance(
+            tagId,
+            new Translation2d(
+                - AutoConstants.kReefDistance - Constants.kChassis.kWheelBase/2.0,
+                Constants.AutoConstants.kReefOffset * (left ? 1 : -1)
+            )
+        );
 
         return Commands.sequence(
-            new InstantCommand(() -> PathPlanning.getInstance().navigateTo(target.plus(new Transform2d(0,Constants.kChassis.kWheelBase/2,new Rotation2d(Math.PI))))),
-            Commands.waitUntil(() -> VectorUtils.isNear(PoseEstimator.getInstance().m_finalPose,target,Math.PI)),//.withTimeout(0.5),
-            new InstantCommand(() -> PathPlanning.getInstance().navigateTo(target.plus(new Transform2d(0,Constants.kChassis.kWheelBase/2,new Rotation2d(Math.PI))).plus(transform)))
+            new InstantCommand(() -> Elevator.getInstance().moveToLevelCommand(()->level)),
+            new InstantCommand(() -> Arm.getInstance().moveToLevelCommand(()->level)),
+            new InstantCommand(() -> PathPlanning.getInstance().navigateTo(target1)),
+            new InstantCommand(() -> PathPlanning.getInstance().navigateTo(target2)),
+            Commands.waitUntil(() -> DriveTrain.getInstance().m_poseQueue.isEmpty() || VectorUtils.isNear(PoseEstimator.getInstance().m_finalPose, target2, AutoConstants.kReefTolerance)),
+            EndEffector.getInstance().ExpelCommand(()->(level == ScoreLevel.TROUGH ? EffectorConstants.kTroughOuttakeSpeed : EffectorConstants.kOuttakeSpeed), ()->level==ScoreLevel.TROUGH)
         );
     }
 }

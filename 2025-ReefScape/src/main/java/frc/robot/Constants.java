@@ -75,7 +75,7 @@ public final class Constants {
     public static Motor.Gains kGainPosition = MotorDefaults.Kraken.kGainPosition;
 
     // Creates Max and Min values for Arm Software Hardstop
-    public static double kAngleMax = Units.degreesToRadians(NTDouble.create(89, "Arm/kAngleMax", (val)->kAngleMax = Units.degreesToRadians(val)));
+    public static double kAngleMax = Units.degreesToRadians(NTDouble.create(95, "Arm/kAngleMax", (val)->kAngleMax = Units.degreesToRadians(val)));
     public static double kAngleMin = Units.degreesToRadians(NTDouble.create(-3, "Arm/kAngleMin", (val)->kAngleMin = Units.degreesToRadians(val)));
 
     public static double kTargetAngleTrough = Units.degreesToRadians(NTDouble.create(63, "Arm/Target/kAngleTrough", (val)->kTargetAngleTrough = Units.degreesToRadians(val)));
@@ -87,7 +87,7 @@ public final class Constants {
 
     public static int kArmMotorCurrentLimit = (NTInteger.create(15, "Arm/kCurrentLimit", (val) ->Arm.getInstance().m_motor.withStatorLimit(val)));
 
-    public static double kAngleTolerance = Units.degreesToRadians(NTDouble.create(0.5, "Arm/kArmAngleTolerance", val -> kAngleTolerance = Units.degreesToRadians(val)));
+    public static double kAngleTolerance = Units.degreesToRadians(NTDouble.create(3, "Arm/kArmAngleTolerance", val -> kAngleTolerance = Units.degreesToRadians(val)));
     public static double kArmGearRatio = 40;
     public static double kMaxSpeed = 0.5;
   }
@@ -133,7 +133,7 @@ public final class Constants {
     public static double kHeight1 = Units.inchesToMeters(NTDouble.create(3, "Elevator/Height1Inch", (val)->kHeight1 = Units.inchesToMeters(val)));
     public static double kMinHeight = Units.inchesToMeters(NTDouble.create(0, "Elevator/MinHeightInch", (val)->kMinHeight = Units.inchesToMeters(val)));
 
-    public static double kElevatorTolerance = Units.inchesToMeters(0.5);
+    public static double kElevatorTolerance = Units.inchesToMeters(0.75);
     public static double kElevatorGearRatio = 16;
     public static double kSprocketCircumference = Units.inchesToMeters(1.685)*Math.PI;
 
@@ -336,7 +336,7 @@ public final class Constants {
       public static int    kSimCamResolutionW = 1280; // pixels
       public static int    kSimCamResolutionH = 720; // pixels
       
-      public static double kCamHeightOffGround = Units.inchesToMeters(41);
+      public static double kCamHeightOffGround = Units.inchesToMeters(39);
       public static Transform3d kCameraToRobot(){
         return new Transform3d(
           new Translation3d(
@@ -383,9 +383,12 @@ public final class Constants {
   
   public static class AutoConstants {
 
+    public static double kReefDistance = Units.inchesToMeters(NTDouble.create(0.0, "Autonomous/kReefDistance", val -> kReefDistance = Units.inchesToMeters(val)));;
+    public static double kReefStartingDistance = Units.inchesToMeters(NTDouble.create(12.0, "Autonomous/kReefStartingDistance", val -> kReefStartingDistance = Units.inchesToMeters(val)));;
     public static double kReefTolerance = Units.inchesToMeters(NTDouble.create(1.0, "Autonomous/kReefToleranceInch", val -> kReefTolerance = Units.inchesToMeters(val)));
-    public static double kSourceNearDistance = Units.inchesToMeters(NTDouble.create(2.0, "Autonomous/kSourceNearDistanceInch", val -> kSourceNearDistance = Units.inchesToMeters(val)));
-    public static double kSourceDistance = Units.inchesToMeters(NTDouble.create(6, "Autonomous/kSourceLDistanceInch", val -> kSourceDistance = Units.inchesToMeters(val)));
+    public static double kSourceDistance = Units.inchesToMeters(NTDouble.create(0, "Autonomous/kSourceLDistanceInch", val -> kSourceDistance = Units.inchesToMeters(val)));
+    public static double kSourceStartingDistance = Units.inchesToMeters(NTDouble.create(12.0, "Autonomous/kSourceStartingDistance", val -> kSourceStartingDistance = Units.inchesToMeters(val)));;
+    public static double kSourceTolerance = Units.inchesToMeters(NTDouble.create(2.0, "Autonomous/kSourceNearDistanceInch", val -> kSourceTolerance = Units.inchesToMeters(val)));
     public static double kReefOffset = Units.inchesToMeters(NTDouble.create(7,"Autonomous/kReefOffset",val -> kReefOffset = Units.inchesToMeters(7)));
     public static double kTroughClearance = NTDouble.create(2, "Autonomous/kTroughClearance", val -> kTroughClearance = Units.inchesToMeters(2));
     
@@ -440,7 +443,7 @@ public final class Constants {
       };
       public static double kMaxSpeed = Units.feetToMeters(NTDouble.create(4, "DriveConstants/MaxSpeed",val -> DriveTrain.getInstance().setMaxSpeed(Units.feetToMeters(val))));
       public static boolean kAutoTurnToBestTag = NTBoolean.create(false,"DriveConstants/kAuto/TurnToBestTag",val->kAutoTurnToBestTag=val);
-      public static double kAutoMaxSpeed = Units.feetToMeters(NTDouble.create(8,"DriveConstants/kAuto/MaxSpeedFPS", val->kAutoMaxSpeed = Units.feetToMeters(val)));
+      public static double kAutoMaxSpeed = Units.feetToMeters(NTDouble.create(3,"DriveConstants/kAuto/MaxSpeedFPS", val->kAutoMaxSpeed = Units.feetToMeters(val)));
       public static double kAutoMinSpeed = Units.feetToMeters(NTDouble.create(1,"DriveConstants/kAuto/MinSpeedFPS", val->kAutoMinSpeed = Units.feetToMeters(val)));
       public static double kAutoAccelLimiter = Units.feetToMeters(NTDouble.create(8,"DriveConstants/kAuto/AccelLimiterFPS2", val->DriveTrain.getInstance().m_autoAccelLimiter = new SlewRateLimiter(Units.feetToMeters(val),-1E9,DriveTrain.getInstance().m_autoSpeed)));
       public static double kAutoMaxRotSpeed = Units.degreesToRadians(NTDouble.create(120,"DriveConstants/kAuto/MaxRotSpeedDPS", val->kAutoMaxRotSpeed = Units.degreesToRadians(val)));

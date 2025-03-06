@@ -125,7 +125,7 @@ public class Robot extends TimedRobot {
   @Override
   public void autonomousInit() {
 
-    switch(SmartDashboard.getString("Auto Selector", "Get Coral")) {
+    switch(SmartDashboard.getString("Auto Selector", "Build Your Own A(uto)dventure")) {
       case "Get Coral":
         m_autonomousCommand = AutoCommands.GetCoral();
         break;
