@@ -111,6 +111,7 @@ public class AutoCommands {
     public static Command AutoScore(String tag, boolean left, int level){
         return AutoScore(tag, left, Constants.ScoreConstants.ScoreLevel.values()[level]);
     }
+
     public static Command AutoScore(String tag, boolean left, ScoreLevel level){
         int tagId;
         switch (tag){
@@ -153,12 +154,14 @@ public class AutoCommands {
         );
 
         return Commands.sequence(
-            new InstantCommand(() -> Elevator.getInstance().moveToLevelCommand(()->level)),
-            new InstantCommand(() -> Arm.getInstance().moveToLevelCommand(()->level)),
+            new InstantCommand(() -> Elevator.getInstance().moveToLevel(level)),
+            new InstantCommand(() -> Arm.getInstance().moveToLevel(level)),
             new InstantCommand(() -> PathPlanning.getInstance().navigateTo(target1)),
             new InstantCommand(() -> PathPlanning.getInstance().navigateTo(target2)),
             Commands.waitUntil(() -> DriveTrain.getInstance().m_poseQueue.isEmpty() || VectorUtils.isNear(PoseEstimator.getInstance().m_finalPose, target2, AutoConstants.kReefTolerance)),
-            EndEffector.getInstance().ExpelCommand(()->(level == ScoreLevel.TROUGH ? EffectorConstants.kTroughOuttakeSpeed : EffectorConstants.kOuttakeSpeed), ()->level==ScoreLevel.TROUGH)
+            EndEffector.getInstance().ExpelCommand(()->(level == ScoreLevel.TROUGH ? EffectorConstants.kTroughOuttakeSpeed : EffectorConstants.kOuttakeSpeed), ()->level==ScoreLevel.TROUGH),
+            new InstantCommand(() -> PathPlanning.getInstance().navigateTo(target1)),
+            Commands.waitUntil(() -> DriveTrain.getInstance().m_poseQueue.isEmpty() || VectorUtils.isNear(PoseEstimator.getInstance().m_finalPose, target1, AutoConstants.kReefTolerance))
         );
     }
 }
