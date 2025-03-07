@@ -126,27 +126,29 @@ public class Arm extends SubsystemBase{
         );
     } 
 
+    public void moveToLevel(ScoreLevel level){
+        switch (level){
+            case FUNNEL:
+                setPosition(ArmConstants.kAngleMax);
+                break;
+            case TROUGH:
+                setPosition(ArmConstants.kTargetAngleTrough);
+                break;
+            case LEVEL2:
+                setPosition(ArmConstants.kTargetAngleLevelMiddle);
+                break;
+            case LEVEL3:
+                setPosition(ArmConstants.kTargetAngleLevelMiddle);
+                break;
+            case LEVEL4:
+                setPosition(ArmConstants.kTargetAngleLevel4);
+                break;
+            default:
+        }
+    }
     public Command moveToLevelCommand(Supplier<ScoreLevel> level) {
-        return new InstantCommand(()->{
-            switch (level.get()){
-                case FUNNEL:
-                    setPosition(ArmConstants.kAngleMax);
-                    break;
-                case TROUGH:
-                    setPosition(ArmConstants.kTargetAngleTrough);
-                    break;
-                case LEVEL2:
-                    setPosition(ArmConstants.kTargetAngleLevelMiddle);
-                    break;
-                case LEVEL3:
-                    setPosition(ArmConstants.kTargetAngleLevelMiddle);
-                    break;
-                case LEVEL4:
-                    setPosition(ArmConstants.kTargetAngleLevel4);
-                    break;
-                default:
-            }
-        }).unless(()->EndEffector.getInstance().m_intakeRunning);
+        return new InstantCommand(()->moveToLevel(level.get()))
+        .unless(()->EndEffector.getInstance().m_intakeRunning);
     }
 
     @Override

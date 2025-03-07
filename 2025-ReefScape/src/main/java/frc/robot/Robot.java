@@ -12,7 +12,6 @@ import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
-import frc.robot.Constants.AutoConstants;
 import frc.robot.subsystems.Arm;
 import frc.robot.subsystems.Autonomous;
 import frc.robot.subsystems.Climber;
@@ -100,7 +99,6 @@ public class Robot extends TimedRobot {
       FlightStick.m_blueAlly = (myAlliance == Alliance.Blue ? true : false);
       PoseEstimator.getInstance().reset();
       Gyro.getInstance().setGyroInit((myAlliance == Alliance.Blue ? 0 : Math.PI), 0, 0);
-      AutoConstants.calcAllianceNotes(myAlliance == Alliance.Blue ? true : false);
       PathPlanning.getInstance().calcFieldGraph();
     }
   

@@ -4,15 +4,11 @@
 
 package frc.robot;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.stream.Collectors;
 import java.util.stream.LongStream;
 
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.filter.Debouncer.DebounceType;
-import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -285,8 +281,7 @@ public final class Constants {
     public static boolean isChampionshipGame = NTBoolean.create(false, "isChampionshipGame", val -> {isChampionshipGame = val; Vision.getInstance().reloadFieldLayout();});
     // Method to get the current field layout path
     public static String getFieldLayoutPath() {
-      return Filesystem.getDeployDirectory() + "/" + "2025-rosiecarpet.json";
-          //(isChampionshipGame ? "2025-reefscape-welded.json" : "2025-reefscape-andymark.json");
+      return Filesystem.getDeployDirectory() + "/" + "2025-reefscape-andymark.json";
     }
 
     public static String kFieldLayout = getFieldLayoutPath();
@@ -300,7 +295,7 @@ public final class Constants {
     public static class frontCamera{
       public static final String kCameraName = "FrontCam";
 
-      public static double kCamYawRight = Math.toRadians(NTDouble.create(15, "Vision/"+kCameraName+"/kCamYawRight_deg", val->{kCamYawRight=Math.toRadians(val); Vision.photonPoseEstimatorFront.setRobotToCameraTransform(kCameraToRobot().inverse());}));
+      public static double kCamYawRight = Math.toRadians(NTDouble.create(10, "Vision/"+kCameraName+"/kCamYawRight_deg", val->{kCamYawRight=Math.toRadians(val); Vision.photonPoseEstimatorFront.setRobotToCameraTransform(kCameraToRobot().inverse());}));
       public static double kCamPitchUp = Math.toRadians(NTDouble.create(0, "Vision/"+kCameraName+"/kCamPitchUp_deg", val->{kCamPitchUp=Math.toRadians(val); Vision.photonPoseEstimatorFront.setRobotToCameraTransform(kCameraToRobot().inverse());}));
       public static double kCamDiagFOV = Math.toRadians(NTDouble.create(77.2, "Vision/"+kCameraName+"/kCamDiagFOV_deg", val->{kCamDiagFOV=Math.toRadians(val); Vision.photonPoseEstimatorFront.setRobotToCameraTransform(kCameraToRobot().inverse());}));
       public static double kCamForwardOffset = Units.inchesToMeters(NTDouble.create(6.875, "Vision/"+kCameraName+"/kCamForwardOffset_in", val->{kCamForwardOffset=Units.inchesToMeters(val); Vision.photonPoseEstimatorFront.setRobotToCameraTransform(kCameraToRobot().inverse());}));
@@ -310,7 +305,7 @@ public final class Constants {
       public static int    kSimCamResolutionW = 1280; // pixels
       public static int    kSimCamResolutionH = 720; // pixels
       
-      public static double kCamHeightOffGround = Units.inchesToMeters(18.0);
+      public static double kCamHeightOffGround = Units.inchesToMeters(14.25);
       public static Transform3d kCameraToRobot(){
         return new Transform3d(
           new Translation3d(
@@ -371,7 +366,7 @@ public final class Constants {
     public static double kRotationInLead = NTDouble.create(-9,"Climber/kAngleInLead",(val) ->kRotationInLead=val); // Change once we can test
     public static double kRotationOutLead = NTDouble.create(5,"Climber/kAngleOutLead",(val) ->kRotationOutLead=val); // Change once we can test
 
-    public static double kAngleIn = Units.degreesToRadians(NTDouble.create(-90,"Climber/kAngleIn",(val) ->kAngleIn=Units.degreesToRadians(val))); // Change once we can test
+    public static double kAngleIn = Units.degreesToRadians(NTDouble.create(-82,"Climber/kAngleIn",(val) ->kAngleIn=Units.degreesToRadians(val))); // Change once we can test
     public static double kAngleOut = Units.degreesToRadians(NTDouble.create(15,"Climber/kAngleOut",(val) ->kAngleOut=Units.degreesToRadians(val))); // Change once we can test
 
     public static double [] kCalibrationX = new double[]{.19, 0.507191, 0.581880, 0.829728, 0.989784}; //analog values from encoder
@@ -383,44 +378,18 @@ public final class Constants {
   
   public static class AutoConstants {
 
-    public static double kReefDistance = Units.inchesToMeters(NTDouble.create(0.0, "Autonomous/kReefDistance", val -> kReefDistance = Units.inchesToMeters(val)));;
-    public static double kReefStartingDistance = Units.inchesToMeters(NTDouble.create(12.0, "Autonomous/kReefStartingDistance", val -> kReefStartingDistance = Units.inchesToMeters(val)));;
-    public static double kReefTolerance = Units.inchesToMeters(NTDouble.create(1.0, "Autonomous/kReefToleranceInch", val -> kReefTolerance = Units.inchesToMeters(val)));
-    public static double kSourceDistance = Units.inchesToMeters(NTDouble.create(0, "Autonomous/kSourceLDistanceInch", val -> kSourceDistance = Units.inchesToMeters(val)));
+    public static double kReefDistance = Units.inchesToMeters(NTDouble.create(5.0, "Autonomous/kReefDistance", val -> kReefDistance = Units.inchesToMeters(val)));;
+    public static double kReefStartingDistance = Units.inchesToMeters(NTDouble.create(24.0, "Autonomous/kReefStartingDistance", val -> kReefStartingDistance = Units.inchesToMeters(val)));;
+    public static double kReefTolerance = Units.inchesToMeters(NTDouble.create(2.0, "Autonomous/kReefToleranceInch", val -> kReefTolerance = Units.inchesToMeters(val)));
+    public static double kSourceDistance = Units.inchesToMeters(NTDouble.create(4, "Autonomous/kSourceDistanceInch", val -> kSourceDistance = Units.inchesToMeters(val)));
     public static double kSourceStartingDistance = Units.inchesToMeters(NTDouble.create(12.0, "Autonomous/kSourceStartingDistance", val -> kSourceStartingDistance = Units.inchesToMeters(val)));;
-    public static double kSourceTolerance = Units.inchesToMeters(NTDouble.create(2.0, "Autonomous/kSourceNearDistanceInch", val -> kSourceTolerance = Units.inchesToMeters(val)));
-    public static double kReefOffset = Units.inchesToMeters(NTDouble.create(7,"Autonomous/kReefOffset",val -> kReefOffset = Units.inchesToMeters(7)));
+    public static double kSourceTolerance = Units.inchesToMeters(NTDouble.create(12.0, "Autonomous/kSourceNearDistanceInch", val -> kSourceTolerance = Units.inchesToMeters(val)));
+    public static double kReefOffset = Units.inchesToMeters(NTDouble.create(6.5,"Autonomous/kReefOffset",val -> kReefOffset = Units.inchesToMeters(7)));
     public static double kTroughClearance = NTDouble.create(2, "Autonomous/kTroughClearance", val -> kTroughClearance = Units.inchesToMeters(2));
     
     public static double kFieldLength = 16.451;
     public static double kFieldWidth = 8.211;
-    public static double kNoteSpacing = Units.feetToMeters(5.5);
-    public static ArrayList<Pose2d> kCenterNotes = new ArrayList<>(Arrays.asList(
-      new Pose2d(new Translation2d(kFieldLength/2.0, kFieldWidth/2.0 - (2 * kNoteSpacing)), null),
-      new Pose2d(new Translation2d(kFieldLength/2.0, kFieldWidth/2.0 - (1 * kNoteSpacing)), null),
-      new Pose2d(new Translation2d(kFieldLength/2.0, kFieldWidth/2.0 - (0 * kNoteSpacing)), null),
-      new Pose2d(new Translation2d(kFieldLength/2.0, kFieldWidth/2.0 + (1 * kNoteSpacing)), null),
-      new Pose2d(new Translation2d(kFieldLength/2.0, kFieldWidth/2.0 + (2 * kNoteSpacing)), null))
-    );
-
     
-    private static ArrayList<Pose2d> kBlueNotes = new ArrayList<>(Arrays.asList(
-      new Pose2d(new Translation2d(2.85, 4.125), null),
-      new Pose2d(new Translation2d(2.85, 5.55), null),
-      new Pose2d(new Translation2d(2.85, 7.00), null)));
-
-    public static ArrayList<Pose2d> kAllianceNotes = new ArrayList<>(kBlueNotes);
-
-    public static void calcAllianceNotes(boolean isBlue){
-      if (isBlue){
-        kAllianceNotes.clear();
-        kAllianceNotes.addAll(kBlueNotes);
-      } else {
-        // Flip across halffield for red
-        kAllianceNotes.clear();
-        kAllianceNotes.addAll(kBlueNotes.stream().map(f->new Pose2d(new Translation2d(kFieldLength/2.0+(kFieldLength/2.0-f.getX()),f.getY()),null)).collect(Collectors.toList()));
-      }
-    }
   }
 
   public static class kDriveTrain {
@@ -443,12 +412,12 @@ public final class Constants {
       };
       public static double kMaxSpeed = Units.feetToMeters(NTDouble.create(4, "DriveConstants/MaxSpeed",val -> DriveTrain.getInstance().setMaxSpeed(Units.feetToMeters(val))));
       public static boolean kAutoTurnToBestTag = NTBoolean.create(false,"DriveConstants/kAuto/TurnToBestTag",val->kAutoTurnToBestTag=val);
-      public static double kAutoMaxSpeed = Units.feetToMeters(NTDouble.create(3,"DriveConstants/kAuto/MaxSpeedFPS", val->kAutoMaxSpeed = Units.feetToMeters(val)));
-      public static double kAutoMinSpeed = Units.feetToMeters(NTDouble.create(1,"DriveConstants/kAuto/MinSpeedFPS", val->kAutoMinSpeed = Units.feetToMeters(val)));
+      public static double kAutoMaxSpeed = Units.feetToMeters(NTDouble.create(7,"DriveConstants/kAuto/MaxSpeedFPS", val->kAutoMaxSpeed = Units.feetToMeters(val)));
+      public static double kAutoMinSpeed = Units.feetToMeters(NTDouble.create(1.5,"DriveConstants/kAuto/MinSpeedFPS", val->kAutoMinSpeed = Units.feetToMeters(val)));
       public static double kAutoAccelLimiter = Units.feetToMeters(NTDouble.create(8,"DriveConstants/kAuto/AccelLimiterFPS2", val->DriveTrain.getInstance().m_autoAccelLimiter = new SlewRateLimiter(Units.feetToMeters(val),-1E9,DriveTrain.getInstance().m_autoSpeed)));
       public static double kAutoMaxRotSpeed = Units.degreesToRadians(NTDouble.create(120,"DriveConstants/kAuto/MaxRotSpeedDPS", val->kAutoMaxRotSpeed = Units.degreesToRadians(val)));
       public static double kAutoTurnToPoseDistance = Units.feetToMeters(NTDouble.create(10, "DriveConstants/kAuto/TurnToPoseDistanceFt", val->kAutoTurnToPoseDistance = Units.feetToMeters(val)));
-      public static double kAutoSlowDist = Units.feetToMeters(NTDouble.create(3,"DriveConstants/kAuto/SlowDistFt",val->kAutoSlowDist=Units.feetToMeters(val)));
+      public static double kAutoSlowDist = Units.feetToMeters(NTDouble.create(2,"DriveConstants/kAuto/SlowDistFt",val->kAutoSlowDist=Units.feetToMeters(val)));
       public static double kAutoToleranceDistance = Units.feetToMeters(NTDouble.create(0.15,"DriveConstants/kAuto/ToleranceDistance",val->kAutoToleranceDistance=Units.feetToMeters(val)));
       public static double kAutoToleranceAngle = Units.degreesToRadians(NTDouble.create(2,"DriveConstants/kAuto/ToleranceAngle",val->kAutoToleranceAngle=Units.degreesToRadians(val)));
 

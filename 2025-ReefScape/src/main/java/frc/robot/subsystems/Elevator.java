@@ -107,27 +107,30 @@ public class Elevator extends SubsystemBase {
             .pidf(ElevatorConstants.kGainPosition, GainSlot.POSITION);
     }
 
+    public void moveToLevel(ScoreLevel level){
+        switch (level){
+            case FUNNEL:
+                setPosition(ElevatorConstants.kMinHeight);
+                break;
+            case TROUGH:
+                setPosition(ElevatorConstants.kHeight1);
+                break;
+            case LEVEL2:
+                setPosition(ElevatorConstants.kHeight2);
+                break;
+            case LEVEL3:
+                setPosition(ElevatorConstants.kHeight3);
+                break;
+            case LEVEL4:
+                setPosition(ElevatorConstants.kMaxHeight);
+                break;
+            default:
+        }
+    }
+
     public Command moveToLevelCommand(Supplier<ScoreLevel> level) {
-        return new InstantCommand(()->{
-            switch (level.get()){
-                case FUNNEL:
-                    setPosition(ElevatorConstants.kMinHeight);
-                    break;
-                case TROUGH:
-                    setPosition(ElevatorConstants.kHeight1);
-                    break;
-                case LEVEL2:
-                    setPosition(ElevatorConstants.kHeight2);
-                    break;
-                case LEVEL3:
-                    setPosition(ElevatorConstants.kHeight3);
-                    break;
-                case LEVEL4:
-                    setPosition(ElevatorConstants.kMaxHeight);
-                    break;
-                default:
-            }
-        }).unless(()->EndEffector.getInstance().m_intakeRunning);
+        return new InstantCommand(()->moveToLevel(level.get()))
+            .unless(()->EndEffector.getInstance().m_intakeRunning);
     }
 
     NTBoolean m_isCalibrated = new NTBoolean(false,table,"isCalibrated",(val)->{});

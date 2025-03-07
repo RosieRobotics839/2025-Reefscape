@@ -48,8 +48,7 @@ public class EndEffector extends SubsystemBase {
         Commands.waitUntil(() -> {return hasGamePiece();}) //Checking whether we have a game piece or not.
       ).onlyWhile(()->DriverStation.isEnabled())
       .beforeStarting(()->{m_intakeRunning=true;})
-      .andThen(()->m_motor.setRelativePosition(0.1))
-      .finallyDo(()->{m_motor.setSpeed(0); m_intakeRunning=false;});
+      .finallyDo(()->{m_motor.setRelativePosition(0.3); m_intakeRunning=false;});
     }
 
     public Command ExpelCommand(DoubleSupplier speed, BooleanSupplier extended){
@@ -57,7 +56,7 @@ public class EndEffector extends SubsystemBase {
         Commands.waitUntil(() -> {return m_motor.setSpeed((m_hasCoral ? 1 : -1) * speed.getAsDouble());}), // If we have the coral ( ? ) then forward, anything else backward.
         Commands.waitUntil(() -> {return !hasGamePiece();}), //Checking whether we have a game piece or not.
         Commands.waitSeconds(3).onlyIf(extended)
-      ).onlyWhile(()->DriverStation.isEnabled())
+      ).withTimeout(4).onlyWhile(()->DriverStation.isEnabled())
       .beforeStarting(()->m_intakeRunning=false)
       .finallyDo(()->m_motor.setSpeed(0));
     };
