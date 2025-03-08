@@ -207,11 +207,11 @@ public final class Constants {
  
     public static long[] kAllLEDs = LongStream.range(0,30).toArray();
     
-    public static long[] kArmLEDs = LongStream.concat(LongStream.range(0,5),LongStream.range(25,30)).toArray();
-    public static long[] kElevatorLEDs = LongStream.concat(LongStream.range(5,10),LongStream.range(20,25)).toArray();
-    public static long[] kEffectorLEDs = LongStream.concat(LongStream.range(5,7),LongStream.range(15,20)).toArray();
-    public static long[] kClimberLEDs = LongStream.concat(LongStream.range(7,9),LongStream.range(10,15)).toArray();
-    public static long[] kSwerveLEDs = LongStream.concat(LongStream.range(9,11),LongStream.range(5,10)).toArray();
+    public static long[] kArmLEDs = LongStream.concat(LongStream.range(0,3),LongStream.range(27,30)).toArray();
+    public static long[] kElevatorLEDs = LongStream.concat(LongStream.range(3,6),LongStream.range(24,27)).toArray();
+    public static long[] kEffectorLEDs = LongStream.concat(LongStream.range(6,9),LongStream.range(21,24)).toArray();
+    public static long[] kClimberLEDs = LongStream.concat(LongStream.range(9,12),LongStream.range(18,21)).toArray();
+    public static long[] kSwerveLEDs = LongStream.concat(LongStream.range(12,15),LongStream.range(15,18)).toArray();
     public static long[] kGyroLEDs = LongStream.concat(LongStream.range(0,7),LongStream.range(23,30)).toArray();
     public static long[] kPhotonVisionLEDs = LongStream.concat(LongStream.range(7,15),LongStream.range(15,23)).toArray();
     public static long[] kPoseEstimatorLEDs = LongStream.concat(LongStream.range(14,16),LongStream.range(16,18)).toArray();
