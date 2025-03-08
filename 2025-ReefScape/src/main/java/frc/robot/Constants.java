@@ -89,6 +89,7 @@ public final class Constants {
   }
 
   public static class EffectorConstants {
+    public static double kExtraTurn = NTDouble.create(0.15, "Effector/kExtraTurn", val->{kExtraTurn=val;});;
     public static MyMotorType kMotorType = MyMotorType.NEO;
     public static int kCANID = 7;
     public static double kIntakeSpeed = NTDouble.create(1, "Effector/kIntakeSpeed", val->{kIntakeSpeed=val;});
@@ -383,6 +384,7 @@ public final class Constants {
   
   public static class AutoConstants {
 
+    public static double kLineupTimeout = NTDouble.create(3, "Autonomous/kLineupTimeout", val -> kLineupTimeout = val);
     public static double kReefDistance = Units.inchesToMeters(NTDouble.create(5.0, "Autonomous/kReefDistance", val -> kReefDistance = Units.inchesToMeters(val)));;
     public static double kReefStartingDistance = Units.inchesToMeters(NTDouble.create(24.0, "Autonomous/kReefStartingDistance", val -> kReefStartingDistance = Units.inchesToMeters(val)));;
     public static double kReefTolerance = Units.inchesToMeters(NTDouble.create(2.0, "Autonomous/kReefToleranceInch", val -> kReefTolerance = Units.inchesToMeters(val)));
