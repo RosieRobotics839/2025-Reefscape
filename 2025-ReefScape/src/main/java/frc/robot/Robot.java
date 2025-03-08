@@ -27,7 +27,6 @@ import frc.robot.subsystems.Vision;
 import frc.utils.Action;
 import frc.robot.subsystems.PoseEstimator;
 import frc.robot.subsystems.SystemLog;
-import frc.robot.subsystems.AutoCommands;
 
 /**
  * The methods in this class are called automatically corresponding to each mode, as described in
@@ -105,7 +104,6 @@ public class Robot extends TimedRobot {
   }
 
   String[] autoArray = {"Do Nothing"
-  , "Get Coral"
   , "Build Your Own A(uto)dventure"};
 
   {SmartDashboard.putStringArray("Auto List", autoArray);}
@@ -124,9 +122,6 @@ public class Robot extends TimedRobot {
   public void autonomousInit() {
 
     switch(SmartDashboard.getString("Auto Selector", "Build Your Own A(uto)dventure")) {
-      case "Get Coral":
-        m_autonomousCommand = AutoCommands.GetCoral();
-        break;
       case "Build Your Own A(uto)dventure":
         m_autonomousCommand = Dashboard.getInstance().BuildYourOwnAutoCommands();
         break;

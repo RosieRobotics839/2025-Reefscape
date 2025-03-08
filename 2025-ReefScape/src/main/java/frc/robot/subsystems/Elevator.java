@@ -140,8 +140,7 @@ public class Elevator extends SubsystemBase {
         return new InstantCommand(()->{m_isCalibrating.set(m_isCalibrating.get()+1);});
     }
 
-    Command c_calibrate = calibrate();
-    private Command calibrate(){ return Commands.sequence(
+    private Command m_calibrate = Commands.sequence(
             // Prep for calibration
             new InstantCommand(()->{
                 m_isCalibrating.set(1);
@@ -158,12 +157,6 @@ public class Elevator extends SubsystemBase {
                 Commands.waitUntil(()->!limitSwitch.get())
             ).unless(()->!limitSwitch.get()),
             // Move down until limit switch is hit
-            new InstantCommand(()->m_EleMotor.setRelativePosition(-(ElevatorConstants.kMaxHeight-ElevatorConstants.kMinHeight)/ElevatorConstants.kSprocketCircumference)),
-            Commands.waitUntil(()->{return limitSwitch.get();}).andThen(increment()).finallyDo(()->m_EleMotor.stopMotor()),
-            // Move up for slow calibration
-            new InstantCommand(()->m_EleMotor.setRelativePosition((ElevatorConstants.kMaxHeight-ElevatorConstants.kMinHeight)/ElevatorConstants.kSprocketCircumference)),
-            Commands.waitUntil(()->!limitSwitch.get()).andThen(increment()).finallyDo(()->m_EleMotor.stopMotor()),
-            // Move down until limit switch is hit again
             new InstantCommand(()->m_EleMotor
                 .withSpeedLimit(ElevatorConstants.kCalibrationSlowSpeed/ElevatorConstants.kSprocketCircumference)
                 .setRelativePosition(-(ElevatorConstants.kMaxHeight-ElevatorConstants.kMinHeight))),
@@ -175,26 +168,25 @@ public class Elevator extends SubsystemBase {
             ).andThen(increment()),
             new InstantCommand(()->{
                 // End calibration and set the position target to 0.
-                setPosition(0);
+                m_EleMotor.setPosition(0);
                 m_isCalibrated.set(true);
                 m_isCalibrating.set(0);
                 // Reset Elevator Speed Limits
                 m_EleMotor.withSpeedLimit(ElevatorConstants.kMaxSpeedPositive/ElevatorConstants.kSprocketCircumference, ElevatorConstants.kMaxSpeedNegative/ElevatorConstants.kSprocketCircumference);
             })
-        ).finallyDo(()->{c_calibrate=calibrate();});
-    }
+        );
 
     @Override
     public void periodic() {
 
-        if (DriverStation.isDisabled() || !m_isCalibrated.get()){
+        if (DriverStation.isDisabled()){
             m_targetHeight = getPosition();
         }
 
         // Start calibration sequence
         if (DriverStation.isEnabled()){
             if (!m_isCalibrated.get() && m_isCalibrating.get()==0){
-                calibrate().schedule();
+                m_calibrate.schedule();
             }
 
             if (m_isCalibrated.get() && m_isCalibrating.get()==0){

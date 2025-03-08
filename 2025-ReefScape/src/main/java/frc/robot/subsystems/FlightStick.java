@@ -83,9 +83,7 @@ public class FlightStick extends Joystick {
         DriveTrain.getInstance().setTargetHeading(DriveTrain.getInstance().getTargetHeading()-Units.degreesToRadians(90)); // CW 90 Degrees
       }));
 
-      Btm4Btn.onTrue(new InstantCommand(() -> {
-        AutoCommands.ReefOffset(Controller.m_scoreLeft);
-      }));
+      Btm4Btn.onTrue(new InstantCommand(()->AutoCommands.DriveReefOffset(Controller.m_scoreLeft)));
       // Btm4Btn.onFalse(new InstantCommand(() -> {
       //   IntakeShooter.getInstance().setIntakeSpeed(0);
       // }));

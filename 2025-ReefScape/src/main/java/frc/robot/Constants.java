@@ -119,7 +119,7 @@ public final class Constants {
 
     public static int klimitSwitchChannel = 0;
 
-    public static int kElevatorMotorCurrentLimit = (NTInteger.create(50, "Elevator/kCurrentLimit", (val) ->Elevator.getInstance().m_EleMotor.withStatorLimit(val)));
+    public static int kElevatorMotorCurrentLimit = (NTInteger.create(40, "Elevator/kCurrentLimit", (val) ->Elevator.getInstance().m_EleMotor.withStatorLimit(val)));
 
     // Values in inches that the elevator should be raised from the bottom to score different heights of coral and algae
     // These need to be tested and adjusted
@@ -274,7 +274,7 @@ public final class Constants {
     // TODO: Tune extra latency to get pose estimator to work smoothly.
     public static double kMaxAmbiguity = NTDouble.create(0.2, "Vision/kMaxAmbiguity", val->kMaxAmbiguity=val);
     public static int    kPipelineIndex = NTInteger.create(0, "Vision/kPipelineIndex", val->Vision.cam1.setPipelineIndex(val));
-    public static double kMinTargetArea = NTDouble.create(.05, "Vision/kMinTargetArea", val->kMinTargetArea=val);
+    public static double kMinTargetArea = NTDouble.create(.1, "Vision/kMinTargetArea", val->kMinTargetArea=val);
     
     // Network Table boolean for switching between field layouts
     public static boolean isChampionshipGame = NTBoolean.create(false, "isChampionshipGame", val -> {isChampionshipGame = val; Vision.getInstance().reloadFieldLayout();});
