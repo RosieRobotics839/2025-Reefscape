@@ -146,6 +146,7 @@ public class Vision extends SubsystemBase {
 
         double ambiguity = result.getBestTarget().getPoseAmbiguity();
         if ((ambiguity > 0 || (DriverStation.isDisabled() && ambiguity == 0)) && ambiguity < VisionConstants.kMaxAmbiguity){
+
           PoseEstimator.getInstance().addVisionMeasurement(robotPose,result.metadata.getCaptureTimestampMicros());
         }
       }
