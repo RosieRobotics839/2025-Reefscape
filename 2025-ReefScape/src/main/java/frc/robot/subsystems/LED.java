@@ -85,7 +85,7 @@ public class LED extends SubsystemBase {
     m_systemhealthy = true;
 
     if (!m_systemhealthy){
-      flash(()->setPixels(LEDConstants.kUnhealthyColor, LEDConstants.kAllLEDs));
+      setPixels(LEDConstants.kUnhealthyColor, LEDConstants.kAllLEDs);
     }
 
     /* Arm */
@@ -95,7 +95,7 @@ public class LED extends SubsystemBase {
     testBool = _arm.m_motor.getMotorTemperature() > LEDConstants.kMaxMotorTemp;
     if (testBool){
       m_systemhealthy = false;
-      flash(()->setPixels(LEDConstants.kMotorTempColor, LEDConstants.kAllLEDs));
+      setPixels(LEDConstants.kMotorTempColor, LEDConstants.kAllLEDs);
     }
 
     // Arm Setup Detection
