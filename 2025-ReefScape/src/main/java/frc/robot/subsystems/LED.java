@@ -200,7 +200,7 @@ public class LED extends SubsystemBase {
       
       // Photonvision Detected AprilTag
       if (Vision.getInstance().m_numTargets > 0){
-        setPixels(LEDConstants.kActivityColor, LEDConstants.kAllLEDs);
+        //setPixels(LEDConstants.kActivityColor, LEDConstants.kAllLEDs);
       }
     }
     sendData();
