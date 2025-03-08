@@ -164,4 +164,29 @@ public class AutoCommands {
             Commands.waitUntil(() -> DriveTrain.getInstance().m_poseQueue.isEmpty() || VectorUtils.isNear(PoseEstimator.getInstance().m_finalPose, target1, AutoConstants.kReefTolerance))
         );
     }
+    
+    public static Command ReefOffset(boolean left){
+        Pose2d target = PoseEstimator.getInstance().m_finalPose.nearest
+                        (Vision.getInstance().aprilTagFieldLayout.getTags()
+                        .stream().map(tag -> tag.pose.toPose2d()).collect(Collectors.toList())); // Hopefully this is readable
+
+        Pose2d target1 = new Pose2d(
+            target.getTranslation().plus(new Translation2d(
+                - AutoConstants.kReefStartingDistance - Constants.kChassis.kWheelBase/2.0,
+                Constants.AutoConstants.kReefOffset * (left ? 1 : -1)
+            )),target.getRotation()
+        );
+                
+        Pose2d target2 = new Pose2d(
+            target.getTranslation().plus(new Translation2d(
+                - AutoConstants.kReefDistance - Constants.kChassis.kWheelBase/2.0,
+                Constants.AutoConstants.kReefOffset * (left ? 1 : -1)
+            )),target.getRotation()
+        );
+                
+        return Commands.sequence(
+            new InstantCommand(() -> PathPlanning.getInstance().navigateTo(target1)),
+            new InstantCommand(() -> PathPlanning.getInstance().navigateTo(target2))
+        );
+    }
 }
