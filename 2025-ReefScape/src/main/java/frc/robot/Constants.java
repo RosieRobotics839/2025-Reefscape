@@ -119,7 +119,7 @@ public final class Constants {
 
     public static int klimitSwitchChannel = 0;
 
-    public static int kElevatorMotorCurrentLimit = (NTInteger.create(30, "Elevator/kCurrentLimit", (val) ->Elevator.getInstance().m_EleMotor.withStatorLimit(val)));
+    public static int kElevatorMotorCurrentLimit = (NTInteger.create(50, "Elevator/kCurrentLimit", (val) ->Elevator.getInstance().m_EleMotor.withStatorLimit(val)));
 
     // Values in inches that the elevator should be raised from the bottom to score different heights of coral and algae
     // These need to be tested and adjusted
