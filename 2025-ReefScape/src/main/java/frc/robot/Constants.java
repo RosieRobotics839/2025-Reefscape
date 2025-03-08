@@ -187,6 +187,7 @@ public final class Constants {
       public static int[] yellow = {255,200,0};
       public static int[] green ={0,255,0};
       public static int[] blue = {0,0,255};
+      public static int[] cyan = {0,230,255};
       public static int[] purple = {150,0,255};
       public static int[] pink = {255,0,150};
       public static int[] white = {255,255,255};
@@ -195,7 +196,8 @@ public final class Constants {
     }
 
     public static int[] kMotorTempColor = colors.red;
-    public static int[] kSetupFailColor = colors.yellow;
+    public static int[] kSetupMovementFailColor = colors.yellow;
+    public static int[] kSetupAwarenessFailColor = colors.cyan;
     public static int[] kHealthyColor1 = colors.orange; 
     public static int[] kHealthyColor2 = colors.white; 
     public static int[] kUnhealthyColor = colors.dkred; 
@@ -216,7 +218,7 @@ public final class Constants {
 
     public static double kUpdateTime = NTDouble.create(0.100, "LED/kUpdateTime", (val)->kUpdateTime=val);
     public static double kBrightness = NTDouble.create(0.1, "LED/kBrightness", (val)->kBrightness=val);
-    public static double kFlashTime = NTDouble.create(0.5, "LED/kFlashTime", (val)->kFlashTime=val);
+    public static double kFlashTime = NTDouble.create(2, "LED/kFlashTime", (val)->kFlashTime=val);
   
   }
 
