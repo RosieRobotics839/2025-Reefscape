@@ -26,6 +26,7 @@ public class Autonomous extends SubsystemBase {
 
   List<Translation2d> m_pathpoints;
 
+  public Boolean m_drivingToReef = false;
   public Pose2d m_aimPoint;
   public double m_aimPointRotationOffset;
 
@@ -124,6 +125,10 @@ public class Autonomous extends SubsystemBase {
   @Override
   public void periodic() {
     
+    if (DriveTrain.getInstance().m_poseQueue.isEmpty()){
+      m_drivingToReef = false;
+    }
+
     // Look for best tag while traveling autonomously
     if (DriveConstants.kAutoTurnToBestTag && DriveTrain.getInstance().m_poseQueue.size() >= 1){
       Rotation2d bestDirection = bestTagRotation(PoseEstimator.getInstance().m_finalPose);

@@ -2,9 +2,7 @@ package frc.robot.subsystems;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 import edu.wpi.first.apriltag.AprilTag;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -178,6 +176,7 @@ public class AutoCommands {
             new InstantCommand(() -> Arm.getInstance().moveToLevel(level)),
             new InstantCommand(() -> PathPlanning.getInstance().navigateTo(target1)),
             new InstantCommand(() -> PathPlanning.getInstance().navigateTo(target2)),
+            new InstantCommand(() -> Autonomous.getInstance().m_drivingToReef = true),
             Commands.waitUntil(() -> DriveTrain.getInstance().m_poseQueue.isEmpty() || VectorUtils.isNear(PoseEstimator.getInstance().m_finalPose, target2, AutoConstants.kReefTolerance)),
             EndEffector.getInstance().ExpelCommand(()->(level == ScoreLevel.TROUGH ? EffectorConstants.kTroughOuttakeSpeed : EffectorConstants.kOuttakeSpeed), ()->level==ScoreLevel.TROUGH),
             new InstantCommand(() -> PathPlanning.getInstance().navigateTo(target1)),
@@ -203,6 +202,7 @@ public class AutoCommands {
 
         PathPlanning.getInstance().navigateTo(target1);
         PathPlanning.getInstance().navigateTo(target2);
+        Autonomous.getInstance().m_drivingToReef = true;
 
     }
 }
