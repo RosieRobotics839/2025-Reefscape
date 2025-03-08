@@ -30,12 +30,12 @@ public class Autonomous extends SubsystemBase {
   public double m_aimPointRotationOffset;
 
   public static List<Translation2d> bluereef = new ArrayList<Translation2d>(){{
-    add(new Translation2d(3.670763, 3.527651));
-    add(new Translation2d(3.643788, 4.550250));
-    add(new Translation2d(4.551053, 4.960700));
-    add(new Translation2d(5.382699, 4.577225));
-    add(new Translation2d(5.396187, 3.527651));
-    add(new Translation2d(4.493562, 3.000275));
+    add(new Translation2d(3.5, 3.4));
+    add(new Translation2d(3.5, 4.6));
+    add(new Translation2d(4.5, 5.15));
+    add(new Translation2d(5.5, 4.6));
+    add(new Translation2d(5.5, 3.4));
+    add(new Translation2d(4.5, 2.85));
   }};
   public static List<Translation2d> bargecolumn = new ArrayList<Translation2d>(){{
     add(new Translation2d(8.160,3.46));
