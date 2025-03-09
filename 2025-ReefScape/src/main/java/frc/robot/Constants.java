@@ -445,7 +445,9 @@ public final class Constants {
 
       public static double kStoppedRatio = NTDouble.create(0.03, "DriveConstants/kStoppedRatio", val->kStoppedRatio = val);
 
-      public static double kMidPointAccuracyFactor = NTDouble.create(3, "DriveConstants/kMidPointAccuracyFactor", val->kMidPointAccuracyFactor = val);;
+      public static double kMidPointAccuracyFactor = NTDouble.create(3, "DriveConstants/kMidPointAccuracyFactor", val->kMidPointAccuracyFactor = val);
+
+    public static double kAutoCrossTrackKp = Units.feetToMeters(NTDouble.create(3.0, "LED/kAutoCrossTrackKp", (val)->kAutoCrossTrackKp = Units.feetToMeters(val)));
 
     }
 

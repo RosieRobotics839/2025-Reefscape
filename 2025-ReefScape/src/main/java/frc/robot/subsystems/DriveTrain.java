@@ -53,6 +53,8 @@ public class DriveTrain extends SubsystemBase {
   public double m_autoSpeed = 0;
   public SlewRateLimiter m_autoAccelLimiter = new SlewRateLimiter(DriveConstants.kAutoAccelLimiter, -1E9, 0);
 
+  public Pose2d m_poseQueueStart;
+
   private double m_forward, m_left, m_rotate;
   private double m_forwardcmd, m_leftcmd, m_rotatecmd;
   private boolean m_controllerInputActive = false;
@@ -139,7 +141,8 @@ public class DriveTrain extends SubsystemBase {
   public void PublishPoseQueue(){
     List<Pose2d> poseQueue = m_poseQueue.stream().map((a)->new Pose2d(a.getTranslation(),
       (a.getRotation()==null ? new Rotation2d(0) : a.getRotation()))).collect(Collectors.toList());
-    poseQueue.add(0, PoseEstimator.getInstance().m_finalPose);
+    if (m_poseQueueStart != null)
+      poseQueue.add(m_poseQueueStart);
     PoseEstimator.getInstance().m_field.getObject("AutoTraj").setPoses(poseQueue);
   }
 
@@ -149,7 +152,7 @@ public class DriveTrain extends SubsystemBase {
       Twist2d movement;
       if (VectorUtils.isNear(PoseEstimator.getInstance().m_finalPose, m_poseQueue.peek(), (m_poseQueue.size() > 1 ? DriveConstants.kMidPointAccuracyFactor : 1) * DriveConstants.kAutoToleranceDistance, (m_poseQueue.size() > 1 ? DriveConstants.kMidPointAccuracyFactor : 1) * DriveConstants.kAutoToleranceAngle)){
         // Reached Target Pose
-        m_poseQueue.poll();
+        m_poseQueueStart = m_poseQueue.poll();
         movement = new Twist2d(0,0,0);
         Drive(movement);
         nt_distance.set(0);
@@ -160,7 +163,15 @@ public class DriveTrain extends SubsystemBase {
         nt_distance.set(distance);
         m_autoSpeed = m_autoAccelLimiter.calculate(Math.max(Math.min(1,distance/(DriveConstants.kAutoSlowDist))*DriveConstants.kAutoMaxSpeed, DriveConstants.kAutoMinSpeed));
         Translation2d vector = VectorUtils.vectorInDirectionOf(diff, m_autoSpeed);
-        movement = new Twist2d(vector.getX(), vector.getY(), 0);
+
+        double crossTrackError = VectorUtils.crossTrackError(PoseEstimator.getInstance().m_finalPose, m_poseQueueStart, m_poseQueue.peek());
+
+        double crossTrackCorrection = crossTrackError * DriveConstants.kAutoCrossTrackKp;
+        Translation2d correctionVector = VectorUtils.vectorInDirectionOf(VectorUtils.poseDiff(m_poseQueue.peek(), m_poseQueueStart).rotateBy(new Rotation2d(Math.PI/2)), crossTrackCorrection);
+
+        Translation2d drivevector = vector.plus(correctionVector);
+
+        movement = new Twist2d(drivevector.getX(), drivevector.getY(), 0);
         Drive(movement);
         if (m_poseQueue.peek().getRotation() != null && distance < DriveConstants.kAutoTurnToPoseDistance){
           double angle = (m_poseQueue.peek().getRotation().getRadians());

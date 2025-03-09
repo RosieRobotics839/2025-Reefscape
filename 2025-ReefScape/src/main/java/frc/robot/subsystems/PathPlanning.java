@@ -191,6 +191,7 @@ public class PathPlanning {
         for (int i=1; i<route.size()-1; i++){
             DriveTrain.getInstance().m_poseQueue.offer(new Pose2d(route.get(i).getPose().getTranslation(),null));
         }
+        DriveTrain.getInstance().m_poseQueueStart = from;
         DriveTrain.getInstance().m_poseQueue.offer(to);
         DriveTrain.getInstance().PublishPoseQueue();
     }
