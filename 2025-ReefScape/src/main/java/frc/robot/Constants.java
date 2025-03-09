@@ -4,6 +4,7 @@
 
 package frc.robot;
 
+import java.io.File;
 import java.util.stream.LongStream;
 
 import edu.wpi.first.math.filter.Debouncer;
@@ -273,6 +274,12 @@ public final class Constants {
     public static double kVisionWeightPos = NTDouble.create(0.2, "Pose/kVisionWeightPos", val->kVisionWeightPos=val);
     public static double kGyroWeight = NTDouble.create(0.10, "Pose/kGyroWeight",val->kGyroWeight=val);
     public static double kDriveSlip = NTDouble.create(1.0, "Pose/kDriveSlip",val->kDriveSlip=val);;
+  }
+
+  public static class OrchestraConstants{
+    public static String getSongSelection(){
+      return Filesystem.getDeployDirectory() + "/" + "song10.chrp";
+    }
   }
 
   public static class VisionConstants{
