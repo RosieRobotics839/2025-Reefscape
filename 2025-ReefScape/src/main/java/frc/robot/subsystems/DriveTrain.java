@@ -170,7 +170,7 @@ public class DriveTrain extends SubsystemBase {
 
         crossTrackError = VectorUtils.crossTrackError(PoseEstimator.getInstance().m_finalPose, m_poseQueueStart, m_poseQueue.peek());
 
-        double crossTrackCorrection = Math.max(-DriveConstants.kAutoCrossTrackMax, Math.min(DriveConstants.kAutoCrossTrackMax, crossTrackError * DriveConstants.kAutoCrossTrackKp));
+        double crossTrackCorrection = -Math.max(-DriveConstants.kAutoCrossTrackMax, Math.min(DriveConstants.kAutoCrossTrackMax, crossTrackError * DriveConstants.kAutoCrossTrackKp));
         Translation2d correctionVector = VectorUtils.vectorInDirectionOf(VectorUtils.poseDiff(m_poseQueue.peek(), m_poseQueueStart).rotateBy(new Rotation2d(Math.PI/2)), crossTrackCorrection);
 
         Translation2d drivevector = vector.plus(correctionVector);
