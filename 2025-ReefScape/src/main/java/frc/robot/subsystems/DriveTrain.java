@@ -10,6 +10,7 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import frc.utils.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -116,7 +117,8 @@ public class DriveTrain extends SubsystemBase {
   }
 
   public LinkedList<Pose2d> m_poseQueue = new LinkedList<Pose2d>();
-
+  public boolean m_isStoppedConfirmed;
+  public Debouncer stoppedConfirmed = new Debouncer(3, Debouncer.DebounceType.kRising);
   public boolean isStopped(){
     return 
     Math.abs(frontLeft.m_motorDrive.getVelocity()) <= DriveConstants.kStoppedRatio*DriveConstants.kAutoMaxSpeed &&
@@ -267,6 +269,7 @@ public class DriveTrain extends SubsystemBase {
       m_motorSetupDone = testBool;
     }
 
+    m_isStoppedConfirmed = stoppedConfirmed.calculate(isStopped());
     // Reset target heading on USER button press
     if (!RobotController.isSysActive()){
       m_targetHeading = PoseEstimator.getInstance().m_finalPose.getRotation().getRadians();
