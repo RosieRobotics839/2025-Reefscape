@@ -354,8 +354,8 @@ public final class Constants {
   // Chassis configuration
   public static class kChassis {
     // TODO: Update for Delta Wheel Position
-    public static final double kTrackWidth = Units.inchesToMeters(20.75);  // Distance between right and left wheels
-    public static final double kWheelBase = Units.inchesToMeters(22.75);       // Distance between front and back wheels
+    public static final double kTrackWidth = Units.inchesToMeters(20.75);//24  // Distance between right and left wheels
+    public static final double kWheelBase = Units.inchesToMeters(22.75);   //24.25    // Distance between front and back wheels
   }
 
   public static class ClimberConstants {
@@ -419,12 +419,12 @@ public final class Constants {
       };
       public static double kMaxSpeed = Units.feetToMeters(NTDouble.create(4, "DriveConstants/MaxSpeed",val -> DriveTrain.getInstance().setMaxSpeed(Units.feetToMeters(val))));
       public static boolean kAutoTurnToBestTag = NTBoolean.create(false,"DriveConstants/kAuto/TurnToBestTag",val->kAutoTurnToBestTag=val);
-      public static double kAutoMaxSpeed = Units.feetToMeters(NTDouble.create(7,"DriveConstants/kAuto/MaxSpeedFPS", val->kAutoMaxSpeed = Units.feetToMeters(val)));
-      public static double kAutoMinSpeed = Units.feetToMeters(NTDouble.create(1.0,"DriveConstants/kAuto/MinSpeedFPS", val->kAutoMinSpeed = Units.feetToMeters(val)));
+      public static double kAutoMaxSpeed = Units.feetToMeters(NTDouble.create(8,"DriveConstants/kAuto/MaxSpeedFPS", val->kAutoMaxSpeed = Units.feetToMeters(val)));
+      public static double kAutoMinSpeed = Units.feetToMeters(NTDouble.create(1.5,"DriveConstants/kAuto/MinSpeedFPS", val->kAutoMinSpeed = Units.feetToMeters(val)));
       public static double kAutoAccelLimiter = Units.feetToMeters(NTDouble.create(8,"DriveConstants/kAuto/AccelLimiterFPS2", val->DriveTrain.getInstance().m_autoAccelLimiter = new SlewRateLimiter(Units.feetToMeters(val),-1E9,DriveTrain.getInstance().m_autoSpeed)));
       public static double kAutoMaxRotSpeed = Units.degreesToRadians(NTDouble.create(120,"DriveConstants/kAuto/MaxRotSpeedDPS", val->kAutoMaxRotSpeed = Units.degreesToRadians(val)));
       public static double kAutoTurnToPoseDistance = Units.feetToMeters(NTDouble.create(10, "DriveConstants/kAuto/TurnToPoseDistanceFt", val->kAutoTurnToPoseDistance = Units.feetToMeters(val)));
-      public static double kAutoSlowDist = Units.feetToMeters(NTDouble.create(4,"DriveConstants/kAuto/SlowDistFt",val->kAutoSlowDist=Units.feetToMeters(val)));
+      public static double kAutoSlowDist = Units.feetToMeters(NTDouble.create(3,"DriveConstants/kAuto/SlowDistFt",val->kAutoSlowDist=Units.feetToMeters(val)));
       public static double kAutoToleranceDistance = Units.feetToMeters(NTDouble.create(0.15,"DriveConstants/kAuto/ToleranceDistance",val->kAutoToleranceDistance=Units.feetToMeters(val)));
       public static double kAutoToleranceAngle = Units.degreesToRadians(NTDouble.create(2,"DriveConstants/kAuto/ToleranceAngle",val->kAutoToleranceAngle=Units.degreesToRadians(val)));
 
@@ -447,8 +447,8 @@ public final class Constants {
 
       public static double kMidPointAccuracyFactor = NTDouble.create(3, "DriveConstants/kMidPointAccuracyFactor", val->kMidPointAccuracyFactor = val);
 
-    public static double kAutoCrossTrackKp = Units.feetToMeters(NTDouble.create(3.0, "LED/kAutoCrossTrackKp", (val)->kAutoCrossTrackKp = Units.feetToMeters(val)));
-
+      public static double kAutoCrossTrackKp = Units.feetToMeters(NTDouble.create(0.7, "LED/kAutoCrossTrackKp", (val)->kAutoCrossTrackKp = Units.feetToMeters(val)));
+      public static double kAutoCrossTrackMax = Units.feetToMeters(NTDouble.create(0.7, "LED/kAutoCrossTrackMax", (val)->kAutoCrossTrackMax = Units.feetToMeters(val)));
     }
 
     public static class kSwerveModule {

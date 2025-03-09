@@ -87,12 +87,13 @@ public class DriveTrain extends SubsystemBase {
   public double m_currentHeading;
  
   public double headingError;
-
+  public double crossTrackError = 0;
   final DoublePublisher nt_forward = table.getDoubleTopic("forward").publish();
   final DoublePublisher nt_left = table.getDoubleTopic("left").publish();
   final DoublePublisher nt_rotate = table.getDoubleTopic("rotate").publish();
   final DoublePublisher nt_speed = table.getDoubleTopic("speed").publish();
   final DoublePublisher nt_distance = table.getDoubleTopic("distance").publish();
+  final DoublePublisher nt_xtrackerr = table.getDoubleTopic("xtrackerr").publish();
   final BooleanPublisher nt_fieldCentricDriving = table.getBooleanTopic("HeadingPID/fieldCentricDriving").publish();
 
   public PIDController m_headingPID;
@@ -149,6 +150,7 @@ public class DriveTrain extends SubsystemBase {
   }
 
   private void RunDrive() {
+    crossTrackError = 0;
     // Follow Drive to Pose Queue, unless controller input is active, which clears the queue in periodic().
     if (!m_poseQueue.isEmpty()){ 
       Twist2d movement;
@@ -166,9 +168,9 @@ public class DriveTrain extends SubsystemBase {
         m_autoSpeed = m_autoAccelLimiter.calculate(Math.max(Math.min(1,distance/(DriveConstants.kAutoSlowDist))*DriveConstants.kAutoMaxSpeed, DriveConstants.kAutoMinSpeed));
         Translation2d vector = VectorUtils.vectorInDirectionOf(diff, m_autoSpeed);
 
-        double crossTrackError = VectorUtils.crossTrackError(PoseEstimator.getInstance().m_finalPose, m_poseQueueStart, m_poseQueue.peek());
+        crossTrackError = VectorUtils.crossTrackError(PoseEstimator.getInstance().m_finalPose, m_poseQueueStart, m_poseQueue.peek());
 
-        double crossTrackCorrection = crossTrackError * DriveConstants.kAutoCrossTrackKp;
+        double crossTrackCorrection = Math.max(-DriveConstants.kAutoCrossTrackMax, Math.min(DriveConstants.kAutoCrossTrackMax, crossTrackError * DriveConstants.kAutoCrossTrackKp));
         Translation2d correctionVector = VectorUtils.vectorInDirectionOf(VectorUtils.poseDiff(m_poseQueue.peek(), m_poseQueueStart).rotateBy(new Rotation2d(Math.PI/2)), crossTrackCorrection);
 
         Translation2d drivevector = vector.plus(correctionVector);
@@ -213,7 +215,8 @@ public class DriveTrain extends SubsystemBase {
       m_left    = m_maxSpeed * m_leftcmd;
     }
     Translation2d translationReq = new Translation2d(m_forward, m_left);
-
+    
+    nt_xtrackerr.set(crossTrackError);
     nt_speed.set(translationReq.getNorm());
 
     // Calculate new Swerve Module states using Reverse Kinematics
