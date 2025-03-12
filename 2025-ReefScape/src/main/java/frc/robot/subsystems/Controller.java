@@ -9,6 +9,7 @@ import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import frc.utils.VectorUtils;
 import frc.utils.NTValues.NTBoolean;
@@ -23,6 +24,7 @@ import edu.wpi.first.networktables.NetworkTableInstance;
 import frc.robot.Constants.ArmConstants;
 import frc.robot.Constants.EffectorConstants;
 import frc.robot.Constants.ElevatorConstants;
+import frc.robot.Constants.OperatorConstants;
 import frc.robot.Constants.ScoreConstants;
 import frc.robot.Constants.ScoreConstants.GamePieceSelected;
 import frc.robot.Constants.ScoreConstants.ScoreLevel;
@@ -83,26 +85,38 @@ public class Controller extends XboxController {
 
   public static class DriveButtons {
 
-    Integer m_speedSelector = DriveConstants.kMaxSpeedDefault;
-    DriveTrain driveTrain = DriveTrain.getInstance(); 
-    Autonomous m_autonomous = Autonomous.getInstance();
-    static ControllerButtons buttons; 
-
-    DriveButtons(){
-      buttons.X.onTrue(new InstantCommand(() -> {
+    public DriveButtons(CommandXboxController controller) {
+      controller.back().onTrue(new InstantCommand(() -> {
         m_speedSelector = rangeLimit(++m_speedSelector, 0, DriveConstants.kMaxSpeedMetersPerSecond.length-1);
-        driveTrain.setMaxSpeed(DriveConstants.kMaxSpeedMetersPerSecond[m_speedSelector]);
+        DriveTrain.getInstance().setMaxSpeed(DriveConstants.kMaxSpeedMetersPerSecond[m_speedSelector]);
       }));
-      buttons.Square.onTrue(new InstantCommand(() -> {
+      controller.start().onTrue(new InstantCommand(() -> {
         m_speedSelector = rangeLimit(--m_speedSelector, 0, DriveConstants.kMaxSpeedMetersPerSecond.length-1);
-        driveTrain.setMaxSpeed(DriveConstants.kMaxSpeedMetersPerSecond[m_speedSelector]);
+        DriveTrain.getInstance().setMaxSpeed(DriveConstants.kMaxSpeedMetersPerSecond[m_speedSelector]);
       }));
-      buttons.Triangle.onTrue(new InstantCommand(()->{
-        m_autonomous.aimAtPoint(new Pose2d(Units.feetToMeters(3),Units.feetToMeters(1),new Rotation2d(0)));
+      controller.rightBumper().onTrue(new InstantCommand(() -> {
+        DriveTrain.getInstance().setTargetHeading(DriveTrain.getInstance().getTargetHeading()+Units.degreesToRadians(90)); // CCW 90 Degrees
       }));
-      buttons.Triangle.onFalse(new InstantCommand(()->{
-        m_autonomous.stopAiming();
+      controller.leftBumper().onTrue(new InstantCommand(() -> {
+        DriveTrain.getInstance().setTargetHeading(DriveTrain.getInstance().getTargetHeading()-Units.degreesToRadians(90)); // CW 90 Degrees
       }));
+      controller.leftTrigger(0.2).onTrue(new InstantCommand(()->
+        AutoCommands.DriveReefOffset(Controller.m_scoreLeft
+      )));
+      controller.rightStick().onTrue(new InstantCommand(() -> {
+        OperatorConstants.kFieldCentricDriving = !OperatorConstants.kFieldCentricDriving;
+      }));
+      controller.leftStick().onTrue(new InstantCommand(() -> {
+        DriveTrain.getInstance().setMaxRotate(DriveConstants.kGetItOffMeRotationSpeed);
+      }));
+      controller.leftStick().onFalse(new InstantCommand(() -> {
+        DriveTrain.getInstance().setMaxRotate(Units.degreesToRadians(75));
+      }));
+    }
+
+    Integer m_speedSelector = DriveConstants.kMaxSpeedDefault;
+    DriveButtons(){
+      
     }
 
   }
@@ -281,7 +295,7 @@ public class Controller extends XboxController {
     Translation2d Rstick = new Translation2d(this.getRightX(),this.getRightY());
     Rstick = VectorUtils.deadband(Rstick,0.1,1);
     Ry = Rstick.getY();
-    Rx = Rstick.getX();
+    Rx = -Rstick.getX();
   }
   
   public void accessoryPeriodic(){

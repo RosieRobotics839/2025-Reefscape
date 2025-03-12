@@ -393,6 +393,8 @@ public final class Constants {
     public static double kSourceTolerance = Units.inchesToMeters(NTDouble.create(12.0, "Autonomous/kSourceNearDistanceInch", val -> kSourceTolerance = Units.inchesToMeters(val)));
     public static double kReefOffset = Units.inchesToMeters(NTDouble.create(5.25,"Autonomous/kReefOffset",val -> kReefOffset = Units.inchesToMeters(7)));
     public static double kTroughClearance = NTDouble.create(2, "Autonomous/kTroughClearance", val -> kTroughClearance = Units.inchesToMeters(2));
+    // Ooga Booga Number
+    public static double kStaticReefOffset = Units.inchesToMeters(NTDouble.create(2,"Autonomous/kStaticReefOffset",val -> kTroughClearance = Units.inchesToMeters(2)));
     
     public static double kFieldLength = 16.451;
     public static double kFieldWidth = 8.211;
