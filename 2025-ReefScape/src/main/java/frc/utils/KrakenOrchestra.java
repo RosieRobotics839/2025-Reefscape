@@ -10,8 +10,6 @@ import com.ctre.phoenix6.Orchestra;
 import com.ctre.phoenix6.hardware.TalonFX;
 
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.Constants.ArmConstants;
-import frc.robot.Constants.OrchestraConstants;
 import frc.robot.subsystems.Arm;
 import frc.robot.subsystems.DriveTrain;
 import frc.robot.subsystems.Elevator;
@@ -27,29 +25,64 @@ public class KrakenOrchestra extends SubsystemBase {
 
     public Orchestra m_orchestra = new Orchestra();
 
-    List<Motor> instruments = new ArrayList<>();
+    private List<TalonFX> instruments = new ArrayList<>();
+    private String currentSong = "";
 
-    instruments.add(_arm.m_motor);
-    instruments.add(_elevator.m_motor);
-    instruments.add(_driveTrain.frontLeft);
-    instruments.add(_driveTrain.frontRight);
-    instruments.add(_driveTrain.rearLeft);
-    instruments.add(_driveTrain.rearRight);
+    private KrakenOrchestra() {
+        // Initialize orchestra with all Kraken motors on the robot
+        initializeInstruments();
+    }
 
-    Arm _arm = Arm.getInstance();
-    Elevator _elevator = Elevator.getInstance();
-    DriveTrain _driveTrain = DriveTrain.getInstance();
-
-    public KrakenOrchestra(instruments){
-        m_orchestra.addInstrument(motor);
+    private void initializeInstruments() {
+        // Clear any existing instruments
+        instruments.clear();
+        
+        // Add Kraken motors from our subsystems
+        try {
+            // Only add motors that are TalonFX (Kraken) instances
+            if (Arm.getInstance().m_motor.motor_talon != null) {
+                instruments.add(Arm.getInstance().m_motor.motor_talon);
+            }
+            
+            if (Elevator.getInstance().m_EleMotor.motor_talon != null) {
+                instruments.add(Elevator.getInstance().m_EleMotor.motor_talon);
+            }
+            
+            DriveTrain dt = DriveTrain.getInstance();
+            if (dt.frontLeft.m_motorDrive.motor_talon != null) instruments.add(dt.frontLeft.m_motorDrive.motor_talon);
+            if (dt.frontRight.m_motorDrive.motor_talon != null) instruments.add(dt.frontRight.m_motorDrive.motor_talon);
+            if (dt.rearLeft.m_motorDrive.motor_talon != null) instruments.add(dt.rearLeft.m_motorDrive.motor_talon);
+            if (dt.rearRight.m_motorDrive.motor_talon != null) instruments.add(dt.rearRight.m_motorDrive.motor_talon);
+            
+            // Add each instrument to the orchestra
+            for (TalonFX motor : instruments) {
+                m_orchestra.addInstrument(motor);
+            }
+        } catch (Exception e) {
+            System.out.println("Error initializing orchestra instruments: " + e.getMessage());
+        }
     }
 
     // Playing Music 
-    public void playMusic(String filepath){
+    public void playMusic(String filepath) {
+        if (filepath == null || filepath.isEmpty()) {
+            return;
+        }
+        
+        // If we're already playing this song, don't restart it
+        if (isPlaying() && filepath.equals(currentSong)) {
+            return;
+        }
+        
+        currentSong = filepath;
+        stopMusic(); // Stop any currently playing music
+        
         var status = m_orchestra.loadMusic(filepath);
-        if (status.isOK()){
+        if (status.isOK()) {
             m_orchestra.play();
-        } 
+        } else {
+            System.out.println("Failed to load music: " + status.toString());
+        }
     }
 
     public void stopMusic(){
