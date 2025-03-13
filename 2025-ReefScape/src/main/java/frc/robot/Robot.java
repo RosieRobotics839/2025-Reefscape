@@ -8,7 +8,10 @@ import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
@@ -25,6 +28,7 @@ import frc.robot.subsystems.LED;
 import frc.robot.subsystems.PathPlanning;
 import frc.robot.subsystems.Vision;
 import frc.utils.Action;
+import frc.utils.KrakenOrchestra;
 import frc.robot.subsystems.PoseEstimator;
 import frc.robot.subsystems.SystemLog;
 
@@ -55,6 +59,7 @@ public class Robot extends TimedRobot {
 
   private Debouncer m_recording = new Debouncer(10, Debouncer.DebounceType.kFalling);
   private Action m_recordTrigger = new Action(false).onTrue(()->DataLogManager.start()).onFalse(()->DataLogManager.stop());
+    private SendableChooser<String> songChooser = new SendableChooser<>();
 
   /**
    * This function is run when the robot is first started up and should be used for any
@@ -146,6 +151,8 @@ public class Robot extends TimedRobot {
     }
   }
 
+  KrakenOrchestra _orchestra = KrakenOrchestra.getInstance();
+
   /** This function is called periodically during operator control. */
   @Override
   public void teleopPeriodic() {}
@@ -155,11 +162,23 @@ public class Robot extends TimedRobot {
   public void disabledInit() {
     DriveTrain.getInstance().m_poseQueue.clear();
     Autonomous.getInstance().stopAiming();
+
+    // Song Chooser for Music Playing
+    songChooser.setDefaultOption("Song 10", Filesystem.getDeployDirectory() + "/" + "song10.chrp");
+    songChooser.addOption("Congrats", "congrats.chrp");
+
+    Shuffleboard.getTab("Music").add("Song Selector", songChooser);
   }
 
   /** This function is called periodically when disabled. */
   @Override
-  public void disabledPeriodic() {}
+  public void disabledPeriodic() {
+
+    String selectedSong = songChooser.getSelected();
+    if (!DriverStation.isFMSAttached() && !isTeleopEnabled()) {
+        _orchestra.playMusic(selectedSong);
+    }
+  }
 
   /** This function is called once when test mode is enabled. */
   @Override
