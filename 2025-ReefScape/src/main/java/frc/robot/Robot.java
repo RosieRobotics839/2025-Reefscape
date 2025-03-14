@@ -126,6 +126,8 @@ public class Robot extends TimedRobot {
   @Override
   public void autonomousInit() {
 
+    _orchestra.stopMusic(); // Stopping music when we switch to auto mode
+
     switch(SmartDashboard.getString("Auto Selector", "Build Your Own A(uto)dventure")) {
       case "Build Your Own A(uto)dventure":
         m_autonomousCommand = Dashboard.getInstance().BuildYourOwnAutoCommands();
@@ -143,7 +145,7 @@ public class Robot extends TimedRobot {
   @Override
   public void teleopInit() {
 
-    //IntakeShooter.getInstance().m_aimForDistance = false;
+    _orchestra.stopMusic(); // Stopping music when we switch to teleop mode
     DriveTrain.getInstance().m_poseQueue.clear();
     Autonomous.getInstance().stopAiming();
     if (m_autonomousCommand != null) {
@@ -165,7 +167,7 @@ public class Robot extends TimedRobot {
 
     // Song Chooser for Music Playing
     songChooser.setDefaultOption("Song 10", Filesystem.getDeployDirectory() + "/" + "song10.chrp");
-    songChooser.addOption("Congrats", "congrats.chrp");
+    songChooser.addOption("Congrats", Filesystem.getDeployDirectory() + "/" + "congrats.chrp");
 
     Shuffleboard.getTab("Music").add("Song Selector", songChooser);
   }

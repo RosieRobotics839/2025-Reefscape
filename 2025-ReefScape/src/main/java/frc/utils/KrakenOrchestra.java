@@ -59,7 +59,8 @@ public class KrakenOrchestra extends SubsystemBase {
                 m_orchestra.addInstrument(motor);
             }
         } catch (Exception e) {
-            System.out.println("Error initializing orchestra instruments: " + e.getMessage());
+            // System.out.println("Error initializing orchestra instruments: " + e.getMessage());
+            // Driver Station Log flows too fast to catch this
         }
     }
 
@@ -81,7 +82,8 @@ public class KrakenOrchestra extends SubsystemBase {
         if (status.isOK()) {
             m_orchestra.play();
         } else {
-            System.out.println("Failed to load music: " + status.toString());
+            // System.out.println("Failed to load music: " + status.toString());
+            // Driver Station Log flows too fast to catch this
         }
     }
 
