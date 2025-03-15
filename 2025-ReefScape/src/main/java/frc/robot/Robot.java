@@ -4,6 +4,8 @@
 
 package frc.robot;
 
+import java.nio.file.FileSystem;
+
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -168,6 +170,9 @@ public class Robot extends TimedRobot {
     // Song Chooser for Music Playing
     songChooser.setDefaultOption("Song 10", Filesystem.getDeployDirectory() + "/" + "song10.chrp");
     songChooser.addOption("Congrats", Filesystem.getDeployDirectory() + "/" + "congrats.chrp");
+    songChooser.addOption("UnderTheSea", Filesystem.getDeployDirectory() + "/" + "underthesea.chrp");
+    songChooser.addOption("SpongeBobOpeningSong", Filesystem.getDeployDirectory() + "/" + "spongebobopening.chrp");
+    songChooser.addOption("WellermanSeaShanty", Filesystem.getDeployDirectory() + "/" + "wellermanshanty.chrp");
 
     Shuffleboard.getTab("Music").add("Song Selector", songChooser);
   }
