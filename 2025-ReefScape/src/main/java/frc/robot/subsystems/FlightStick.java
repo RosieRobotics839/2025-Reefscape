@@ -41,7 +41,7 @@ public class FlightStick extends Joystick {
 
     private Integer m_speedSelector = DriveConstants.kMaxSpeedDefault;
 
-    public JoystickButton Trigger,Top2Btn,Top3Btn,Top4Btn,Top5Btn,Top6Btn,Btm7Btn,Btm8Btn,Btm9Btn,Btm10Btn,Btm11Btn,Btm12Btn;
+    public JoystickButton Trigger,Top2Btn,Top3Btn,Top4Btn,Top5Btn,Top6Btn,Btm4Btn,Btm7Btn,Btm8Btn,Btm9Btn,Btm10Btn,Btm11Btn,Btm12Btn;
     DriveButtons(FlightStick controller){
       Trigger   = new JoystickButton(controller, 1);  // Trigger on Joystick
       Top2Btn   = new JoystickButton(controller, 2);  // Button on side of main stick
@@ -49,7 +49,8 @@ public class FlightStick extends Joystick {
       Top4Btn   = new JoystickButton(controller, 4);  //  |
       Top5Btn    = new JoystickButton(controller, 5);  // |
       Top6Btn    = new JoystickButton(controller, 6);  // ↓
-      Btm7Btn  = new JoystickButton(controller, 7);  // On bottom part of stick
+      Btm4Btn  = new JoystickButton(controller, 4);  // On bottom part of stick
+      Btm7Btn  = new JoystickButton(controller, 7);  //  |
       Btm8Btn  = new JoystickButton(controller, 8);  //  |
       Btm9Btn  = new JoystickButton(controller, 9);  //  |
       Btm10Btn  = new JoystickButton(controller, 10); // |
@@ -82,9 +83,7 @@ public class FlightStick extends Joystick {
         DriveTrain.getInstance().setTargetHeading(DriveTrain.getInstance().getTargetHeading()-Units.degreesToRadians(90)); // CW 90 Degrees
       }));
 
-      // Btm4Btn.whileTrue(new InstantCommand(() -> {
-      //   IntakeShooter.getInstance().setIntakeSpeed(1);
-      // }));
+      Btm8Btn.onTrue(new InstantCommand(()->AutoCommands.DriveReefOffset(Controller.m_scoreLeft)));
       // Btm4Btn.onFalse(new InstantCommand(() -> {
       //   IntakeShooter.getInstance().setIntakeSpeed(0);
       // }));

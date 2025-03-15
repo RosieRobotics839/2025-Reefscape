@@ -143,4 +143,38 @@ public class VectorUtils {
       }
       return new Translation2d(r_out, angle_out);
     }
+
+    /**
+     * Calculates the cross-track error from a point to a line segment.
+     *
+     * @param point The point to calculate the error for.
+     * @param lineStart The starting point of the line segment.
+     * @param lineEnd The ending point of the line segment.
+     * @return The cross-track error (perpendicular distance) from the point to the line.
+     *         Returns Double.NaN if any input is null.
+     */
+    public static double crossTrackError(Pose2d point, Pose2d lineStart, Pose2d lineEnd) {
+
+        if (point == null || lineStart == null || lineEnd == null) {
+            return 0;
+        }
+
+        double dx = lineEnd.getX() - lineStart.getX();
+        double dy = lineEnd.getY() - lineStart.getY();
+
+        if (dx == 0 && dy == 0) {
+          // Line segment is a point.  Return distance to that point.
+          return poseDiff(point,lineStart).getTranslation().getNorm();
+        }
+
+        double crossProduct = (lineEnd.getX() - lineStart.getX()) * (point.getY() - lineStart.getY()) -
+                             (lineEnd.getY() - lineStart.getY()) * (point.getX() - lineStart.getX());
+
+        double denominator = Math.sqrt(dx * dx + dy * dy);
+        double distance = crossProduct / denominator; // Cross track error
+
+        return distance;
+    }
+
+
 }

@@ -122,7 +122,7 @@ public class Vision extends SubsystemBase {
    * @param camera PhotonCamera to process
    * @param poseEst PhotonPoseEstimator to update
    */
-  private CamResult processCamera(PhotonCamera camera, final PhotonPoseEstimator poseEst){
+  private CamResult processCamera(PhotonCamera camera, final PhotonPoseEstimator poseEst, boolean ignore){
     int numTargets = 0;
     Optional<PhotonTrackedTarget> bestTarget = Optional.empty();
     Optional<EstimatedRobotPose> robotPose = Optional.empty();
@@ -146,7 +146,10 @@ public class Vision extends SubsystemBase {
 
         double ambiguity = result.getBestTarget().getPoseAmbiguity();
         if ((ambiguity > 0 || (DriverStation.isDisabled() && ambiguity == 0)) && ambiguity < VisionConstants.kMaxAmbiguity){
-          PoseEstimator.getInstance().addVisionMeasurement(robotPose,result.metadata.getCaptureTimestampMicros());
+
+          if (!ignore){
+            PoseEstimator.getInstance().addVisionMeasurement(robotPose,result.metadata.getCaptureTimestampMicros());
+          }
         }
       }
     }
@@ -160,8 +163,8 @@ public class Vision extends SubsystemBase {
     photonPoseEstimatorFront.setReferencePose(PoseEstimator.getInstance().m_finalPose3d);
     photonPoseEstimatorRear.setReferencePose(PoseEstimator.getInstance().m_finalPose3d);
 
-    var cam1result = processCamera(cam1, photonPoseEstimatorFront);
-    var cam2result = processCamera(cam2, photonPoseEstimatorRear);
+    var cam1result = processCamera(cam1, photonPoseEstimatorFront, false);
+    var cam2result = processCamera(cam2, photonPoseEstimatorRear, Autonomous.getInstance().m_drivingToReef);
     
     nt_posefront.set(cam1result);
     nt_poserear.set(cam2result);

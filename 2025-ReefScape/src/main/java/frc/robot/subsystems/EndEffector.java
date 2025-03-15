@@ -48,7 +48,7 @@ public class EndEffector extends SubsystemBase {
         Commands.waitUntil(() -> {return hasGamePiece();}) //Checking whether we have a game piece or not.
       ).onlyWhile(()->DriverStation.isEnabled())
       .beforeStarting(()->{m_intakeRunning=true;})
-      .finallyDo(()->{m_motor.setRelativePosition(0.3); m_intakeRunning=false;});
+      .finallyDo(()->{m_motor.setRelativePosition(EffectorConstants.kExtraTurn); m_intakeRunning=false;});
     }
 
     public Command ExpelCommand(DoubleSupplier speed, BooleanSupplier extended){

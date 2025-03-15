@@ -191,6 +191,7 @@ public class PathPlanning {
         for (int i=1; i<route.size()-1; i++){
             DriveTrain.getInstance().m_poseQueue.offer(new Pose2d(route.get(i).getPose().getTranslation(),null));
         }
+        DriveTrain.getInstance().m_poseQueueStart = from;
         DriveTrain.getInstance().m_poseQueue.offer(to);
         DriveTrain.getInstance().PublishPoseQueue();
     }
@@ -236,11 +237,18 @@ public class PathPlanning {
      */
     public static Pose2d AprilTagAtDistance(int id, Translation2d translation, double radians) {
         Pose2d tagPose = Vision.getInstance().aprilTagFieldLayout.getTagPose(id).get().toPose2d();
+        return PoseAtDistance(tagPose, translation, radians);
+    }
+
+    public static Pose2d PoseAtDistance(Pose2d pose, Translation2d translation, double radians){
         Pose2d result = new Pose2d(
-            tagPose.getTranslation().plus(translation.rotateBy(new Rotation2d(tagPose.getRotation().getRadians()+Math.PI))),
-            tagPose.getRotation().plus(new Rotation2d(radians+Math.PI))
+            pose.getTranslation().plus(translation.rotateBy(new Rotation2d(pose.getRotation().getRadians()+Math.PI))),
+            pose.getRotation().plus(new Rotation2d(radians+Math.PI))
         );
         return result;
+    }
+    public static Pose2d PoseAtDistance(Pose2d pose, Translation2d translation){
+        return PoseAtDistance(pose, translation, 0);
     }
     
     public static Pose2d AprilTagAtDistance(int id, Translation2d translation) {

@@ -26,16 +26,17 @@ public class Autonomous extends SubsystemBase {
 
   List<Translation2d> m_pathpoints;
 
+  public Boolean m_drivingToReef = false;
   public Pose2d m_aimPoint;
   public double m_aimPointRotationOffset;
 
   public static List<Translation2d> bluereef = new ArrayList<Translation2d>(){{
-    add(new Translation2d(2.875,4.820));
-    add(new Translation2d(4.561,5.838));
-    add(new Translation2d(6.138, 4.820));
-    add(new Translation2d(6.138, 3.15));
-    add(new Translation2d(4.561, 2.218));
-    add(new Translation2d(2.875, 3.15));
+    add(new Translation2d(3.5, 3.4));
+    add(new Translation2d(3.5, 4.6));
+    add(new Translation2d(4.5, 5.15));
+    add(new Translation2d(5.5, 4.6));
+    add(new Translation2d(5.5, 3.4));
+    add(new Translation2d(4.5, 2.85));
   }};
   public static List<Translation2d> bargecolumn = new ArrayList<Translation2d>(){{
     add(new Translation2d(8.160,3.46));
@@ -124,6 +125,10 @@ public class Autonomous extends SubsystemBase {
   @Override
   public void periodic() {
     
+    if (DriveTrain.getInstance().m_poseQueue.isEmpty()){
+      m_drivingToReef = false;
+    }
+
     // Look for best tag while traveling autonomously
     if (DriveConstants.kAutoTurnToBestTag && DriveTrain.getInstance().m_poseQueue.size() >= 1){
       Rotation2d bestDirection = bestTagRotation(PoseEstimator.getInstance().m_finalPose);
