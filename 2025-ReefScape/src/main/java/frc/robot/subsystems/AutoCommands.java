@@ -156,6 +156,7 @@ public class AutoCommands {
         return Commands.sequence(
             new InstantCommand(() -> Elevator.getInstance().moveToLevel(level)),
             new InstantCommand(() -> Arm.getInstance().moveToLevel(level)),
+            Commands.waitUntil(() -> Arm.getInstance().isAtPosition() && Elevator.getInstance().isAtPosition()),
             new InstantCommand(() -> PathPlanning.getInstance().navigateTo(target1)),
             new InstantCommand(() -> PathPlanning.getInstance().navigateTo(target2)),
             Commands.waitUntil(() -> DriveTrain.getInstance().m_poseQueue.isEmpty() || VectorUtils.isNear(PoseEstimator.getInstance().m_finalPose, target2, AutoConstants.kReefTolerance)),

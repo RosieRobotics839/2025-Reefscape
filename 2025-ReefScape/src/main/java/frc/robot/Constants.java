@@ -49,11 +49,7 @@ public final class Constants {
   public static class ScoreConstants {
 
     public enum ScoreLevel{
-      FUNNEL, TROUGH, LEVEL2, LEVEL3, LEVEL4
-    }
-
-    public enum GamePieceSelected{
-      ALGAE, CORAL
+      FUNNEL, TROUGH, LEVEL2, LEVEL3, LEVEL4, ALGAE
     }
     
   }
@@ -73,6 +69,7 @@ public final class Constants {
     // Creates Max and Min values for Arm Software Hardstop
     public static double kAngleMax = Units.degreesToRadians(NTDouble.create(95, "Arm/kAngleMax", (val)->kAngleMax = Units.degreesToRadians(val)));
     public static double kAngleMin = Units.degreesToRadians(NTDouble.create(-3, "Arm/kAngleMin", (val)->kAngleMin = Units.degreesToRadians(val)));
+    public static double kAlgaeAngle = Units.degreesToRadians(NTDouble.create(0, "Arm/AlgaeAngle", (val)->kAlgaeAngle = Units.degreesToRadians(val)));
 
     public static double kTargetAngleTrough = Units.degreesToRadians(NTDouble.create(63, "Arm/Target/kAngleTrough", (val)->kTargetAngleTrough = Units.degreesToRadians(val)));
     public static double kTargetAngleLevelMiddle = Units.degreesToRadians(NTDouble.create(63, "Arm/Target/kLevelMiddle", (val)->kTargetAngleLevelMiddle = Units.degreesToRadians(val)));
@@ -202,8 +199,7 @@ public final class Constants {
     public static int[] kHealthyColor2 = colors.white; 
     public static int[] kUnhealthyColor = colors.dkred; 
     public static int[] kActivityColor = colors.blue;
-    public static int[] kAlgaeColor = colors.green;
-    public static int[] kCoralColor = colors.white;
+    public static int[] kClimbColor = colors.white;
  
     public static long[] kAllLEDs = LongStream.range(0,30).toArray();
     

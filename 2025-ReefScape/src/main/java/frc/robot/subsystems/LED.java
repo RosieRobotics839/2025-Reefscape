@@ -12,7 +12,6 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.LEDConstants;
-import frc.robot.subsystems.Controller.AccessoryButtons;
 
 public class LED extends SubsystemBase {
 
@@ -26,6 +25,7 @@ public class LED extends SubsystemBase {
   
   private boolean testBool = true; 
   private double lastFlash = Timer.getFPGATimestamp(); 
+  double timeRemaining = Timer.getMatchTime();
 
   double lastUpdate = 0;
 
@@ -79,6 +79,12 @@ public class LED extends SubsystemBase {
 
   boolean m_systemhealthy;
 
+  public void goClimb() {
+    for (int i = 0; i < 5; i++) {
+    flash(() ->setPixels(LEDConstants.kClimbColor, LEDConstants.kAllLEDs));
+    }
+  }
+
   @Override
   public void periodic() {
 
@@ -86,6 +92,10 @@ public class LED extends SubsystemBase {
 
     if (!m_systemhealthy){
       setPixels(LEDConstants.kUnhealthyColor, LEDConstants.kAllLEDs);
+    }
+
+    if (timeRemaining == 30) {
+      goClimb();
     }
 
     /* Arm */
@@ -123,7 +133,6 @@ public class LED extends SubsystemBase {
     /* End Effector */
     
     EndEffector _effector = EndEffector.getInstance();
-    AccessoryButtons _controller = Controller.getAccessoryButtonsInstance();
     // Test Effector Motor Temperature
     testBool = _effector.m_motor.getMotorTemperature() > LEDConstants.kMaxMotorTemp;
     if (testBool){
@@ -179,12 +188,6 @@ public class LED extends SubsystemBase {
     if (m_systemhealthy){
       if (DriverStation.isDisabled()){
         setAltColors(LEDConstants.kHealthyColor1, LEDConstants.kHealthyColor2, LEDConstants.kAllLEDs);
-      } else {
-        if (_controller.isAlgaeSelected){
-          setPixels(LEDConstants.kAlgaeColor, LEDConstants.kAllLEDs);
-        } else {
-          setPixels(LEDConstants.kCoralColor, LEDConstants.kAllLEDs);
-        }
       }
       
       // Checking to see if we have a game piece
