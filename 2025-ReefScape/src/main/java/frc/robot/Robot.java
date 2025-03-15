@@ -171,6 +171,7 @@ public class Robot extends TimedRobot {
     songChooser.addOption("UnderTheSea", Filesystem.getDeployDirectory() + "/" + "underthesea.chrp");
     songChooser.addOption("SpongeBobOpeningSong", Filesystem.getDeployDirectory() + "/" + "spongebobopening.chrp");
     songChooser.addOption("WellermanSeaShanty", Filesystem.getDeployDirectory() + "/" + "wellerman.chrp");
+    songChooser.addOption("Jeopardy", Filesystem.getDeployDirectory() + "/" + "jeopardy.chrp");
 
     Shuffleboard.getTab("Music").add("Song Selector", songChooser);
   }
