@@ -7,15 +7,20 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.ctre.phoenix6.Orchestra;
+import com.ctre.phoenix6.StatusCode;
 import com.ctre.phoenix6.hardware.TalonFX;
 
+import edu.wpi.first.networktables.BooleanPublisher;
+import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.subsystems.Arm;
 import frc.robot.subsystems.DriveTrain;
 import frc.robot.subsystems.Elevator;
 
-
 public class KrakenOrchestra extends SubsystemBase {
+
+    static NetworkTable table = NetworkTableInstance.getDefault().getTable("roboRIO/Orchestra");
 
     private static KrakenOrchestra instance = new KrakenOrchestra();
 
@@ -27,6 +32,8 @@ public class KrakenOrchestra extends SubsystemBase {
 
     private List<TalonFX> instruments = new ArrayList<>();
     private String currentSong = "";
+    private StatusCode status;
+    BooleanPublisher nt_orchestraIsPlaying = table.getBooleanTopic("orchestraIsPlaying").publish();
 
     private KrakenOrchestra() {
         // Initialize orchestra with all Kraken motors on the robot
@@ -78,7 +85,7 @@ public class KrakenOrchestra extends SubsystemBase {
         currentSong = filepath;
         stopMusic(); // Stop any currently playing music
         
-        var status = m_orchestra.loadMusic(filepath);
+        status = m_orchestra.loadMusic(filepath);
         if (status.isOK()) {
             m_orchestra.play();
         } else {
@@ -93,6 +100,13 @@ public class KrakenOrchestra extends SubsystemBase {
 
     public boolean isPlaying(){
         return m_orchestra.isPlaying();
+    }
+
+    @Override
+    public void periodic() {
+
+        nt_orchestraIsPlaying.set(isPlaying());
+
     }
 
 }
