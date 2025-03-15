@@ -96,10 +96,6 @@ public class LED extends SubsystemBase {
       setPixels(LEDConstants.kUnhealthyColor, LEDConstants.kAllLEDs);
     }
 
-    if (/*timeRemaining < 30*/ LEDConstants.kTestTimeRemaining < 30 && !_goClimb) {
-      goClimb();
-    }
-
     /* Arm */
     
     Arm _arm = Arm.getInstance();
@@ -190,6 +186,10 @@ public class LED extends SubsystemBase {
     if (m_systemhealthy){
       if (DriverStation.isDisabled()){
         setAltColors(LEDConstants.kHealthyColor1, LEDConstants.kHealthyColor2, LEDConstants.kAllLEDs);
+      } else {
+        if (/*timeRemaining < 30*/ LEDConstants.kTestTimeRemaining < 30 && !_goClimb) {
+          goClimb();
+        }
       }
       
       // Checking to see if we have a game piece
