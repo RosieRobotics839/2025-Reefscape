@@ -198,9 +198,9 @@ public final class Constants {
     public static int[] kSetupAwarenessFailColor = colors.cyan;
     public static int[] kHealthyColor1 = colors.orange; 
     public static int[] kHealthyColor2 = colors.white; 
-    public static int[] kUnhealthyColor = colors.dkred; 
+    public static int[] kUnhealthyColor = colors.off; 
     public static int[] kActivityColor = colors.blue;
-    public static int[] kClimbColor = colors.white;
+    public static int[] kClimbColor = colors.green;
  
     public static long[] kAllLEDs = LongStream.range(0,30).toArray();
     

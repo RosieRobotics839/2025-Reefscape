@@ -24,7 +24,6 @@ public class LED extends SubsystemBase {
   AddressableLEDBuffer m_ledBuffer;
   
   private boolean testBool = true; 
-  private boolean _goClimb = false;
   private double lastFlash = Timer.getFPGATimestamp(); 
   double timeRemaining = Timer.getMatchTime();
 
@@ -80,13 +79,6 @@ public class LED extends SubsystemBase {
 
   boolean m_systemhealthy;
 
-  public void goClimb() {
-    _goClimb = true;
-    for (int i = 0; i < 5; i++) {
-      flash(() ->setPixels(LEDConstants.kClimbColor, LEDConstants.kAllLEDs));
-    }
-  }
-
   @Override
   public void periodic() {
 
@@ -121,7 +113,7 @@ public class LED extends SubsystemBase {
     }
 
     // Elevator setup detection
-    if (!_elevator.setupElevator || (DriverStation.isEnabled() && !_elevator.m_isCalibrated.get())){
+    if (!_elevator.m_EleMotor.isSetupDone() || (DriverStation.isEnabled() && !_elevator.m_isCalibrated.get())){
       m_systemhealthy = false;
       flash(()->setPixels(LEDConstants.kSetupMovementFailColor, LEDConstants.kElevatorLEDs));
     }
@@ -147,7 +139,7 @@ public class LED extends SubsystemBase {
     }
 
     // Climber setup detection
-    if (!_climber.m_setupDone){
+    if (!_climber.m_motor.isSetupDone()){
       m_systemhealthy = false;
       flash(()->setPixels(LEDConstants.kSetupMovementFailColor, LEDConstants.kClimberLEDs));
     }
@@ -176,17 +168,16 @@ public class LED extends SubsystemBase {
     }
 
     // Check Gyro Status
-    if (Gyro.getInstance().getStatus() == false || true){
+    if (Gyro.getInstance().getStatus() == false){
       m_systemhealthy = false;
       flash(()->setPixels(LEDConstants.kSetupAwarenessFailColor, LEDConstants.kGyroLEDs));
     }
 
     if (m_systemhealthy){
-      if (DriverStation.isDisabled()){
-        setAltColors(LEDConstants.kHealthyColor1, LEDConstants.kHealthyColor2, LEDConstants.kAllLEDs);
-      } else {
-        if (/*timeRemaining < 30*/ LEDConstants.kTestTimeRemaining < 30 && !_goClimb) {
-          goClimb();
+      setAltColors(LEDConstants.kHealthyColor1, LEDConstants.kHealthyColor2, LEDConstants.kAllLEDs);
+      if (DriverStation.isEnabled()){
+        if (/*timeRemaining < 30*/ LEDConstants.kTestTimeRemaining < 30 && LEDConstants.kTestTimeRemaining > 25 ) {
+          flash(() ->setPixels(LEDConstants.kClimbColor, LEDConstants.kAllLEDs));
         }
       }
 	  }
@@ -208,5 +199,6 @@ public class LED extends SubsystemBase {
       if (Vision.getInstance().m_numTargets > 0){
         //setPixels(LEDConstants.kActivityColor, LEDConstants.kAllLEDs);
       }
+      sendData();
   }
 }
