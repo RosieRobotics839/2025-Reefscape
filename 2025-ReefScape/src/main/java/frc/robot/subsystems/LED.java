@@ -24,6 +24,7 @@ public class LED extends SubsystemBase {
   AddressableLEDBuffer m_ledBuffer;
   
   private boolean testBool = true; 
+  private boolean _goClimb = false;
   private double lastFlash = Timer.getFPGATimestamp(); 
   double timeRemaining = Timer.getMatchTime();
 
@@ -80,8 +81,9 @@ public class LED extends SubsystemBase {
   boolean m_systemhealthy;
 
   public void goClimb() {
+    _goClimb = true;
     for (int i = 0; i < 5; i++) {
-    flash(() ->setPixels(LEDConstants.kClimbColor, LEDConstants.kAllLEDs));
+      flash(() ->setPixels(LEDConstants.kClimbColor, LEDConstants.kAllLEDs));
     }
   }
 
@@ -94,7 +96,7 @@ public class LED extends SubsystemBase {
       setPixels(LEDConstants.kUnhealthyColor, LEDConstants.kAllLEDs);
     }
 
-    if (timeRemaining == 30) {
+    if (/*timeRemaining < 30*/ LEDConstants.kTestTimeRemaining < 30 && !_goClimb) {
       goClimb();
     }
 

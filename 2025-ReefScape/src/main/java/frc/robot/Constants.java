@@ -215,6 +215,7 @@ public final class Constants {
     public static double kUpdateTime = NTDouble.create(0.100, "LED/kUpdateTime", (val)->kUpdateTime=val);
     public static double kBrightness = NTDouble.create(0.1, "LED/kBrightness", (val)->kBrightness=val);
     public static double kFlashTime = NTDouble.create(2, "LED/kFlashTime", (val)->kFlashTime=val);
+    public static double kTestTimeRemaining = NTDouble.create(100, "LED/kTestTimeRemaining", val -> kTestTimeRemaining = (val));
   
   }
 
