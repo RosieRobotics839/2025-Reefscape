@@ -189,7 +189,7 @@ public class LED extends SubsystemBase {
           goClimb();
         }
       }
-	}
+	  }
       
       // Checking to see if we have a game piece
       if (EndEffector.getInstance().hasGamePiece()){
@@ -208,8 +208,5 @@ public class LED extends SubsystemBase {
       if (Vision.getInstance().m_numTargets > 0){
         //setPixels(LEDConstants.kActivityColor, LEDConstants.kAllLEDs);
       }
-    }
-    sendData();
-
   }
 }
