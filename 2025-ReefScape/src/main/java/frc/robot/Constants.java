@@ -275,12 +275,6 @@ public final class Constants {
     public static double kDriveSlip = NTDouble.create(1.0, "Pose/kDriveSlip",val->kDriveSlip=val);;
   }
 
-  public static class OrchestraConstants{
-    public static String getSongSelection(){
-      return Filesystem.getDeployDirectory() + "/" + "song10.chrp";
-    }
-  }
-
   public static class VisionConstants{
     // TODO: Tune extra latency to get pose estimator to work smoothly.
     public static double kMaxAmbiguity = NTDouble.create(0.2, "Vision/kMaxAmbiguity", val->kMaxAmbiguity=val);

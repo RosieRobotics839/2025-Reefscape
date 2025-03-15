@@ -10,6 +10,7 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -59,7 +60,7 @@ public class Robot extends TimedRobot {
 
   private Debouncer m_recording = new Debouncer(10, Debouncer.DebounceType.kFalling);
   private Action m_recordTrigger = new Action(false).onTrue(()->DataLogManager.start()).onFalse(()->DataLogManager.stop());
-    private SendableChooser<String> songChooser = new SendableChooser<>();
+  private SendableChooser<String> songChooser = new SendableChooser<>();
 
   /**
    * This function is run when the robot is first started up and should be used for any
@@ -173,7 +174,7 @@ public class Robot extends TimedRobot {
     songChooser.addOption("WellermanSeaShanty", Filesystem.getDeployDirectory() + "/" + "wellerman.chrp");
     songChooser.addOption("Jeopardy", Filesystem.getDeployDirectory() + "/" + "jeopardy.chrp");
 
-    Shuffleboard.getTab("Music").add("Song Selector", songChooser);
+    Shuffleboard.getTab("Music").add("Song Selector", songChooser).withWidget(BuiltInWidgets.kComboBoxChooser);
   }
 
   /** This function is called periodically when disabled. */
