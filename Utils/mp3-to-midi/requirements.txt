@@ -1,0 +1,5 @@
+numpy
+midiutil
+pydub
+librosa
+matplotlib
