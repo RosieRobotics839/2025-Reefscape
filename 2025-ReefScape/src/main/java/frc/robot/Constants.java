@@ -69,7 +69,6 @@ public final class Constants {
     // Creates Max and Min values for Arm Software Hardstop
     public static double kAngleMax = Units.degreesToRadians(NTDouble.create(95, "Arm/kAngleMax", (val)->kAngleMax = Units.degreesToRadians(val)));
     public static double kAngleMin = Units.degreesToRadians(NTDouble.create(-3, "Arm/kAngleMin", (val)->kAngleMin = Units.degreesToRadians(val)));
-    public static double kAlgaeAngle = Units.degreesToRadians(NTDouble.create(0, "Arm/AlgaeAngle", (val)->kAlgaeAngle = Units.degreesToRadians(val)));
 
     public static double kTargetAngleTrough = Units.degreesToRadians(NTDouble.create(63, "Arm/Target/kAngleTrough", (val)->kTargetAngleTrough = Units.degreesToRadians(val)));
     public static double kTargetAngleLevelMiddle = Units.degreesToRadians(NTDouble.create(63, "Arm/Target/kLevelMiddle", (val)->kTargetAngleLevelMiddle = Units.degreesToRadians(val)));
@@ -90,7 +89,7 @@ public final class Constants {
     public static MyMotorType kMotorType = MyMotorType.NEO;
     public static int kCANID = 7;
     public static double kIntakeSpeed = NTDouble.create(1, "Effector/kIntakeSpeed", val->{kIntakeSpeed=val;});
-    public static double kOuttakeSpeed = NTDouble.create(9, "Effector/kOuttakeSpeed", val->{kOuttakeSpeed=val;});
+    public static double kOuttakeSpeed = NTDouble.create(4, "Effector/kOuttakeSpeed", val->{kOuttakeSpeed=val;});
     public static double kTroughOuttakeSpeed = NTDouble.create(2.5, "Effector/kTroughOuttakeSpeed", val->{kTroughOuttakeSpeed=val;});
     public static double kAlgaeMotorRevolutions = 5;
 
