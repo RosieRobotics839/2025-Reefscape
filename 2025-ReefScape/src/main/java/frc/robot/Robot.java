@@ -74,6 +74,24 @@ public class Robot extends TimedRobot {
    */
   public Robot() {
     addPeriodic(()->Controller.getAccessoryInstance().accessoryPeriodic(),0.020,0.010);
+
+    // Song Chooser for Music Playing
+    songChooser.setDefaultOption("Song 10", Filesystem.getDeployDirectory() + "/" + "song10.chrp");
+    songChooser.addOption("Congrats", Filesystem.getDeployDirectory() + "/" + "congrats.chrp");
+    songChooser.addOption("UnderTheSea", Filesystem.getDeployDirectory() + "/" + "underthesea.chrp");
+    songChooser.addOption("SpongeBobOpeningSong", Filesystem.getDeployDirectory() + "/" + "spongebobopening.chrp");
+    songChooser.addOption("WellermanSeaShanty", Filesystem.getDeployDirectory() + "/" + "wellerman.chrp");
+    songChooser.addOption("Jeopardy", Filesystem.getDeployDirectory() + "/" + "jeopardy.chrp");
+
+    startStop.setDefaultOption("Stop", stopMusic);
+    startStop.addOption("Start", startMusic);
+
+    Shuffleboard.getTab("Music")
+    .add("Song Selector", songChooser)
+    .withWidget(BuiltInWidgets.kComboBoxChooser);
+    Shuffleboard.getTab("Music")
+    .add("Music Control", startStop)
+    .withWidget(BuiltInWidgets.kComboBoxChooser);
   }
 
   /**
@@ -130,6 +148,7 @@ public class Robot extends TimedRobot {
    * below with additional strings. If using the SendableChooser make sure to add them to the
    * chooser code above as well.
    */
+  
   @Override
   public void autonomousInit() {
 
@@ -169,24 +188,6 @@ public class Robot extends TimedRobot {
   public void disabledInit() {
     DriveTrain.getInstance().m_poseQueue.clear();
     Autonomous.getInstance().stopAiming();
-
-    // Song Chooser for Music Playing
-    songChooser.setDefaultOption("Song 10", Filesystem.getDeployDirectory() + "/" + "song10.chrp");
-    songChooser.addOption("Congrats", Filesystem.getDeployDirectory() + "/" + "congrats.chrp");
-    songChooser.addOption("UnderTheSea", Filesystem.getDeployDirectory() + "/" + "underthesea.chrp");
-    songChooser.addOption("SpongeBobOpeningSong", Filesystem.getDeployDirectory() + "/" + "spongebobopening.chrp");
-    songChooser.addOption("WellermanSeaShanty", Filesystem.getDeployDirectory() + "/" + "wellerman.chrp");
-    songChooser.addOption("Jeopardy", Filesystem.getDeployDirectory() + "/" + "jeopardy.chrp");
-
-    startStop.setDefaultOption("Stop", stopMusic);
-    startStop.addOption("Start", startMusic);
-
-    Shuffleboard.getTab("Music")
-    .add("Song Selector", songChooser)
-    .withWidget(BuiltInWidgets.kComboBoxChooser);
-    Shuffleboard.getTab("Music")
-    .add("Music Control", startStop)
-    .withWidget(BuiltInWidgets.kComboBoxChooser);
   }
 
   /** This function is called periodically when disabled. */

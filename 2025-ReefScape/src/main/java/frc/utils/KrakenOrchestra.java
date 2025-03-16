@@ -35,7 +35,6 @@ public class KrakenOrchestra extends SubsystemBase {
     private String currentSong = "";
     private StatusCode status;
     private boolean orchestraReady = false;
-    int playDelay;
     BooleanPublisher nt_orchestraIsPlaying = table.getBooleanTopic("orchestraIsPlaying").publish();
     BooleanPublisher nt_orchestraIsReady = table.getBooleanTopic("orchestraIsReady").publish();
     IntegerPublisher nt_instrumentCount = table.getIntegerTopic("instrumentCount").publish();
