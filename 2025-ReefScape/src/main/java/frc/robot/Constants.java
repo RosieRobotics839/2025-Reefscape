@@ -218,7 +218,7 @@ public final class Constants {
     public static long[] kPoseEstimatorLEDs = LongStream.concat(LongStream.range(14,16),LongStream.range(16,18)).toArray();
 
     public static double kUpdateTime = NTDouble.create(0.100, "LED/kUpdateTime", (val)->kUpdateTime=val);
-    public static double kBrightness = NTDouble.create(0.1, "LED/kBrightness", (val)->kBrightness=val);
+    public static double kBrightness = NTDouble.create((Robot.isSimulation() ? 1 : 0.1), "LED/kBrightness", (val)->kBrightness=val);
     public static double kFlashTime = NTDouble.create(2, "LED/kFlashTime", (val)->kFlashTime=val);
   
   }
@@ -354,8 +354,8 @@ public final class Constants {
   // Chassis configuration
   public static class kChassis {
     // TODO: Update for Delta Wheel Position
-    public static final double kTrackWidth = Units.inchesToMeters(20.75);//24  // Distance between right and left wheels
-    public static final double kWheelBase = Units.inchesToMeters(22.75);   //24.25    // Distance between front and back wheels
+    public static final double kTrackWidth = Units.inchesToMeters(24);//24  // Distance between right and left wheels
+    public static final double kWheelBase = Units.inchesToMeters(24.25);   //24.25    // Distance between front and back wheels
   }
 
   public static class ClimberConstants {
@@ -384,17 +384,17 @@ public final class Constants {
   
   public static class AutoConstants {
 
-    public static double kLineupTimeout = NTDouble.create(3, "Autonomous/kLineupTimeout", val -> kLineupTimeout = val);
-    public static double kReefDistance = Units.inchesToMeters(NTDouble.create(7.0, "Autonomous/kReefDistance", val -> kReefDistance = Units.inchesToMeters(val)));;
+    public static double kLineupTimeout = NTDouble.create(7, "Autonomous/kLineupTimeout", val -> kLineupTimeout = val);
+    public static double kReefDistance = Units.inchesToMeters(NTDouble.create(6.25, "Autonomous/kReefDistance", val -> kReefDistance = Units.inchesToMeters(val)));;
     public static double kReefStartingDistance = Units.inchesToMeters(NTDouble.create(36.0, "Autonomous/kReefStartingDistance", val -> kReefStartingDistance = Units.inchesToMeters(val)));;
     public static double kReefTolerance = Units.inchesToMeters(NTDouble.create(0.5, "Autonomous/kReefToleranceInch", val -> kReefTolerance = Units.inchesToMeters(val)));
     public static double kSourceDistance = Units.inchesToMeters(NTDouble.create(4, "Autonomous/kSourceDistanceInch", val -> kSourceDistance = Units.inchesToMeters(val)));
     public static double kSourceStartingDistance = Units.inchesToMeters(NTDouble.create(12.0, "Autonomous/kSourceStartingDistance", val -> kSourceStartingDistance = Units.inchesToMeters(val)));;
     public static double kSourceTolerance = Units.inchesToMeters(NTDouble.create(12.0, "Autonomous/kSourceNearDistanceInch", val -> kSourceTolerance = Units.inchesToMeters(val)));
-    public static double kReefOffset = Units.inchesToMeters(NTDouble.create(5.25,"Autonomous/kReefOffset",val -> kReefOffset = Units.inchesToMeters(7)));
+    public static double kReefOffset = Units.inchesToMeters(NTDouble.create(7,"Autonomous/kReefOffset",val -> kReefOffset = Units.inchesToMeters(7)));
     public static double kTroughClearance = NTDouble.create(2, "Autonomous/kTroughClearance", val -> kTroughClearance = Units.inchesToMeters(2));
     // Ooga Booga Number
-    public static double kStaticReefOffset = Units.inchesToMeters(NTDouble.create(2,"Autonomous/kStaticReefOffset",val -> kTroughClearance = Units.inchesToMeters(2)));
+    public static double kStaticReefOffset = Units.inchesToMeters(NTDouble.create(-1,"Autonomous/kStaticReefOffset",val -> kStaticReefOffset = Units.inchesToMeters(val)));
     
     public static double kFieldLength = 16.451;
     public static double kFieldWidth = 8.211;
@@ -449,8 +449,8 @@ public final class Constants {
 
       public static double kMidPointAccuracyFactor = NTDouble.create(3, "DriveConstants/kMidPointAccuracyFactor", val->kMidPointAccuracyFactor = val);
 
-      public static double kAutoCrossTrackKp = Units.feetToMeters(NTDouble.create(2, "LED/kAutoCrossTrackKp", (val)->kAutoCrossTrackKp = Units.feetToMeters(val)));
-      public static double kAutoCrossTrackMax = Units.feetToMeters(NTDouble.create(2, "LED/kAutoCrossTrackMax", (val)->kAutoCrossTrackMax = Units.feetToMeters(val)));
+      public static double kAutoCrossTrackKp = NTDouble.create(2.5, "DriveConstants/kAutoCrossTrackKp", (val)->kAutoCrossTrackKp = val);
+      public static double kAutoCrossTrackMax = Units.feetToMeters(NTDouble.create(6, "DriveConstants/kAutoCrossTrackMax", (val)->kAutoCrossTrackMax = Units.feetToMeters(val)));
     }
 
     public static class kSwerveModule {

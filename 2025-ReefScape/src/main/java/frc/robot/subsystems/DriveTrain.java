@@ -4,6 +4,7 @@
 
 package frc.robot.subsystems;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.function.Consumer;
@@ -54,7 +55,7 @@ public class DriveTrain extends SubsystemBase {
   public double m_autoSpeed = 0;
   public SlewRateLimiter m_autoAccelLimiter = new SlewRateLimiter(DriveConstants.kAutoAccelLimiter, -1E9, 0);
 
-  public Pose2d m_poseQueueStart;
+  public Pose2d m_poseQueueStart = new Pose2d(0,0,new Rotation2d(0));
 
   private double m_forward, m_left, m_rotate;
   private double m_forwardcmd, m_leftcmd, m_rotatecmd;
@@ -144,12 +145,13 @@ public class DriveTrain extends SubsystemBase {
   public void PublishPoseQueue(){
     List<Pose2d> poseQueue = m_poseQueue.stream().map((a)->new Pose2d(a.getTranslation(),
       (a.getRotation()==null ? new Rotation2d(0) : a.getRotation()))).collect(Collectors.toList());
-    if (m_poseQueueStart != null)
-      poseQueue.add(m_poseQueueStart);
+    poseQueue.add(0,new Pose2d(m_poseQueueStart.getTranslation(),(m_poseQueueStart.getRotation()==null ? new Rotation2d(0) : m_poseQueueStart.getRotation())));
     PoseEstimator.getInstance().m_field.getObject("AutoTraj").setPoses(poseQueue);
   }
 
   private void RunDrive() {
+    ArrayList<Pose2d> poses = new ArrayList<Pose2d>();
+  
     crossTrackError = 0;
     // Follow Drive to Pose Queue, unless controller input is active, which clears the queue in periodic().
     if (!m_poseQueue.isEmpty()){ 
@@ -168,13 +170,17 @@ public class DriveTrain extends SubsystemBase {
         m_autoSpeed = m_autoAccelLimiter.calculate(Math.max(Math.min(1,distance/(DriveConstants.kAutoSlowDist))*DriveConstants.kAutoMaxSpeed, DriveConstants.kAutoMinSpeed));
         Translation2d vector = VectorUtils.vectorInDirectionOf(diff, m_autoSpeed);
 
-        crossTrackError = VectorUtils.crossTrackError(PoseEstimator.getInstance().m_finalPose, m_poseQueueStart, m_poseQueue.peek());
 
-        double crossTrackCorrection = -Math.max(-DriveConstants.kAutoCrossTrackMax, Math.min(DriveConstants.kAutoCrossTrackMax, crossTrackError * DriveConstants.kAutoCrossTrackKp));
-        Translation2d correctionVector = VectorUtils.vectorInDirectionOf(VectorUtils.poseDiff(m_poseQueue.peek(), m_poseQueueStart).rotateBy(new Rotation2d(Math.PI/2)), crossTrackCorrection);
+        // Cross Track Correction
+        Translation2d nearestPoint = VectorUtils.nearestPointOnLine(PoseEstimator.getInstance().m_finalPose.getTranslation(), m_poseQueueStart.getTranslation(), m_poseQueue.peek().getTranslation());
+        poses.add(new Pose2d(nearestPoint,new Rotation2d(0)));
+        Pose2d correction = VectorUtils.poseDiff(new Pose2d(nearestPoint,new Rotation2d(0)),PoseEstimator.getInstance().m_finalPose);
+        poses.add(correction);
+        Translation2d limitedCorrection = VectorUtils.vectorInDirectionOf(correction, Math.max(Math.min(correction.getTranslation().getNorm()*DriveConstants.kAutoCrossTrackKp,DriveConstants.kAutoCrossTrackMax),-DriveConstants.kAutoCrossTrackMax));
+        poses.add(new Pose2d(limitedCorrection, new Rotation2d(0)));
+        Translation2d drivevector = vector.plus(limitedCorrection);
 
-        Translation2d drivevector = vector.plus(correctionVector);
-
+        PoseEstimator.getInstance().m_field.getObject("crossTrack").setPoses(poses);
         movement = new Twist2d(drivevector.getX(), drivevector.getY(), 0);
         Drive(movement);
         if (m_poseQueue.peek().getRotation() != null && distance < DriveConstants.kAutoTurnToPoseDistance){

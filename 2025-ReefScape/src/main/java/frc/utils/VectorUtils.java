@@ -43,6 +43,10 @@ public class VectorUtils {
       return new Translation2d(magnitude, pose.getTranslation().getAngle());
     }
 
+    public static Translation2d vectorInDirectionOf(Translation2d pose, double magnitude){
+      return new Translation2d(magnitude, pose.getAngle());
+    }
+
     public static boolean isInDistanceAndAngle(Pose2d pose, Pose2d target, double meters, double radiansFromTargetFace){
       Pose2d diff = poseDiff(pose,target); // offset between
       if (diff.getTranslation().getNorm() > meters){
@@ -145,36 +149,29 @@ public class VectorUtils {
     }
 
     /**
-     * Calculates the cross-track error from a point to a line segment.
+     * Returns the nearest point on a line segment to a pose2d object.
      *
-     * @param point The point to calculate the error for.
+     * @param point The point to determine the nearest point to.
      * @param lineStart The starting point of the line segment.
      * @param lineEnd The ending point of the line segment.
-     * @return The cross-track error (perpendicular distance) from the point to the line.
+     * @return The point on the line which is nearest to the point.
      *         Returns Double.NaN if any input is null.
      */
-    public static double crossTrackError(Pose2d point, Pose2d lineStart, Pose2d lineEnd) {
-
-        if (point == null || lineStart == null || lineEnd == null) {
-            return 0;
-        }
-
+    public static Translation2d nearestPointOnLine(Translation2d point, Translation2d lineStart, Translation2d lineEnd){
         double dx = lineEnd.getX() - lineStart.getX();
         double dy = lineEnd.getY() - lineStart.getY();
 
         if (dx == 0 && dy == 0) {
-          // Line segment is a point.  Return distance to that point.
-          return poseDiff(point,lineStart).getTranslation().getNorm();
+            // Line is a point, return the line's point.
+            return point;
         }
 
-        double crossProduct = (lineEnd.getX() - lineStart.getX()) * (point.getY() - lineStart.getY()) -
-                             (lineEnd.getY() - lineStart.getY()) * (point.getX() - lineStart.getX());
+        double t = ((point.getX() - lineStart.getX()) * dx + (point.getY() - lineStart.getY()) * dy) / (dx * dx + dy * dy);
 
-        double denominator = Math.sqrt(dx * dx + dy * dy);
-        double distance = crossProduct / denominator; // Cross track error
+        double nearestX = lineStart.getX() + t * dx;
+        double nearestY = lineStart.getY() + t * dy;
 
-        return distance;
+        return new Translation2d(nearestX, nearestY);
     }
-
 
 }
