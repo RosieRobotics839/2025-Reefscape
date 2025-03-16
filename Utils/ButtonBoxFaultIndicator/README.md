@@ -22,6 +22,7 @@
 
 ## Setting Up for Auto-Start
 
+### Option 1
 Create a file named `start_relay.bat` with:
 ```batch
 @echo off
@@ -30,6 +31,30 @@ python main.py
 ```
 
 Place this in: `C:\Users\[username]\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup`
+
+### Option 2
+1. **Install PyInstaller**:
+   ```
+   pip install pyinstaller
+   ```
+
+2. **Create the executable**:
+   ```
+   pyinstaller --onefile --noconsole your_script.py
+   ```
+   - `--onefile`: Creates a single .exe file
+   - `--noconsole`: Hides the console window (for GUI apps)
+   - Add `--icon=your_icon.ico` for custom icons
+
+3. **Configure startup**:
+   - Create a shortcut to your .exe in the Windows Startup folder:
+     `C:\Users\[Username]\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup`
+   - OR use Windows Task Scheduler:
+     - Open Task Scheduler → Create Basic Task
+     - Set trigger to "At startup"
+     - Action: "Start a program" → browse to your .exe
+
+
 
 ## Testing Tips
 
