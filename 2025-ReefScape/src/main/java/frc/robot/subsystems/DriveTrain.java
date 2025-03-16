@@ -257,6 +257,10 @@ public class DriveTrain extends SubsystemBase {
     }
   }
 
+  public boolean isSetupDone() {
+    return m_motorSetupDone;
+  }
+
   Boolean m_motorSetupDone = false;
   boolean testBool = true;
   @Override

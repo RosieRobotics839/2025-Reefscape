@@ -75,8 +75,7 @@ public class KrakenOrchestra extends SubsystemBase {
             }
             orchestraReady = successCount > 0;
         } catch (Exception e) {
-            // System.out.println("Error initializing orchestra instruments: " + e.getMessage());
-            // Driver Station Log flows too fast to catch this
+            orchestraReady = false;
         }
     }
 
@@ -128,6 +127,23 @@ public class KrakenOrchestra extends SubsystemBase {
         nt_orchestraIsPlaying.set(isPlaying());
         nt_orchestraIsReady.set(orchestraReady);
         nt_instrumentCount.set(instruments.size());
+
+        // If motors have been initialized since our last check, try initializing instruments again
+        if (!orchestraReady) {
+            // Check if the motors we need are now available
+            boolean motorsAvailable = false;
+            
+            if (Arm.getInstance().m_motor.isSetupDone() && 
+                Elevator.getInstance().m_EleMotor.isSetupDone() &&
+                DriveTrain.getInstance().isSetupDone()) {
+                
+                motorsAvailable = true;
+            }
+            
+            if (motorsAvailable) {
+                initializeInstruments();
+            }
+        }
 
     }
 

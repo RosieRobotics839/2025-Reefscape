@@ -196,10 +196,10 @@ public class Robot extends TimedRobot {
 
     selectedSong = songChooser.getSelected();
     selectedChoice = startStop.getSelected();
-        if (!DriverStation.isFMSAttached() && !isTeleopEnabled() && selectedChoice == startMusic) {
-        m_orchestra.playMusic(selectedSong);
+        if (!DriverStation.isFMSAttached() && !isTeleopEnabled() && selectedChoice == startMusic && m_orchestra.isReady()) {
+            m_orchestra.playMusic(selectedSong);
         } else if (!DriverStation.isFMSAttached() && !isTeleopEnabled() && selectedChoice == stopMusic) {
-        m_orchestra.stopMusic();
+            m_orchestra.stopMusic();
         }
   }
 
