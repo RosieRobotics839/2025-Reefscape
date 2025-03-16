@@ -11,6 +11,7 @@ import com.ctre.phoenix6.StatusCode;
 import com.ctre.phoenix6.hardware.TalonFX;
 
 import edu.wpi.first.networktables.BooleanPublisher;
+import edu.wpi.first.networktables.IntegerPublisher;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -33,7 +34,11 @@ public class KrakenOrchestra extends SubsystemBase {
     private List<TalonFX> instruments = new ArrayList<>();
     private String currentSong = "";
     private StatusCode status;
+    private boolean orchestraReady = false;
+    int playDelay;
     BooleanPublisher nt_orchestraIsPlaying = table.getBooleanTopic("orchestraIsPlaying").publish();
+    BooleanPublisher nt_orchestraIsReady = table.getBooleanTopic("orchestraIsReady").publish();
+    IntegerPublisher nt_instrumentCount = table.getIntegerTopic("instrumentCount").publish();
 
     private KrakenOrchestra() {
         // Initialize orchestra with all Kraken motors on the robot
@@ -62,9 +67,14 @@ public class KrakenOrchestra extends SubsystemBase {
             if (dt.rearRight.m_motorDrive.motor_talon != null) instruments.add(dt.rearRight.m_motorDrive.motor_talon);
             
             // Add each instrument to the orchestra
+            int successCount = 0;
             for (TalonFX motor : instruments) {
-                m_orchestra.addInstrument(motor);
+                StatusCode addStatus = m_orchestra.addInstrument(motor);
+                if (addStatus.isOK()) {
+                    successCount++;
+                }
             }
+            orchestraReady = successCount > 0;
         } catch (Exception e) {
             // System.out.println("Error initializing orchestra instruments: " + e.getMessage());
             // Driver Station Log flows too fast to catch this
@@ -82,6 +92,11 @@ public class KrakenOrchestra extends SubsystemBase {
             return;
         }
         
+        if (!orchestraReady) {
+            initializeInstruments();
+            return;
+        }
+
         currentSong = filepath;
         stopMusic(); // Stop any currently playing music
         
@@ -95,17 +110,25 @@ public class KrakenOrchestra extends SubsystemBase {
     }
 
     public void stopMusic(){
-        m_orchestra.stop();
+        if (orchestraReady) {
+            m_orchestra.stop();
+        }
     }
 
     public boolean isPlaying(){
-        return m_orchestra.isPlaying();
+        return m_orchestra.isPlaying() && orchestraReady;
+    }
+
+    public boolean isReady() {
+        return orchestraReady;
     }
 
     @Override
     public void periodic() {
 
         nt_orchestraIsPlaying.set(isPlaying());
+        nt_orchestraIsReady.set(orchestraReady);
+        nt_instrumentCount.set(instruments.size());
 
     }
 

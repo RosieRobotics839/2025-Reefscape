@@ -277,11 +277,12 @@ public class Controller extends XboxController {
     Lstick = VectorUtils.deadband(Lstick,0.1,1);
     Ly = Lstick.getY();
     Lx = Lstick.getX();
-
+  if (this.getAxisCount() > 2) {
     Translation2d Rstick = new Translation2d(this.getRightX(),this.getRightY());
     Rstick = VectorUtils.deadband(Rstick,0.1,1);
     Ry = Rstick.getY();
     Rx = Rstick.getX();
+    }
   }
   
   public void accessoryPeriodic(){

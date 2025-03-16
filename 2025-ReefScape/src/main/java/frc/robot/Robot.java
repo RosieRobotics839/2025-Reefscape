@@ -53,14 +53,20 @@ public class Robot extends TimedRobot {
   public Arm m_arm = Arm.getInstance();
   public Climber m_climber = Climber.getInstance();
   public Funnel m_funnel = Funnel.getInstance();
+  public KrakenOrchestra m_orchestra = KrakenOrchestra.getInstance();
 
   Alliance myAlliance = Alliance.Red;
 
   public boolean changedAlly = true;
+  public String selectedChoice;
+  public String selectedSong;
+  String startMusic;
+  String stopMusic;
 
   private Debouncer m_recording = new Debouncer(10, Debouncer.DebounceType.kFalling);
   private Action m_recordTrigger = new Action(false).onTrue(()->DataLogManager.start()).onFalse(()->DataLogManager.stop());
   private SendableChooser<String> songChooser = new SendableChooser<>();
+  private SendableChooser<String> startStop = new SendableChooser<>();
 
   /**
    * This function is run when the robot is first started up and should be used for any
@@ -127,7 +133,7 @@ public class Robot extends TimedRobot {
   @Override
   public void autonomousInit() {
 
-    _orchestra.stopMusic(); // Stopping music when we switch to auto mode
+    m_orchestra.stopMusic(); // Stopping music when we switch to auto mode
 
     switch(SmartDashboard.getString("Auto Selector", "Build Your Own A(uto)dventure")) {
       case "Build Your Own A(uto)dventure":
@@ -146,15 +152,13 @@ public class Robot extends TimedRobot {
   @Override
   public void teleopInit() {
 
-    _orchestra.stopMusic(); // Stopping music when we switch to teleop mode
+    m_orchestra.stopMusic(); // Stopping music when we switch to teleop mode
     DriveTrain.getInstance().m_poseQueue.clear();
     Autonomous.getInstance().stopAiming();
     if (m_autonomousCommand != null) {
       m_autonomousCommand.cancel();
     }
   }
-
-  KrakenOrchestra _orchestra = KrakenOrchestra.getInstance();
 
   /** This function is called periodically during operator control. */
   @Override
@@ -174,17 +178,28 @@ public class Robot extends TimedRobot {
     songChooser.addOption("WellermanSeaShanty", Filesystem.getDeployDirectory() + "/" + "wellerman.chrp");
     songChooser.addOption("Jeopardy", Filesystem.getDeployDirectory() + "/" + "jeopardy.chrp");
 
-    Shuffleboard.getTab("Music").add("Song Selector", songChooser).withWidget(BuiltInWidgets.kComboBoxChooser);
+    startStop.setDefaultOption("Stop", stopMusic);
+    startStop.addOption("Start", startMusic);
+
+    Shuffleboard.getTab("Music")
+    .add("Song Selector", songChooser)
+    .withWidget(BuiltInWidgets.kComboBoxChooser);
+    Shuffleboard.getTab("Music")
+    .add("Music Control", startStop)
+    .withWidget(BuiltInWidgets.kComboBoxChooser);
   }
 
   /** This function is called periodically when disabled. */
   @Override
   public void disabledPeriodic() {
 
-    String selectedSong = songChooser.getSelected();
-    if (!DriverStation.isFMSAttached() && !isTeleopEnabled()) {
-        _orchestra.playMusic(selectedSong);
-    }
+    selectedSong = songChooser.getSelected();
+    selectedChoice = startStop.getSelected();
+        if (!DriverStation.isFMSAttached() && !isTeleopEnabled() && selectedChoice == startMusic) {
+        m_orchestra.playMusic(selectedSong);
+        } else if (!DriverStation.isFMSAttached() && !isTeleopEnabled() && selectedChoice == stopMusic) {
+        m_orchestra.stopMusic();
+        }
   }
 
   /** This function is called once when test mode is enabled. */
