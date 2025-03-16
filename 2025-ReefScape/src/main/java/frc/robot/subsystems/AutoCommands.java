@@ -173,11 +173,13 @@ public class AutoCommands {
 
         return Commands.sequence(
             new InstantCommand(() -> Elevator.getInstance().moveToLevel(level)),
-            new InstantCommand(() -> Arm.getInstance().moveToLevel(level)),
+            Commands.parallel(
+                Commands.sequence(new InstantCommand(() -> Arm.getInstance().moveToLevel(level))),
+                new InstantCommand(() -> Autonomous.getInstance().m_drivingToReef = true),
+                new InstantCommand(() -> PathPlanning.getInstance().navigateTo(target1))
+            ),
             Commands.waitUntil(() -> Arm.getInstance().isAtPosition() && Elevator.getInstance().isAtPosition()),
-            new InstantCommand(() -> PathPlanning.getInstance().navigateTo(target1)),
             new InstantCommand(() -> PathPlanning.getInstance().navigateTo(target2)),
-            new InstantCommand(() -> Autonomous.getInstance().m_drivingToReef = true),
             Commands.waitUntil(() -> DriveTrain.getInstance().m_poseQueue.isEmpty() || DriveTrain.getInstance().m_isStoppedConfirmed || VectorUtils.isNear(PoseEstimator.getInstance().m_finalPose, target2, AutoConstants.kReefTolerance)).withTimeout(6),
             EndEffector.getInstance().ExpelCommand(()->(level == ScoreLevel.TROUGH ? EffectorConstants.kTroughOuttakeSpeed : EffectorConstants.kOuttakeSpeed), ()->level==ScoreLevel.TROUGH).withTimeout(3),
             new InstantCommand(() -> PathPlanning.getInstance().navigateTo(target1)),
