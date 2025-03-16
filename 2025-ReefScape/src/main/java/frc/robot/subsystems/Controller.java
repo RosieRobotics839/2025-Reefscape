@@ -24,7 +24,6 @@ import frc.robot.Constants.EffectorConstants;
 import frc.robot.Constants.ElevatorConstants;
 import frc.robot.Constants.OperatorConstants;
 import frc.robot.Constants.ScoreConstants;
-import frc.robot.Constants.ScoreConstants.GamePieceSelected;
 import frc.robot.Constants.ScoreConstants.ScoreLevel;
 import frc.robot.Constants.kDriveTrain.DriveConstants;
 public class Controller extends XboxController {
@@ -126,11 +125,7 @@ public class Controller extends XboxController {
   static NTBoolean nt_scoreLeft = new NTBoolean(true,table,"scoreleft",(val)->{});
 
   public static class AccessoryButtons {
-    public JoystickButton Intake, Outtake, ClimberIn, ClimberOut, GMPCS, StageDial0, StageDial1, StageDial2, StageDial3, StageDial4, LeftScore, RightScore, RS, Home;
-
-    public Command waitForTarget = Commands.sequence(
-      Commands.waitUntil(() -> {return Arm.getInstance().isAtPosition() && Elevator.getInstance().isAtPosition();})
-    );
+    public JoystickButton Intake, Outtake, ClimberIn, ClimberOut, ByeAlgae, StageDial0, StageDial1, StageDial2, StageDial3, StageDial4, LeftScore, RightScore, RS, Home;
 
     public Command disableDirectControl(){
       return new InstantCommand(()->{getAccessoryInstance().m_directElevator = false; getAccessoryInstance().m_directArm = false;});
@@ -138,20 +133,11 @@ public class Controller extends XboxController {
 
     ScoreConstants.ScoreLevel m_level;
     public Command m_expel = EndEffector.getInstance().ExpelCommand(()->(m_level == ScoreLevel.TROUGH ? EffectorConstants.kTroughOuttakeSpeed : EffectorConstants.kOuttakeSpeed), ()->m_level==ScoreLevel.TROUGH);
-      
-    ScoreConstants.GamePieceSelected m_pieceSelected;
 
     // boolean that decides which game piece we are handling
     boolean isAlgaeSelected = false;  // Initially set to false (CORAL)
 
     NTBoolean nt_algaeSelected = new NTBoolean(false,table,"algaeSelected",(val)->{});
-
-
-    public boolean toggleAlgae(){
-      isAlgaeSelected = !isAlgaeSelected;
-      nt_algaeSelected.set(isAlgaeSelected);
-      return true;
-    }
 
     AccessoryButtons(Controller controller){
 
@@ -166,7 +152,7 @@ public class Controller extends XboxController {
       Outtake    = new JoystickButton(controller, 9);  // Expel Button (Outtake for those who don't know)
       ClimberOut = new JoystickButton(controller, 10);  // Brings Climber Out & Funnel Down
       ClimberIn  = new JoystickButton(controller, 11);  // Brings Climber In & Funnel Up
-      GMPCS      = new JoystickButton(controller, 12);  // Game Piece Selector Button (Algae or Coral)
+      ByeAlgae      = new JoystickButton(controller, 12);  // Game Piece Selector Button (Algae or Coral)
 
       //RS       = new JoystickButton(controller, 12); // Right Stick Click
       //Home     = new JoystickButton(controller, 13); // Home Button
@@ -174,9 +160,6 @@ public class Controller extends XboxController {
       //DPadRight    = new POVButton(controller, 90);
       //DPadDown    = new POVButton(controller, 180);
       //DPadLeft    = new POVButton(controller, 270);
-
-      // Initializing the selected game piece to be the default; coral.
-      m_pieceSelected = ScoreConstants.GamePieceSelected.CORAL;
 
       /* Run Climber Command Sequences */
       ClimberIn.and(()->!ClimberOut.getAsBoolean()).debounce(0.06,DebounceType.kRising).whileTrue(
@@ -197,10 +180,7 @@ public class Controller extends XboxController {
       );
 
       Outtake.onTrue(
-        Commands.sequence(
-          waitForTarget.onlyIf(() -> m_pieceSelected == GamePieceSelected.CORAL), // Waiting for arm and elevator to reach target, will only run if coral is selected
-          m_expel // Expelling either way, no matter algae or coral
-        )
+        m_expel // Expelling either way, no matter algae or coral
       );
       
       /* Setting Stage Dial Values */
@@ -260,22 +240,14 @@ public class Controller extends XboxController {
         )
       );
 
-      /* Algae/Coral Selector */
+      /* Algae Button */
 
-      GMPCS.onTrue(
-          Commands.sequence(
-            Commands.waitUntil(() -> {return toggleAlgae();}),
-            Commands.waitUntil(() -> {
-              if (isAlgaeSelected) {
-                  m_pieceSelected = ScoreConstants.GamePieceSelected.ALGAE;
-              } else {
-                  m_pieceSelected = ScoreConstants.GamePieceSelected.CORAL;
-              }
-              return true;
-            })
-          )
-      );
-
+      ByeAlgae.onTrue(
+        Commands.sequence(
+          disableDirectControl(),
+          new InstantCommand(()->m_level = ScoreConstants.ScoreLevel.ALGAE),
+          Arm.getInstance().moveToLevelCommand(()->m_level)
+      ));
     } 
   }
 

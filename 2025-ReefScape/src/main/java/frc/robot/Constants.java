@@ -49,11 +49,7 @@ public final class Constants {
   public static class ScoreConstants {
 
     public enum ScoreLevel{
-      FUNNEL, TROUGH, LEVEL2, LEVEL3, LEVEL4
-    }
-
-    public enum GamePieceSelected{
-      ALGAE, CORAL
+      FUNNEL, TROUGH, LEVEL2, LEVEL3, LEVEL4, ALGAE
     }
     
   }
@@ -73,6 +69,7 @@ public final class Constants {
     // Creates Max and Min values for Arm Software Hardstop
     public static double kAngleMax = Units.degreesToRadians(NTDouble.create(95, "Arm/kAngleMax", (val)->kAngleMax = Units.degreesToRadians(val)));
     public static double kAngleMin = Units.degreesToRadians(NTDouble.create(-3, "Arm/kAngleMin", (val)->kAngleMin = Units.degreesToRadians(val)));
+    public static double kAlgaeAngle = Units.degreesToRadians(NTDouble.create(0, "Arm/AlgaeAngle", (val)->kAlgaeAngle = Units.degreesToRadians(val)));
 
     public static double kTargetAngleTrough = Units.degreesToRadians(NTDouble.create(63, "Arm/Target/kAngleTrough", (val)->kTargetAngleTrough = Units.degreesToRadians(val)));
     public static double kTargetAngleLevelMiddle = Units.degreesToRadians(NTDouble.create(63, "Arm/Target/kLevelMiddle", (val)->kTargetAngleLevelMiddle = Units.degreesToRadians(val)));
@@ -202,9 +199,8 @@ public final class Constants {
     public static int[] kHealthyColor1 = colors.orange; 
     public static int[] kHealthyColor2 = colors.white; 
     public static int[] kUnhealthyColor = colors.off; 
-    public static int[] kActivityColor = colors.purple;
-    public static int[] kAlgaeColor = colors.green;
-    public static int[] kCoralColor = colors.white;
+    public static int[] kActivityColor = colors.blue;
+    public static int[] kClimbColor = colors.green;
  
     public static long[] kAllLEDs = LongStream.range(0,30).toArray();
     
@@ -220,6 +216,7 @@ public final class Constants {
     public static double kUpdateTime = NTDouble.create(0.100, "LED/kUpdateTime", (val)->kUpdateTime=val);
     public static double kBrightness = NTDouble.create((Robot.isSimulation() ? 1 : 0.1), "LED/kBrightness", (val)->kBrightness=val);
     public static double kFlashTime = NTDouble.create(2, "LED/kFlashTime", (val)->kFlashTime=val);
+    public static double kTestTimeRemaining = NTDouble.create(100, "LED/kTestTimeRemaining", val -> kTestTimeRemaining = (val));
   
   }
 

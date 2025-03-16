@@ -174,6 +174,7 @@ public class AutoCommands {
         return Commands.sequence(
             new InstantCommand(() -> Elevator.getInstance().moveToLevel(level)),
             new InstantCommand(() -> Arm.getInstance().moveToLevel(level)),
+            Commands.waitUntil(() -> Arm.getInstance().isAtPosition() && Elevator.getInstance().isAtPosition()),
             new InstantCommand(() -> PathPlanning.getInstance().navigateTo(target1)),
             new InstantCommand(() -> PathPlanning.getInstance().navigateTo(target2)),
             new InstantCommand(() -> Autonomous.getInstance().m_drivingToReef = true),

@@ -143,6 +143,9 @@ public class Arm extends SubsystemBase{
             case LEVEL4:
                 setPosition(ArmConstants.kTargetAngleLevel4);
                 break;
+            case ALGAE:
+                setPosition(ArmConstants.kAlgaeAngle);
+                break;
             default:
         }
     }
