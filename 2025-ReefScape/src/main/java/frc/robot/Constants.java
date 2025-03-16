@@ -282,9 +282,9 @@ public final class Constants {
     public static boolean isChampionshipGame = NTBoolean.create(false, "isChampionshipGame", val -> {isChampionshipGame = val; Vision.getInstance().reloadFieldLayout();});
     // Method to get the current field layout path
     public static String getFieldLayoutPath() {
-      return Filesystem.getDeployDirectory() + "/" + "2025-reefscape-andymark.json";
+      //return Filesystem.getDeployDirectory() + "/" + "2025-reefscape-andymark.json";
       //return Filesystem.getDeployDirectory() + "/" + "2025-waterbury-practice-field.json";
-      //return Filesystem.getDeployDirectory() + "/" + "2025-rosiecarpet.json";
+      return Filesystem.getDeployDirectory() + "/" + "2025-rosiecarpet.json";
     }
 
     public static String kFieldLayout = getFieldLayoutPath();
@@ -351,8 +351,8 @@ public final class Constants {
   // Chassis configuration
   public static class kChassis {
     // TODO: Update for Delta Wheel Position
-    public static final double kTrackWidth = Units.inchesToMeters(24);//24  // Distance between right and left wheels
-    public static final double kWheelBase = Units.inchesToMeters(24.25);   //24.25    // Distance between front and back wheels
+    public static final double kTrackWidth = Units.inchesToMeters(24); // Distance between right and left wheels
+    public static final double kWheelBase = Units.inchesToMeters(24.25); // Distance between front and back wheels
   }
 
   public static class ClimberConstants {
@@ -388,8 +388,8 @@ public final class Constants {
     public static double kSourceDistance = Units.inchesToMeters(NTDouble.create(4, "Autonomous/kSourceDistanceInch", val -> kSourceDistance = Units.inchesToMeters(val)));
     public static double kSourceStartingDistance = Units.inchesToMeters(NTDouble.create(12.0, "Autonomous/kSourceStartingDistance", val -> kSourceStartingDistance = Units.inchesToMeters(val)));;
     public static double kSourceTolerance = Units.inchesToMeters(NTDouble.create(12.0, "Autonomous/kSourceNearDistanceInch", val -> kSourceTolerance = Units.inchesToMeters(val)));
-    public static double kReefOffset = Units.inchesToMeters(NTDouble.create(8.5,"Autonomous/kReefOffset",val -> kReefOffset = Units.inchesToMeters(7)));
-    public static double kTroughClearance = NTDouble.create(2, "Autonomous/kTroughClearance", val -> kTroughClearance = Units.inchesToMeters(2));
+    public static double kReefOffset = Units.inchesToMeters(NTDouble.create(6.5,"Autonomous/kReefOffset",val -> kReefOffset = Units.inchesToMeters(val)));
+    public static double kTroughClearance = NTDouble.create(2, "Autonomous/kTroughClearance", val -> kTroughClearance = Units.inchesToMeters(val));
     // Ooga Booga Number
     public static double kStaticReefOffset = Units.inchesToMeters(NTDouble.create(0,"Autonomous/kStaticReefOffset",val -> kStaticReefOffset = Units.inchesToMeters(val)));
     
