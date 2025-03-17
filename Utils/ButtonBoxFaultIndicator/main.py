@@ -6,7 +6,7 @@ import time
 import json
 
 # Eli TODO: Set the correct robot IP and serial port
-ROBOT_IP = "10.XX.XX.2"  # Replace with your team's robot IP
+ROBOT_IP = "10.83.9.2"   # The Team's robot IP
 ARDUINO_PORT = "COM3"    # Change this to match your Arduino's port
 BAUD_RATE = 9600         # Arduino baud rate
 
@@ -29,10 +29,23 @@ def get_robot_data():
     try:
         # Example: get some motor data
         drivetrain = NetworkTables.getTable("roboRIO/Drivetrain")
+        endeffector = NetworkTables.getTable("roboRIO/EndEffector")
+        gyro = NetworkTables.getTable("roboRIO/Gyro")
+        elevator = NetworkTables.getTable("roboRIO/Elevator")
+        arm = NetworkTables.getTable("roboRIO/Arm")
+        climber = NetworkTables.getTable("roboRIO/Climber")
+        funnel = NetworkTables.getTable("roboRIO/Funnel")
         
         # Get values with default of 0.0 if not found
         left_speed = drivetrain.getNumber("leftSpeed", 0.0)
         right_speed = drivetrain.getNumber("rightSpeed", 0.0)
+        has_game_piece = endeffector.getBoolean("hasGamePiece", False)
+        gyro_status = gyro.getBoolean("status", False)
+        elevator_status = elevator.getBoolean("isCalibrated", False)
+        arm_status = arm.getBoolean("setupDone", False)
+
+
+
         
         # Eli TODO: Add more data points you want to collect
         
@@ -102,7 +115,8 @@ def main():
         # Check if still connected to robot
         connected_to_robot = NetworkTables.isConnected()
         
-        # Eli TODO: Adjust this delay to control how often data is sent
+        # Eli TODO: Adjust this delay to control how often data is sent 
+        # This number is probably good since there is going to be a match countdown clock on interface, so data needs to be sent more than once in a second anyway ~~ Eli
         time.sleep(0.1)
 
 if __name__ == "__main__":
