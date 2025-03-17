@@ -1,6 +1,7 @@
 package frc.robot.subsystems;
 
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.networktables.BooleanPublisher;
 import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
@@ -26,13 +27,17 @@ public class Climber extends SubsystemBase{
     }
 
     public Motor m_motor;
+    public boolean hasReachedInPos = false;
+    public boolean hasReachedOutPos = false;
     public CalibrationMap motorCal = new CalibrationMap(ClimberConstants.kCalibrationX, ClimberConstants.kCalibrationY);
     public DutyCycleEncoder m_angleSensor;
-    public Boolean m_setupDone = false;
     public NTDouble nt_targetPosition = new NTDouble(0, table, "target", null);
     public NTDouble nt_position = new NTDouble(0, table, "position", null);
     DoublePublisher nt_positionSensor = table.getDoubleTopic("positionSensor").publish();
     DoublePublisher nt_currentAngle = table.getDoubleTopic("currentAngle").publish();
+    BooleanPublisher nt_climberCalibrated = table.getBooleanTopic("climberCalibrated").publish();
+    BooleanPublisher nt_hasReachedInPos = table.getBooleanTopic("hasReachedInPos").publish();
+    BooleanPublisher nt_hasReachedOutPos = table.getBooleanTopic("hasReachedOutPos").publish();
     NTDouble nt_relativePosition = new NTDouble(0, table, "relativePosition", (val)->setRelativePosition(Units.degreesToRadians(val)));
     {nt_relativePosition.resetOnRecv = true;}
 
@@ -57,12 +62,20 @@ public class Climber extends SubsystemBase{
     }
     
     public Command ClimberInCommand = Commands.sequence(
-        new InstantCommand(() -> m_motor.setRelativePosition(ClimberConstants.kRotationInLead*0.020))
-    ).repeatedly().until(()->motorCal.get(m_angleSensor.get()) <= Units.radiansToRotations(ClimberConstants.kAngleIn));
+        Commands.repeatingSequence(
+            new InstantCommand(() -> m_motor.setRelativePosition(ClimberConstants.kRotationInLead*0.020))
+        ).until(()->motorCal.get(m_angleSensor.get()) <= Units.radiansToRotations(ClimberConstants.kAngleIn)),
+            new InstantCommand(() -> hasReachedInPos = true),
+            new InstantCommand(() -> hasReachedOutPos = false)
+    );
     
     public Command ClimberOutCommand = Commands.sequence(
-        new InstantCommand(() -> m_motor.setRelativePosition(ClimberConstants.kRotationOutLead*0.020))
-    ).repeatedly().until(()->motorCal.get(m_angleSensor.get()) >= Units.radiansToRotations(ClimberConstants.kAngleOut));
+        Commands.repeatingSequence(
+            new InstantCommand(() -> m_motor.setRelativePosition(ClimberConstants.kRotationOutLead*0.020))
+        ).until(()->motorCal.get(m_angleSensor.get()) >= Units.radiansToRotations(ClimberConstants.kAngleOut)),
+            new InstantCommand(() -> hasReachedOutPos = true),
+            new InstantCommand(() -> hasReachedInPos = false)
+    );
     
     public Climber(int CANID, int analogID) {
 
@@ -83,5 +96,8 @@ public class Climber extends SubsystemBase{
         nt_position.set(m_motor.getPosition());
         nt_positionSensor.set(m_angleSensor.get());
         nt_currentAngle.set(Units.rotationsToDegrees(motorCal.get(m_angleSensor.get())));
+        nt_climberCalibrated.set(m_motor.isSetupDone());
+        nt_hasReachedInPos.set(hasReachedInPos);
+        nt_hasReachedOutPos.set(hasReachedOutPos);
     }
 }

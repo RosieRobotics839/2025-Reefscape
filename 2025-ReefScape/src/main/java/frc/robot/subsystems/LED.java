@@ -6,6 +6,7 @@ package frc.robot.subsystems;
 
 import java.util.stream.LongStream;
 
+import edu.wpi.first.networktables.BooleanPublisher;
 import edu.wpi.first.wpilibj.AddressableLED;
 import edu.wpi.first.wpilibj.AddressableLEDBuffer;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -23,9 +24,24 @@ public class LED extends SubsystemBase {
   AddressableLED m_led;
   AddressableLEDBuffer m_ledBuffer;
   
-  private boolean testBool = true; 
+  private boolean testBool = true;
+  public boolean m_driveTrainMotorsTempHigh = false;
+  public boolean m_elevatorMotorTempHigh = false;
+  public boolean m_armMotorTempHigh = false;
+  public boolean m_effectorMotorTempHigh = false;
+  public boolean m_funnelMotorTempHigh = false;
+  public boolean m_climberMotorTempHigh = false;
+
   private double lastFlash = Timer.getFPGATimestamp(); 
   double timeRemaining = Timer.getMatchTime();
+
+  BooleanPublisher
+    nt_driveTrainMotorsTempHigh,
+    nt_elevatorMotorTempHigh,
+    nt_armMotorTempHigh,
+    nt_effectorMotorTempHigh,
+    nt_funnelMotorTempHigh,
+    nt_climberMotorTempHigh;
 
   double lastUpdate = 0;
 
@@ -93,7 +109,10 @@ public class LED extends SubsystemBase {
     testBool = _arm.m_motor.getMotorTemperature() > LEDConstants.kMaxMotorTemp;
     if (testBool){
       m_systemhealthy = false;
+      m_armMotorTempHigh = true;
       setPixels(LEDConstants.kMotorTempColor, LEDConstants.kArmLEDs);
+    } else {
+      m_armMotorTempHigh = false;
     }
 
     // Arm Setup Detection
@@ -109,7 +128,10 @@ public class LED extends SubsystemBase {
     testBool = _elevator.m_EleMotor.getMotorTemperature() > LEDConstants.kMaxMotorTemp;
     if (testBool) {
       m_systemhealthy = false;
+      m_elevatorMotorTempHigh = true;
       setPixels(LEDConstants.kMotorTempColor, LEDConstants.kElevatorLEDs);
+    } else {
+      m_elevatorMotorTempHigh = false;
     }
 
     // Elevator setup detection
@@ -125,8 +147,11 @@ public class LED extends SubsystemBase {
     testBool = _effector.m_motor.getMotorTemperature() > LEDConstants.kMaxMotorTemp;
     if (testBool){
       m_systemhealthy = false;
+      m_effectorMotorTempHigh = true;
       setPixels(LEDConstants.kMotorTempColor, LEDConstants.kEffectorLEDs);
-    } 
+    } else {
+      m_effectorMotorTempHigh = false;
+    }
 
     /* Elevator */
     
@@ -135,7 +160,10 @@ public class LED extends SubsystemBase {
     testBool = _climber.m_motor.getMotorTemperature() > LEDConstants.kMaxMotorTemp;
     if (testBool){
       m_systemhealthy = false;
+      m_climberMotorTempHigh = true;
       setPixels(LEDConstants.kMotorTempColor, LEDConstants.kClimberLEDs);
+    } else {
+      m_climberMotorTempHigh = false;
     }
 
     // Climber setup detection
@@ -151,7 +179,10 @@ public class LED extends SubsystemBase {
     DriveTrain.forEachSwerveModule((s)->testBool = testBool || s.m_motorDrive.getMotorTemperature() > LEDConstants.kMaxMotorTemp || s.m_motorSteer.getMotorTemperature() > LEDConstants.kMaxMotorTemp);
     if (testBool){
       m_systemhealthy = false;
+      m_driveTrainMotorsTempHigh = true;
       setPixels(LEDConstants.kMotorTempColor, LEDConstants.kSwerveLEDs);
+    } else {
+      m_driveTrainMotorsTempHigh = false;
     }
 
     // Swerve Setup Detection 
@@ -199,6 +230,14 @@ public class LED extends SubsystemBase {
       if (Vision.getInstance().m_numTargets > 0){
         //setPixels(LEDConstants.kActivityColor, LEDConstants.kAllLEDs);
       }
+
+      nt_driveTrainMotorsTempHigh.set(m_driveTrainMotorsTempHigh);
+      nt_elevatorMotorTempHigh.set(m_elevatorMotorTempHigh);
+      nt_armMotorTempHigh.set(m_armMotorTempHigh);
+      nt_effectorMotorTempHigh.set(m_effectorMotorTempHigh);
+      nt_funnelMotorTempHigh.set(m_funnelMotorTempHigh);
+      nt_climberMotorTempHigh.set(m_climberMotorTempHigh);
+
       sendData();
   }
 }
