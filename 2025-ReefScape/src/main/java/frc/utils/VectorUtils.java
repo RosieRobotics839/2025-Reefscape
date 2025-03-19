@@ -40,7 +40,8 @@ public class VectorUtils {
     }
     
     public static Translation2d vectorInDirectionOf(Pose2d pose, double magnitude){
-      return new Translation2d(magnitude, pose.getTranslation().getAngle());
+      Rotation2d angle = (pose.getTranslation().getNorm() != 0 ? pose.getTranslation().getAngle() : new Rotation2d(0));
+      return new Translation2d(magnitude, angle);
     }
 
     public static Translation2d vectorInDirectionOf(Translation2d pose, double magnitude){
