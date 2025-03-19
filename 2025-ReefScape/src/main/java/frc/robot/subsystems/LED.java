@@ -7,6 +7,7 @@ package frc.robot.subsystems;
 import java.util.stream.LongStream;
 
 import edu.wpi.first.networktables.BooleanPublisher;
+import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.wpilibj.AddressableLED;
 import edu.wpi.first.wpilibj.AddressableLEDBuffer;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -33,7 +34,7 @@ public class LED extends SubsystemBase {
   public boolean m_climberMotorTempHigh = false;
 
   private double lastFlash = Timer.getFPGATimestamp(); 
-  double timeRemaining = Timer.getMatchTime();
+  double FMSTimeRemaining = Timer.getMatchTime();
 
   BooleanPublisher
     nt_driveTrainMotorsTempHigh,
@@ -42,6 +43,9 @@ public class LED extends SubsystemBase {
     nt_effectorMotorTempHigh,
     nt_funnelMotorTempHigh,
     nt_climberMotorTempHigh;
+
+  DoublePublisher
+    nt_remainingMatchTime;
 
   double lastUpdate = 0;
 
@@ -204,10 +208,15 @@ public class LED extends SubsystemBase {
       flash(()->setPixels(LEDConstants.kSetupAwarenessFailColor, LEDConstants.kGyroLEDs));
     }
 
+    int TestTimeRemaining = 150; // 2 and a half minutes
+
     if (m_systemhealthy){
       setAltColors(LEDConstants.kHealthyColor1, LEDConstants.kHealthyColor2, LEDConstants.kAllLEDs);
       if (DriverStation.isEnabled()){
-        if (/*timeRemaining < 30*/ LEDConstants.kTestTimeRemaining < 30 && LEDConstants.kTestTimeRemaining > 25 ) {
+        if (TestTimeRemaining > 0){
+          TestTimeRemaining--;
+        }
+        if (/*timeRemaining < 30 && timeRemaining > 25*/ TestTimeRemaining < 30 && TestTimeRemaining > 25 ) {
           flash(() ->setPixels(LEDConstants.kClimbColor, LEDConstants.kAllLEDs));
         }
       }
@@ -237,6 +246,7 @@ public class LED extends SubsystemBase {
       nt_effectorMotorTempHigh.set(m_effectorMotorTempHigh);
       nt_funnelMotorTempHigh.set(m_funnelMotorTempHigh);
       nt_climberMotorTempHigh.set(m_climberMotorTempHigh);
+      nt_remainingMatchTime.set(TestTimeRemaining /*FMSTimeRemaining*/);
 
       sendData();
   }
