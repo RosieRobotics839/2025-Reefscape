@@ -383,7 +383,8 @@ public final class Constants {
   public static class AutoConstants {
     
     public static final double kReefCenterDistance = 0.831723; // Determined from Andymark Apriltag Map
-    public static final int kReefCenterRefID = 7;
+    public static final int kReefRedCenterRefID = 7;
+    public static final int kReefBlueCenterRefID = 18;
     public static double kReefKOZRadius = Units.feetToMeters(NTDouble.create(6,"Autonomous/kReefKOZRadius", val -> {kReefKOZRadius = Units.feetToMeters(val); Autonomous.staticObstacles = Autonomous.generateStaticObstacles();}));
     public static double kReefGraphNodeRadius = Units.feetToMeters(NTDouble.create(8,"Autonomous/kReefGraphNodeRadius", val -> {kReefGraphNodeRadius = Units.feetToMeters(val);}));
    

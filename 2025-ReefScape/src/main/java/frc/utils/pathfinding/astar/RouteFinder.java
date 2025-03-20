@@ -32,8 +32,7 @@ public class RouteFinder<T extends GraphNode> {
 
         while (!openSet.isEmpty()) {
             RouteNode<T> next = openSet.pollFirst();
-            // TODO: Remove the 100 and figure out how to make it not return desination prematurely.
-            if (next.getCurrent().equals(to) && next.getRouteScore() < 100) {
+            if (next.getCurrent().equals(to) && next.getRouteScore() < 50000) {
 
                 List<T> route = new ArrayList<>();
                 RouteNode<T> current = next;

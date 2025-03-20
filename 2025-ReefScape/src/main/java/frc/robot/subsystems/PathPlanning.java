@@ -46,7 +46,6 @@ public class PathPlanning {
     FieldPose m_current = new FieldPose(-1, "current", PoseEstimator.getInstance().m_finalPose);
     FieldPose m_destination = new FieldPose(-2, "destination", PoseEstimator.getInstance().m_finalPose);
 
-    public List<FieldPose> orignodes = new ArrayList<FieldPose>();
     Map<Integer, Set<Integer>> map = new HashMap<Integer, Set<Integer>>();
     PathScorer nextNodeScorer = new PathScorer();
     ScoreHeuristic targetScorer = new ScoreHeuristic();
@@ -65,20 +64,20 @@ public class PathPlanning {
     }
 
     private void addNode(FieldPose pose, int[] connectedNodes){
-        orignodes.add(pose);
+        nodes.add(pose);
         map.put(pose.getId(), connection(pose.getId(), connectedNodes));
     }
 
-    public void GenerateRedReefNodes (){
+    public void GenerateReefNodes (){
         for (Integer i=0; i<6; i++){
             addNode(new FieldPose(
                 i,
                 i.toString(),
                 new Pose2d(
-                    Autonomous.m_redReefCenter.plus(
+                    Autonomous.reefCenter().getTranslation().plus(
                         new Translation2d(
                             AutoConstants.kReefGraphNodeRadius,
-                            new Rotation2d(Units.degreesToRadians(30+60*i))
+                            new Rotation2d(Autonomous.reefCenter().getRotation().getRadians()+Units.degreesToRadians(30+60*i))
                         )
                     ),
                     null
@@ -95,18 +94,13 @@ public class PathPlanning {
     public PathPlanning(){
         //fromChorFile("autopointgraph.json");
         
-        GenerateRedReefNodes();
         calcFieldGraph();
     }
 
     public void calcFieldGraph(){
         nodes.clear();
-        if (FlightStick.m_blueAlly){
-            double halffield = Vision.getInstance().aprilTagFieldLayout.getFieldLength()/2.0;
-            nodes.addAll(this.orignodes.stream().map(f->new FieldPose(f.getId(), f.getName(), new Pose2d(new Translation2d(halffield+(halffield-f.getPose().getX()),f.getPose().getY()),null))).collect(Collectors.toList()));
-        } else {
-            nodes.addAll(this.orignodes);
-        }
+        map.clear();
+        GenerateReefNodes();
 
         int nnodes = nodes.size();
 
@@ -209,7 +203,7 @@ public class PathPlanning {
         }
         
         // Check if from is in an obstacle, if so find the shortest way out
-        var polygon = PathfindingUtils.PointInPolygons(from.getTranslation(), Autonomous.staticObstacles);
+        var polygon = PathfindingUtils.PointInConvexPolygons(from.getTranslation(), Autonomous.staticObstacles);
         if (!polygon.isEmpty()){
             var nearestExit = new Pose2d(PathfindingUtils.nearestExit(from.getTranslation(),polygon),from.getRotation());
             navigateTo(nearestExit, from);
@@ -226,12 +220,13 @@ public class PathPlanning {
         // Otherwise find the best route using A*
         RouteFinder<FieldPose> routeFinder = new RouteFinder<FieldPose>(fieldgraph, nextNodeScorer, targetScorer);
         List<FieldPose> route = routeFinder.findRoute(m_current, m_destination);
-        for (int i=1; i<route.size()-1; i++){
-            DriveTrain.getInstance().m_poseQueue.offer(new Pose2d(route.get(i).getPose().getTranslation(),null));
-        }
         if (DriveTrain.getInstance().m_poseQueue.isEmpty()){
             DriveTrain.getInstance().m_poseQueueStart = from;
         }
+        for (int i=1; i<route.size()-1; i++){
+            DriveTrain.getInstance().m_poseQueue.offer(new Pose2d(route.get(i).getPose().getTranslation(),null));
+        }
+
         DriveTrain.getInstance().m_poseQueue.offer(to);
         DriveTrain.getInstance().PublishPoseQueue();
     }
