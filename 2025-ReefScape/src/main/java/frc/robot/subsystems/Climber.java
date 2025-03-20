@@ -38,6 +38,7 @@ public class Climber extends SubsystemBase{
     BooleanPublisher nt_climberCalibrated = table.getBooleanTopic("climberCalibrated").publish();
     BooleanPublisher nt_hasReachedInPos = table.getBooleanTopic("hasReachedInPos").publish();
     BooleanPublisher nt_hasReachedOutPos = table.getBooleanTopic("hasReachedOutPos").publish();
+    BooleanPublisher nt_climbMotorMoving = table.getBooleanTopic("climbMotorMoving").publish();
     NTDouble nt_relativePosition = new NTDouble(0, table, "relativePosition", (val)->setRelativePosition(Units.degreesToRadians(val)));
     {nt_relativePosition.resetOnRecv = true;}
 
@@ -99,5 +100,6 @@ public class Climber extends SubsystemBase{
         nt_climberCalibrated.set(m_motor.isSetupDone());
         nt_hasReachedInPos.set(hasReachedInPos);
         nt_hasReachedOutPos.set(hasReachedOutPos);
+        //nt_climbMotorMoving.set(m_motor.)
     }
 }

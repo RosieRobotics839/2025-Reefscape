@@ -8,6 +8,8 @@ import java.util.stream.LongStream;
 
 import edu.wpi.first.networktables.BooleanPublisher;
 import edu.wpi.first.networktables.DoublePublisher;
+import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.AddressableLED;
 import edu.wpi.first.wpilibj.AddressableLEDBuffer;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -16,6 +18,8 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.LEDConstants;
 
 public class LED extends SubsystemBase {
+
+  static NetworkTable table = NetworkTableInstance.getDefault().getTable("roboRIO/LED");
 
   private static final LED led = new LED();
   public static LED getInstance() {
@@ -33,19 +37,16 @@ public class LED extends SubsystemBase {
   public boolean m_funnelMotorTempHigh = false;
   public boolean m_climberMotorTempHigh = false;
 
+  BooleanPublisher nt_driveTrainMotorsTempHigh = table.getBooleanTopic("driveTrainMotorsTempHigh").publish();
+  BooleanPublisher nt_elevatorMotorTempHigh = table.getBooleanTopic("elevatorMotorTempHigh").publish();
+  BooleanPublisher nt_armMotorTempHigh = table.getBooleanTopic("armMotorTempHigh").publish();
+  BooleanPublisher nt_effectorMotorTempHigh = table.getBooleanTopic("effectorMotorTempHigh").publish();
+  BooleanPublisher nt_funnelMotorTempHigh = table.getBooleanTopic("funnelMotorTempHigh").publish();
+  BooleanPublisher nt_climberMotorTempHigh = table.getBooleanTopic("climberMotorTempHigh").publish();
+  DoublePublisher nt_remainingMatchTime = table.getDoubleTopic("remainingMatchTime").publish();
+
   private double lastFlash = Timer.getFPGATimestamp(); 
   double FMSTimeRemaining = Timer.getMatchTime();
-
-  BooleanPublisher
-    nt_driveTrainMotorsTempHigh,
-    nt_elevatorMotorTempHigh,
-    nt_armMotorTempHigh,
-    nt_effectorMotorTempHigh,
-    nt_funnelMotorTempHigh,
-    nt_climberMotorTempHigh;
-
-  DoublePublisher
-    nt_remainingMatchTime;
 
   double lastUpdate = 0;
 
@@ -208,7 +209,7 @@ public class LED extends SubsystemBase {
       flash(()->setPixels(LEDConstants.kSetupAwarenessFailColor, LEDConstants.kGyroLEDs));
     }
 
-    int TestTimeRemaining = 150; // 2 and a half minutes
+    int TestTimeRemaining = 7500; // 2 and a half minutes
 
     if (m_systemhealthy){
       setAltColors(LEDConstants.kHealthyColor1, LEDConstants.kHealthyColor2, LEDConstants.kAllLEDs);
