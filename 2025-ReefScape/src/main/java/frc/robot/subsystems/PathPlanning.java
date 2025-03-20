@@ -24,12 +24,15 @@ import org.json.simple.parser.JSONParser;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Filesystem;
+import frc.robot.Constants.AutoConstants;
 import frc.utils.VectorUtils;
 import frc.utils.pathfinding.astar.FieldPose;
 import frc.utils.pathfinding.astar.ScoreHeuristic;
 import frc.utils.pathfinding.astar.Graph;
 import frc.utils.pathfinding.astar.PathScorer;
+import frc.utils.pathfinding.astar.PathfindingUtils;
 import frc.utils.pathfinding.astar.RouteFinder;
 
 /** Add your docs here. */
@@ -65,18 +68,44 @@ public class PathPlanning {
         orignodes.add(pose);
         map.put(pose.getId(), connection(pose.getId(), connectedNodes));
     }
+
+    public void GenerateRedReefNodes (){
+        for (Integer i=0; i<6; i++){
+            addNode(new FieldPose(
+                i,
+                i.toString(),
+                new Pose2d(
+                    Autonomous.m_redReefCenter.plus(
+                        new Translation2d(
+                            AutoConstants.kReefGraphNodeRadius,
+                            new Rotation2d(Units.degreesToRadians(30+60*i))
+                        )
+                    ),
+                    null
+                )
+            ),
+            // The line below defines the connections between navigation nodes.
+            // the reason it looks weird is because it needs to wrap around to complete the circle around the reef.
+            // Node zero needs to connect to both node 5 and node 1, like 5 <- 0 -> 1. When i is 0, (i+5) % 6 is equal to 5. (i+7) % 6 is equal to 1.
+            new int[]{(i+5) % 6, (i+7) % 6}
+            );
+        };
+    }
+
     public PathPlanning(){
-        fromChorFile("autopointgraph.json");
+        //fromChorFile("autopointgraph.json");
+        
+        GenerateRedReefNodes();
         calcFieldGraph();
     }
 
     public void calcFieldGraph(){
         nodes.clear();
         if (FlightStick.m_blueAlly){
-            nodes.addAll(this.orignodes);
-        } else {
             double halffield = Vision.getInstance().aprilTagFieldLayout.getFieldLength()/2.0;
             nodes.addAll(this.orignodes.stream().map(f->new FieldPose(f.getId(), f.getName(), new Pose2d(new Translation2d(halffield+(halffield-f.getPose().getX()),f.getPose().getY()),null))).collect(Collectors.toList()));
+        } else {
+            nodes.addAll(this.orignodes);
         }
 
         int nnodes = nodes.size();
@@ -178,7 +207,16 @@ public class PathPlanning {
         } else {
             from = DriveTrain.getInstance().m_poseQueue.getLast();
         }
-        navigateTo(to, from);
+        
+        // Check if from is in an obstacle, if so find the shortest way out
+        var polygon = PathfindingUtils.PointInPolygons(from.getTranslation(), Autonomous.staticObstacles);
+        if (!polygon.isEmpty()){
+            var nearestExit = new Pose2d(PathfindingUtils.nearestExit(from.getTranslation(),polygon),from.getRotation());
+            navigateTo(nearestExit, from);
+            navigateTo(to, nearestExit);
+        } else {
+            navigateTo(to, from);
+        }
     }
 
     public void navigateTo(Pose2d to, Pose2d from){

@@ -21,22 +21,6 @@ public class RouteFinder<T extends GraphNode> {
         this.targetScorer = targetScorer;
     }
 
-    public T bestEntryPoint(T fpose, T to){
-        List<T> nodes = new ArrayList<>();
-        List<Double> scores = new ArrayList<>();
-        graph.nodes.forEach((node) -> {
-
-            double score = nextNodeScorer.computeCost(fpose,node) + targetScorer.computeCost(node, to);
-            RouteNode<T> next = new RouteNode<T>(node, null, 0d, targetScorer.computeCost(fpose, to));
-            if (nodes.isEmpty() || score < scores.get(0)) {
-                next.setRouteScore(score);
-                nodes.add(0, next.getCurrent());
-                scores.add(0, score);
-            }
-        });
-        return nodes.get(0);
-    }
-
     public List<T> findRoute(T from, T to) {
         List<RouteNode<T>> allNodes = graph.nodes.stream().map(n-> new RouteNode<T>(n)).collect(Collectors.toList()); 
 
@@ -48,7 +32,8 @@ public class RouteFinder<T extends GraphNode> {
 
         while (!openSet.isEmpty()) {
             RouteNode<T> next = openSet.pollFirst();
-            if (next.getCurrent().equals(to)) {
+            // TODO: Remove the 100 and figure out how to make it not return desination prematurely.
+            if (next.getCurrent().equals(to) && next.getRouteScore() < 100) {
 
                 List<T> route = new ArrayList<>();
                 RouteNode<T> current = next;

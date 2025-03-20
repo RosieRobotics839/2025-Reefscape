@@ -12,6 +12,7 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Constants.AutoConstants;
 import frc.robot.Constants.kDriveTrain.DriveConstants;
 import frc.utils.VectorUtils;
 
@@ -30,14 +31,24 @@ public class Autonomous extends SubsystemBase {
   public Pose2d m_aimPoint;
   public double m_aimPointRotationOffset;
 
-  public static List<Translation2d> bluereef = new ArrayList<Translation2d>(){{
-    add(new Translation2d(3.5, 3.4));
-    add(new Translation2d(3.5, 4.6));
-    add(new Translation2d(4.5, 5.15));
-    add(new Translation2d(5.5, 4.6));
-    add(new Translation2d(5.5, 3.4));
-    add(new Translation2d(4.5, 2.85));
-  }};
+  public static Translation2d m_redReefCenter = PathPlanning.AprilTagAtDistance(AutoConstants.kReefCenterRefID, AutoConstants.kReefCenterDistance).getTranslation();
+  
+    public static List<Translation2d> generateRedReefKOZ(){
+    return new ArrayList<Translation2d>(){{
+      for (int i=0; i<6; i++){
+        add(m_redReefCenter.plus(
+          new Translation2d(
+            AutoConstants.kReefKOZRadius,
+            new Rotation2d(Units.degreesToRadians(30+60*i))
+          )
+        ));
+      }
+    }};
+  }
+  
+  public static List<Translation2d> redreef = generateRedReefKOZ();
+  public static List<Translation2d> bluereef = flipRedToBlue(redreef);
+  
   public static List<Translation2d> bargecolumn = new ArrayList<Translation2d>(){{
     add(new Translation2d(8.160,3.46));
     add(new Translation2d(8.160,4.475));
@@ -57,27 +68,33 @@ public class Autonomous extends SubsystemBase {
   //  add(new Translation2d(16.542, 4.119));
   //}};
 
-  // TODO: UPDATE FIELD GEOMETRY!
-  public static List<List<Translation2d>> staticObstacles = new ArrayList<List<Translation2d>>(){{
+  public static List<Translation2d> flipRedToBlue(List<Translation2d> obstacle){
     double halffield = Vision.getInstance().aprilTagFieldLayout.getFieldLength()/2.0;
-    
-    List<Translation2d> redreef = bluereef.stream().map(f->new Translation2d(halffield+(halffield-f.getX()),f.getY())).collect(Collectors.toList());
-    add(bluereef);
-    add(redreef);
-    add(bargecolumn);
-    
-    //List<Translation2d> redspeaker = bluespeaker.stream().map(f->new Translation2d(halffield+(halffield-f.getX()),f.getY())).collect(Collectors.toList());
-    //add(bluespeaker);
-    //add(redspeaker);
+    return obstacle.stream().map(f->new Translation2d(halffield-(f.getX()-halffield),f.getY())).collect(Collectors.toList());
+  }
+  
+  public static List<List<Translation2d>> staticObstacles = generateStaticObstacles();
+  public static List<List<Translation2d>> generateStaticObstacles(){
+    Autonomous.redreef = Autonomous.generateRedReefKOZ();
+    Autonomous.bluereef = Autonomous.flipRedToBlue(Autonomous.redreef);
+    return new ArrayList<List<Translation2d>>(){{
+      add(bluereef);
+      add(redreef);
+      add(bargecolumn);
+  
+      publishObstacles(this);
+    }};
+  }
 
-    var it = iterator();
+  public static void publishObstacles(List<List<Translation2d>> list){
+    var it = list.iterator();
     Integer i=0;
     while(it.hasNext()){
       var fieldobj=PoseEstimator.getInstance().m_field.getObject("KeepOut"+(i++).toString());
       fieldobj.setPoses(it.next().stream().map(a->new Pose2d(a,new Rotation2d(0))).collect(Collectors.toList()));
-    }    
-  }};
-
+    } 
+  }
+  
   static NetworkTable table;
   //final BooleanPublisher nt_instage;
 

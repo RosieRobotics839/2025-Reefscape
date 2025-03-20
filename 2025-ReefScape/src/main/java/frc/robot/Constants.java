@@ -17,6 +17,7 @@ import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Filesystem;
 import frc.robot.subsystems.Arm;
+import frc.robot.subsystems.Autonomous;
 import frc.robot.subsystems.DriveTrain;
 import frc.robot.subsystems.EndEffector;
 import frc.robot.subsystems.Elevator;
@@ -281,8 +282,8 @@ public final class Constants {
     public static boolean isChampionshipGame = NTBoolean.create(false, "isChampionshipGame", val -> {isChampionshipGame = val; Vision.getInstance().reloadFieldLayout();});
     // Method to get the current field layout path
     public static String getFieldLayoutPath() {
-      //return Filesystem.getDeployDirectory() + "/" + "2025-reefscape-andymark.json";
-      return Filesystem.getDeployDirectory() + "/" + "2025-reefscape-buzz.json";
+      return Filesystem.getDeployDirectory() + "/" + "2025-reefscape-andymark.json";
+      //return Filesystem.getDeployDirectory() + "/" + "2025-reefscape-buzz.json";
       //return Filesystem.getDeployDirectory() + "/" + "2025-waterbury-practice-field.json";
       //return Filesystem.getDeployDirectory() + "/" + "2025-rosiecarpet.json";
     }
@@ -380,7 +381,12 @@ public final class Constants {
   }
   
   public static class AutoConstants {
-
+    
+    public static final double kReefCenterDistance = 0.831723; // Determined from Andymark Apriltag Map
+    public static final int kReefCenterRefID = 7;
+    public static double kReefKOZRadius = Units.feetToMeters(NTDouble.create(6,"Autonomous/kReefKOZRadius", val -> {kReefKOZRadius = Units.feetToMeters(val); Autonomous.staticObstacles = Autonomous.generateStaticObstacles();}));
+    public static double kReefGraphNodeRadius = Units.feetToMeters(NTDouble.create(8,"Autonomous/kReefGraphNodeRadius", val -> {kReefGraphNodeRadius = Units.feetToMeters(val);}));
+   
     public static double kLineupTimeout = NTDouble.create(7, "Autonomous/kLineupTimeout", val -> kLineupTimeout = val);
     public static double kReefDistance = Units.inchesToMeters(NTDouble.create(6.25, "Autonomous/kReefDistance", val -> kReefDistance = Units.inchesToMeters(val)));;
     public static double kReefStartingDistance = Units.inchesToMeters(NTDouble.create(36.0, "Autonomous/kReefStartingDistance", val -> kReefStartingDistance = Units.inchesToMeters(val)));;
