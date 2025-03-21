@@ -58,10 +58,11 @@ public class Robot extends TimedRobot {
   Alliance myAlliance = Alliance.Red;
 
   public boolean changedAlly = true;
+  private boolean orchestraIsPlaying = false;
   public String selectedChoice;
   public String selectedSong;
-  String startMusic;
-  String stopMusic;
+  private String startMusic = "playing";
+  private String stopMusic = "notPlaying";
 
   private Debouncer m_recording = new Debouncer(10, Debouncer.DebounceType.kFalling);
   private Action m_recordTrigger = new Action(false).onTrue(()->DataLogManager.start()).onFalse(()->DataLogManager.stop());
@@ -82,6 +83,8 @@ public class Robot extends TimedRobot {
     songChooser.addOption("SpongeBobOpeningSong", Filesystem.getDeployDirectory() + "/" + "spongebobopening.chrp");
     songChooser.addOption("WellermanSeaShanty", Filesystem.getDeployDirectory() + "/" + "wellerman.chrp");
     songChooser.addOption("Jeopardy", Filesystem.getDeployDirectory() + "/" + "jeopardy.chrp");
+    songChooser.addOption("Song 2", Filesystem.getDeployDirectory() + "/" + "song2.chrp");
+    songChooser.addOption("Song 5", Filesystem.getDeployDirectory() + "/" + "song5.chrp");
 
     startStop.setDefaultOption("Stop", stopMusic);
     startStop.addOption("Start", startMusic);
@@ -196,9 +199,12 @@ public class Robot extends TimedRobot {
 
     selectedSong = songChooser.getSelected();
     selectedChoice = startStop.getSelected();
-        if (!DriverStation.isFMSAttached() && !isTeleopEnabled() && selectedChoice == startMusic && m_orchestra.isReady()) {
-            m_orchestra.playMusic(selectedSong);
-        } else if (!DriverStation.isFMSAttached() && !isTeleopEnabled() && selectedChoice == stopMusic) {
+        if (!DriverStation.isFMSAttached() && !isTeleopEnabled() && selectedChoice == "playing" && m_orchestra.isReady()) {
+            if (!orchestraIsPlaying) {
+              m_orchestra.playMusic(selectedSong);
+              orchestraIsPlaying = true;
+            }
+        } else if (!DriverStation.isFMSAttached() && !isTeleopEnabled() && selectedChoice == "notPlaying") {
             m_orchestra.stopMusic();
         }
   }

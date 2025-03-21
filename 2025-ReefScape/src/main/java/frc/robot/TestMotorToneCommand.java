@@ -6,7 +6,7 @@ import frc.robot.subsystems.Arm;
 import edu.wpi.first.wpilibj.Timer;
 
 public class TestMotorToneCommand extends Command {
-    private static final double TEST_FREQUENCY = 440.0; // A4 note (440Hz)
+    private static final double TEST_FREQUENCY = 1000.0; // A4 note (440Hz)
     private static final double DURATION = 3.0; // Seconds to play the tone
     private final Arm m_arm;
     private final Timer m_timer = new Timer();

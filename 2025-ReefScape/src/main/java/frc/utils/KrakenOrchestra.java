@@ -101,8 +101,9 @@ public class KrakenOrchestra extends SubsystemBase {
         status = m_orchestra.loadMusic(filepath);
         if (status.isOK()) {
             m_orchestra.play();
+            System.out.println("Playing music: " + filepath);
         } else {
-            // System.out.println("Failed to load music: " + status.toString());
+            System.out.println("Failed to load music: " + filepath);
             // Driver Station Log flows too fast to catch this
         }
     }
