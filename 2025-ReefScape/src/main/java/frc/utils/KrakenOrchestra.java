@@ -13,6 +13,7 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import edu.wpi.first.networktables.BooleanPublisher;
 import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.IntegerPublisher;
+import edu.wpi.first.networktables.StringPublisher;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -39,7 +40,7 @@ public class KrakenOrchestra extends SubsystemBase {
     BooleanPublisher nt_orchestraIsPlaying = table.getBooleanTopic("orchestraIsPlaying").publish();
     BooleanPublisher nt_orchestraIsReady = table.getBooleanTopic("orchestraIsReady").publish();
     IntegerPublisher nt_instrumentCount = table.getIntegerTopic("instrumentCount").publish();
-    DoublePublisher nt_currentFile = table.getDoubleTopic("currentFile").publish();
+    StringPublisher nt_currentFile = table.getStringTopic("currentSongPlaying").publish();
 
     private KrakenOrchestra() {
         // Initialize orchestra with all Kraken motors on the robot
