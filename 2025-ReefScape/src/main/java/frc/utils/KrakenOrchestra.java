@@ -11,6 +11,7 @@ import com.ctre.phoenix6.StatusCode;
 import com.ctre.phoenix6.hardware.TalonFX;
 
 import edu.wpi.first.networktables.BooleanPublisher;
+import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.IntegerPublisher;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
@@ -38,6 +39,7 @@ public class KrakenOrchestra extends SubsystemBase {
     BooleanPublisher nt_orchestraIsPlaying = table.getBooleanTopic("orchestraIsPlaying").publish();
     BooleanPublisher nt_orchestraIsReady = table.getBooleanTopic("orchestraIsReady").publish();
     IntegerPublisher nt_instrumentCount = table.getIntegerTopic("instrumentCount").publish();
+    DoublePublisher nt_currentFile = table.getDoubleTopic("currentFile").publish();
 
     private KrakenOrchestra() {
         // Initialize orchestra with all Kraken motors on the robot
@@ -135,6 +137,7 @@ public class KrakenOrchestra extends SubsystemBase {
         nt_orchestraIsPlaying.set(isPlaying());
         nt_orchestraIsReady.set(orchestraReady);
         nt_instrumentCount.set(instruments.size());
+        nt_currentFile.set(currentSong);
 
         // If motors have been initialized since our last check, try initializing instruments again
         if (!orchestraReady) {
