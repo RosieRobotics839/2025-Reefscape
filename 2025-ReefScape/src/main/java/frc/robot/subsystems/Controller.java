@@ -9,14 +9,13 @@ import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import frc.utils.KrakenOrchestra;
 import frc.utils.VectorUtils;
 import frc.utils.NTValues.NTBoolean;
 import frc.utils.NTValues.NTDouble;
 import edu.wpi.first.math.filter.Debouncer.DebounceType;
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.NetworkTable;
@@ -24,8 +23,8 @@ import edu.wpi.first.networktables.NetworkTableInstance;
 import frc.robot.Constants.ArmConstants;
 import frc.robot.Constants.EffectorConstants;
 import frc.robot.Constants.ElevatorConstants;
+import frc.robot.Constants.OperatorConstants;
 import frc.robot.Constants.ScoreConstants;
-import frc.robot.Constants.ScoreConstants.GamePieceSelected;
 import frc.robot.Constants.ScoreConstants.ScoreLevel;
 import frc.robot.Constants.kDriveTrain.DriveConstants;
 public class Controller extends XboxController {
@@ -85,26 +84,38 @@ public class Controller extends XboxController {
 
   public static class DriveButtons {
 
-    Integer m_speedSelector = DriveConstants.kMaxSpeedDefault;
-    DriveTrain driveTrain = DriveTrain.getInstance(); 
-    Autonomous m_autonomous = Autonomous.getInstance();
-    static ControllerButtons buttons; 
-
-    DriveButtons(){
-      buttons.X.onTrue(new InstantCommand(() -> {
+    public DriveButtons(CommandXboxController controller) {
+      controller.back().onTrue(new InstantCommand(() -> {
         m_speedSelector = rangeLimit(++m_speedSelector, 0, DriveConstants.kMaxSpeedMetersPerSecond.length-1);
-        driveTrain.setMaxSpeed(DriveConstants.kMaxSpeedMetersPerSecond[m_speedSelector]);
+        DriveTrain.getInstance().setMaxSpeed(DriveConstants.kMaxSpeedMetersPerSecond[m_speedSelector]);
       }));
-      buttons.Square.onTrue(new InstantCommand(() -> {
+      controller.start().onTrue(new InstantCommand(() -> {
         m_speedSelector = rangeLimit(--m_speedSelector, 0, DriveConstants.kMaxSpeedMetersPerSecond.length-1);
-        driveTrain.setMaxSpeed(DriveConstants.kMaxSpeedMetersPerSecond[m_speedSelector]);
+        DriveTrain.getInstance().setMaxSpeed(DriveConstants.kMaxSpeedMetersPerSecond[m_speedSelector]);
       }));
-      buttons.Triangle.onTrue(new InstantCommand(()->{
-        m_autonomous.aimAtPoint(new Pose2d(Units.feetToMeters(3),Units.feetToMeters(1),new Rotation2d(0)));
+      controller.rightBumper().onTrue(new InstantCommand(() -> {
+        DriveTrain.getInstance().setTargetHeading(DriveTrain.getInstance().getTargetHeading()+Units.degreesToRadians(90)); // CCW 90 Degrees
       }));
-      buttons.Triangle.onFalse(new InstantCommand(()->{
-        m_autonomous.stopAiming();
+      controller.leftBumper().onTrue(new InstantCommand(() -> {
+        DriveTrain.getInstance().setTargetHeading(DriveTrain.getInstance().getTargetHeading()-Units.degreesToRadians(90)); // CW 90 Degrees
       }));
+      controller.leftTrigger(0.2).onTrue(new InstantCommand(()->
+        AutoCommands.DriveReefOffset(Controller.m_scoreLeft
+      )));
+      controller.rightStick().onTrue(new InstantCommand(() -> {
+        OperatorConstants.kFieldCentricDriving = !OperatorConstants.kFieldCentricDriving;
+      }));
+      controller.leftStick().onTrue(new InstantCommand(() -> {
+        DriveTrain.getInstance().setMaxRotate(DriveConstants.kGetItOffMeRotationSpeed);
+      }));
+      controller.leftStick().onFalse(new InstantCommand(() -> {
+        DriveTrain.getInstance().setMaxRotate(Units.degreesToRadians(75));
+      }));
+    }
+
+    Integer m_speedSelector = DriveConstants.kMaxSpeedDefault;
+    DriveButtons(){
+      
     }
 
   }
@@ -116,12 +127,8 @@ public class Controller extends XboxController {
   static NTBoolean nt_scoreLeft = new NTBoolean(true,table,"scoreleft",(val)->{});
 
   public static class AccessoryButtons {
-    public JoystickButton Intake, Outtake, ClimberIn, ClimberOut, GMPCS, StageDial0, StageDial1, StageDial2, StageDial3, StageDial4, LeftScore, RightScore, RS, Home;
+    public JoystickButton Intake, Outtake, ClimberIn, ClimberOut, ByeAlgae, StageDial0, StageDial1, StageDial2, StageDial3, StageDial4, LeftScore, RightScore, RS, Home;
     //public POVButton DPadUp, DPadRight, DPadDown, DPadLeft;
-
-    public Command waitForTarget = Commands.sequence(
-      Commands.waitUntil(() -> {return Arm.getInstance().isAtPosition() && Elevator.getInstance().isAtPosition();})
-    );
 
     public Command disableDirectControl(){
       return new InstantCommand(()->{getAccessoryInstance().m_directElevator = false; getAccessoryInstance().m_directArm = false;});
@@ -129,20 +136,11 @@ public class Controller extends XboxController {
 
     ScoreConstants.ScoreLevel m_level;
     public Command m_expel = EndEffector.getInstance().ExpelCommand(()->(m_level == ScoreLevel.TROUGH ? EffectorConstants.kTroughOuttakeSpeed : EffectorConstants.kOuttakeSpeed), ()->m_level==ScoreLevel.TROUGH);
-      
-    ScoreConstants.GamePieceSelected m_pieceSelected;
 
     // boolean that decides which game piece we are handling
     boolean isAlgaeSelected = false;  // Initially set to false (CORAL)
 
     NTBoolean nt_algaeSelected = new NTBoolean(false,table,"algaeSelected",(val)->{});
-
-
-    public boolean toggleAlgae(){
-      isAlgaeSelected = !isAlgaeSelected;
-      nt_algaeSelected.set(isAlgaeSelected);
-      return true;
-    }
 
     AccessoryButtons(Controller controller){
 
@@ -157,6 +155,7 @@ public class Controller extends XboxController {
       Outtake    = new JoystickButton(controller, 9);  // Expel Button (Outtake for those who don't know)
       ClimberOut = new JoystickButton(controller, 10);  // Brings Climber Out & Funnel Down
       ClimberIn  = new JoystickButton(controller, 11);  // Brings Climber In & Funnel Up
+      ByeAlgae      = new JoystickButton(controller, 12);  // Game Piece Selector Button (Algae or Coral)
 
       //RS       = new JoystickButton(controller, 12); // Right Stick Click
       //Home     = new JoystickButton(controller, 13); // Home Button
@@ -164,9 +163,6 @@ public class Controller extends XboxController {
       //DPadRight    = new POVButton(controller, 90);
       //DPadDown    = new POVButton(controller, 180);
       //DPadLeft    = new POVButton(controller, 270);
-
-      // Initializing the selected game piece to be the default; coral.
-      m_pieceSelected = ScoreConstants.GamePieceSelected.CORAL;
 
       /* Run Climber Command Sequences */
       ClimberIn.and(()->!ClimberOut.getAsBoolean()).debounce(0.06,DebounceType.kRising).whileTrue(
@@ -187,10 +183,7 @@ public class Controller extends XboxController {
       );
 
       Outtake.onTrue(
-        Commands.sequence(
-          waitForTarget.onlyIf(() -> m_pieceSelected == GamePieceSelected.CORAL), // Waiting for arm and elevator to reach target, will only run if coral is selected
-          m_expel // Expelling either way, no matter algae or coral
-        )
+        m_expel // Expelling either way, no matter algae or coral
       );
       
       /* Setting Stage Dial Values */
@@ -250,22 +243,14 @@ public class Controller extends XboxController {
         )
       );
 
-      /* Algae/Coral Selector */
+      /* Algae Button */
 
-      GMPCS.onTrue(
-          Commands.sequence(
-            Commands.waitUntil(() -> {return toggleAlgae();}),
-            Commands.waitUntil(() -> {
-              if (isAlgaeSelected) {
-                  m_pieceSelected = ScoreConstants.GamePieceSelected.ALGAE;
-              } else {
-                  m_pieceSelected = ScoreConstants.GamePieceSelected.CORAL;
-              }
-              return true;
-            })
-          )
-      );
-
+      ByeAlgae.onTrue(
+        Commands.sequence(
+          disableDirectControl(),
+          new InstantCommand(()->m_level = ScoreConstants.ScoreLevel.ALGAE),
+          Arm.getInstance().moveToLevelCommand(()->m_level)
+      ));
     } 
   }
 
@@ -279,11 +264,11 @@ public class Controller extends XboxController {
     Lstick = VectorUtils.deadband(Lstick,0.1,1);
     Ly = Lstick.getY();
     Lx = Lstick.getX();
-  if (this.getAxisCount() > 2) {
-    Translation2d Rstick = new Translation2d(this.getRightX(),this.getRightY());
-    Rstick = VectorUtils.deadband(Rstick,0.1,1);
-    Ry = Rstick.getY();
-    Rx = Rstick.getX();
+    if (getAxisCount() > 2){
+      Translation2d Rstick = new Translation2d(this.getRightX(),this.getRightY());
+      Rstick = VectorUtils.deadband(Rstick,0.1,1);
+      Ry = Rstick.getY();
+      Rx = -Rstick.getX();
     }
   }
   

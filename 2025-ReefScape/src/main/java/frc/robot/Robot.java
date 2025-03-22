@@ -5,6 +5,10 @@
 package frc.robot;
 
 import edu.wpi.first.math.filter.Debouncer;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
@@ -16,6 +20,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import frc.robot.subsystems.Arm;
 import frc.robot.subsystems.Autonomous;
 import frc.robot.subsystems.Climber;
@@ -57,6 +62,22 @@ public class Robot extends TimedRobot {
 
   Alliance myAlliance = Alliance.Red;
 
+  NetworkTable nt_smartdashboard = NetworkTableInstance.getDefault().getTable("SmartDashboard");
+  {
+    if (Robot.isSimulation()){
+      nt_smartdashboard.getStringTopic("Auto Selector").publish().set("Build Your Own A(uto)dventure");
+      nt_smartdashboard.getStringTopic("DB/String 0").publish().set("Get.Left");
+      nt_smartdashboard.getStringTopic("DB/String 1").publish().set("Score.SS.Left.4");
+      nt_smartdashboard.getStringTopic("DB/String 2").publish().set("Get.Left");
+      nt_smartdashboard.getStringTopic("DB/String 3").publish().set("Score.SS.Right.4");
+      nt_smartdashboard.getStringTopic("DB/String 4").publish().set("");
+      nt_smartdashboard.getStringTopic("DB/String 5").publish().set("");
+      nt_smartdashboard.getStringTopic("DB/String 6").publish().set("");
+      nt_smartdashboard.getStringTopic("DB/String 7").publish().set("");
+      nt_smartdashboard.getStringTopic("DB/String 8").publish().set("");
+      nt_smartdashboard.getStringTopic("DB/String 9").publish().set("");
+    }
+  }
   public boolean changedAlly = true;
   private boolean orchestraIsPlaying = false;
   public String selectedChoice;
@@ -146,7 +167,8 @@ public class Robot extends TimedRobot {
   }
 
   String[] autoArray = {"Do Nothing"
-  , "Build Your Own A(uto)dventure"};
+  , "Build Your Own A(uto)dventure"
+  , "FollowLine"};
 
   {SmartDashboard.putStringArray("Auto List", autoArray);}
 
@@ -160,7 +182,13 @@ public class Robot extends TimedRobot {
    * below with additional strings. If using the SendableChooser make sure to add them to the
    * chooser code above as well.
    */
-  
+  Pose2d poseTo;
+  Pose2d poseFrom;
+  {
+    PoseEstimator.getInstance().m_field.getObject("poseTo").setPose(0,0, new Rotation2d(0));
+    PoseEstimator.getInstance().m_field.getObject("poseFrom").setPose(0,0, new Rotation2d(0));
+  }
+
   @Override
   public void autonomousInit() {
 
@@ -168,9 +196,17 @@ public class Robot extends TimedRobot {
     orchestraIsPlaying = false;
 
     switch(SmartDashboard.getString("Auto Selector", "Build Your Own A(uto)dventure")) {
+      default:
       case "Build Your Own A(uto)dventure":
         m_autonomousCommand = Dashboard.getInstance().BuildYourOwnAutoCommands();
         break;
+      case "FollowLine":
+        Pose2d from = PoseEstimator.getInstance().m_field.getObject("poseFrom").getPose();
+        Pose2d to = PoseEstimator.getInstance().m_field.getObject("poseTo").getPose();
+        m_autonomousCommand = new InstantCommand(()->PathPlanning.getInstance().navigateTo(to, from));
+        break;
+        
+        //m_autonomousCommand = Dashboard.getInstance().BuildYourOwnAutoCommands();
    }
     CommandScheduler.getInstance().schedule(m_autonomousCommand);
   }

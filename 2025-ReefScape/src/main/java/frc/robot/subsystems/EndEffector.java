@@ -48,7 +48,7 @@ public class EndEffector extends SubsystemBase {
         Commands.waitUntil(() -> {return hasGamePiece();}) //Checking whether we have a game piece or not.
       ).onlyWhile(()->DriverStation.isEnabled())
       .beforeStarting(()->{m_intakeRunning=true;})
-      .finallyDo(()->{m_motor.setRelativePosition(EffectorConstants.kExtraTurn); m_intakeRunning=false;});
+      .finallyDo(()->{m_motor.setRelativePosition(EffectorConstants.kExtraTurn); m_intakeRunning=false; if (Robot.isSimulation()){m_beamBreakTestSensor.set(true);}});
     }
 
     public Command ExpelCommand(DoubleSupplier speed, BooleanSupplier extended){
@@ -58,7 +58,7 @@ public class EndEffector extends SubsystemBase {
         Commands.waitSeconds(3).onlyIf(extended)
       ).withTimeout(4).onlyWhile(()->DriverStation.isEnabled())
       .beforeStarting(()->m_intakeRunning=false)
-      .finallyDo(()->m_motor.setSpeed(0));
+      .finallyDo(()->{m_motor.setSpeed(0); if (Robot.isSimulation()){m_beamBreakTestSensor.set(false);}});
     };
 
     public EndEffector(int CANID) {

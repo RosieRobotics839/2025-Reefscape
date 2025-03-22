@@ -49,11 +49,7 @@ public final class Constants {
   public static class ScoreConstants {
 
     public enum ScoreLevel{
-      FUNNEL, TROUGH, LEVEL2, LEVEL3, LEVEL4
-    }
-
-    public enum GamePieceSelected{
-      ALGAE, CORAL
+      FUNNEL, TROUGH, LEVEL2, LEVEL3, LEVEL4, ALGAE
     }
     
   }
@@ -76,7 +72,7 @@ public final class Constants {
 
     public static double kTargetAngleTrough = Units.degreesToRadians(NTDouble.create(63, "Arm/Target/kAngleTrough", (val)->kTargetAngleTrough = Units.degreesToRadians(val)));
     public static double kTargetAngleLevelMiddle = Units.degreesToRadians(NTDouble.create(63, "Arm/Target/kLevelMiddle", (val)->kTargetAngleLevelMiddle = Units.degreesToRadians(val)));
-    public static double kTargetAngleLevel4 = Units.degreesToRadians(NTDouble.create(77, "Arm/Target/kLevel4", (val)->kTargetAngleLevel4 = Units.degreesToRadians(val)));
+    public static double kTargetAngleLevel4 = Units.degreesToRadians(NTDouble.create(79, "Arm/Target/kLevel4", (val)->kTargetAngleLevel4 = Units.degreesToRadians(val)));
 
     public static double [] kCalibrationX = new double[]{ 0.32, 0.60}; //analog values
     public static double [] kCalibrationY = new double[]{Units.degreesToRotations(-2), Units.degreesToRotations(90)};
@@ -93,7 +89,7 @@ public final class Constants {
     public static MyMotorType kMotorType = MyMotorType.SIMULATED;
     public static int kCANID = 7;
     public static double kIntakeSpeed = NTDouble.create(1, "Effector/kIntakeSpeed", val->{kIntakeSpeed=val;});
-    public static double kOuttakeSpeed = NTDouble.create(9, "Effector/kOuttakeSpeed", val->{kOuttakeSpeed=val;});
+    public static double kOuttakeSpeed = NTDouble.create(4, "Effector/kOuttakeSpeed", val->{kOuttakeSpeed=val;});
     public static double kTroughOuttakeSpeed = NTDouble.create(2.5, "Effector/kTroughOuttakeSpeed", val->{kTroughOuttakeSpeed=val;});
     public static double kAlgaeMotorRevolutions = 5;
 
@@ -202,9 +198,8 @@ public final class Constants {
     public static int[] kHealthyColor1 = colors.orange; 
     public static int[] kHealthyColor2 = colors.white; 
     public static int[] kUnhealthyColor = colors.off; 
-    public static int[] kActivityColor = colors.purple;
-    public static int[] kAlgaeColor = colors.green;
-    public static int[] kCoralColor = colors.white;
+    public static int[] kActivityColor = colors.blue;
+    public static int[] kClimbColor = colors.green;
  
     public static long[] kAllLEDs = LongStream.range(0,30).toArray();
     
@@ -218,8 +213,9 @@ public final class Constants {
     public static long[] kPoseEstimatorLEDs = LongStream.concat(LongStream.range(14,16),LongStream.range(16,18)).toArray();
 
     public static double kUpdateTime = NTDouble.create(0.100, "LED/kUpdateTime", (val)->kUpdateTime=val);
-    public static double kBrightness = NTDouble.create(0.1, "LED/kBrightness", (val)->kBrightness=val);
+    public static double kBrightness = NTDouble.create((Robot.isSimulation() ? 1 : 0.1), "LED/kBrightness", (val)->kBrightness=val);
     public static double kFlashTime = NTDouble.create(2, "LED/kFlashTime", (val)->kFlashTime=val);
+    public static double kTestTimeRemaining = NTDouble.create(100, "LED/kTestTimeRemaining", val -> kTestTimeRemaining = (val));
   
   }
 
@@ -285,7 +281,8 @@ public final class Constants {
     public static boolean isChampionshipGame = NTBoolean.create(false, "isChampionshipGame", val -> {isChampionshipGame = val; Vision.getInstance().reloadFieldLayout();});
     // Method to get the current field layout path
     public static String getFieldLayoutPath() {
-      return Filesystem.getDeployDirectory() + "/" + "2025-reefscape-andymark.json";
+      //return Filesystem.getDeployDirectory() + "/" + "2025-reefscape-andymark.json";
+      return Filesystem.getDeployDirectory() + "/" + "2025-reefscape-buzz.json";
       //return Filesystem.getDeployDirectory() + "/" + "2025-waterbury-practice-field.json";
       //return Filesystem.getDeployDirectory() + "/" + "2025-rosiecarpet.json";
     }
@@ -354,8 +351,8 @@ public final class Constants {
   // Chassis configuration
   public static class kChassis {
     // TODO: Update for Delta Wheel Position
-    public static final double kTrackWidth = Units.inchesToMeters(20.75);  // Distance between right and left wheels
-    public static final double kWheelBase = Units.inchesToMeters(22.75);       // Distance between front and back wheels
+    public static final double kTrackWidth = Units.inchesToMeters(24); // Distance between right and left wheels
+    public static final double kWheelBase = Units.inchesToMeters(24.25); // Distance between front and back wheels
   }
 
   public static class ClimberConstants {
@@ -384,15 +381,18 @@ public final class Constants {
   
   public static class AutoConstants {
 
-    public static double kLineupTimeout = NTDouble.create(3, "Autonomous/kLineupTimeout", val -> kLineupTimeout = val);
-    public static double kReefDistance = Units.inchesToMeters(NTDouble.create(5.0, "Autonomous/kReefDistance", val -> kReefDistance = Units.inchesToMeters(val)));;
-    public static double kReefStartingDistance = Units.inchesToMeters(NTDouble.create(24.0, "Autonomous/kReefStartingDistance", val -> kReefStartingDistance = Units.inchesToMeters(val)));;
-    public static double kReefTolerance = Units.inchesToMeters(NTDouble.create(2.0, "Autonomous/kReefToleranceInch", val -> kReefTolerance = Units.inchesToMeters(val)));
+    public static double kLineupTimeout = NTDouble.create(7, "Autonomous/kLineupTimeout", val -> kLineupTimeout = val);
+    public static double kReefDistance = Units.inchesToMeters(NTDouble.create(6.25, "Autonomous/kReefDistance", val -> kReefDistance = Units.inchesToMeters(val)));;
+    public static double kReefStartingDistance = Units.inchesToMeters(NTDouble.create(36.0, "Autonomous/kReefStartingDistance", val -> kReefStartingDistance = Units.inchesToMeters(val)));;
+    public static double kReefTolerance = Units.inchesToMeters(NTDouble.create(0.5, "Autonomous/kReefToleranceInch", val -> kReefTolerance = Units.inchesToMeters(val)));
+    public static double kReefArmupTolerance = Units.inchesToMeters(NTDouble.create(60, "Autonomous/kReefArmupTolerance", val -> kReefArmupTolerance = Units.inchesToMeters(val)));
     public static double kSourceDistance = Units.inchesToMeters(NTDouble.create(4, "Autonomous/kSourceDistanceInch", val -> kSourceDistance = Units.inchesToMeters(val)));
     public static double kSourceStartingDistance = Units.inchesToMeters(NTDouble.create(12.0, "Autonomous/kSourceStartingDistance", val -> kSourceStartingDistance = Units.inchesToMeters(val)));;
     public static double kSourceTolerance = Units.inchesToMeters(NTDouble.create(12.0, "Autonomous/kSourceNearDistanceInch", val -> kSourceTolerance = Units.inchesToMeters(val)));
-    public static double kReefOffset = Units.inchesToMeters(NTDouble.create(6.5,"Autonomous/kReefOffset",val -> kReefOffset = Units.inchesToMeters(7)));
-    public static double kTroughClearance = NTDouble.create(2, "Autonomous/kTroughClearance", val -> kTroughClearance = Units.inchesToMeters(2));
+    public static double kReefOffset = Units.inchesToMeters(NTDouble.create(6.5,"Autonomous/kReefOffset",val -> kReefOffset = Units.inchesToMeters(val)));
+    public static double kTroughClearance = NTDouble.create(2, "Autonomous/kTroughClearance", val -> kTroughClearance = Units.inchesToMeters(val));
+    // Ooga Booga Number
+    public static double kStaticReefOffset = Units.inchesToMeters(NTDouble.create(0,"Autonomous/kStaticReefOffset",val -> kStaticReefOffset = Units.inchesToMeters(val)));
     
     public static double kFieldLength = 16.451;
     public static double kFieldWidth = 8.211;
@@ -409,7 +409,7 @@ public final class Constants {
       public static double [] kMaxSpeedMetersPerSecond = { // m/s
         Units.feetToMeters(5),
         Units.feetToMeters(10),
-        Units.feetToMeters(18)
+        Units.feetToMeters(15)
       };
 
       public static double [] kMaxRotationVelocity = { // rad/s
@@ -419,12 +419,12 @@ public final class Constants {
       };
       public static double kMaxSpeed = Units.feetToMeters(NTDouble.create(4, "DriveConstants/MaxSpeed",val -> DriveTrain.getInstance().setMaxSpeed(Units.feetToMeters(val))));
       public static boolean kAutoTurnToBestTag = NTBoolean.create(false,"DriveConstants/kAuto/TurnToBestTag",val->kAutoTurnToBestTag=val);
-      public static double kAutoMaxSpeed = Units.feetToMeters(NTDouble.create(7,"DriveConstants/kAuto/MaxSpeedFPS", val->kAutoMaxSpeed = Units.feetToMeters(val)));
-      public static double kAutoMinSpeed = Units.feetToMeters(NTDouble.create(1.5,"DriveConstants/kAuto/MinSpeedFPS", val->kAutoMinSpeed = Units.feetToMeters(val)));
+      public static double kAutoMaxSpeed = Units.feetToMeters(NTDouble.create(10,"DriveConstants/kAuto/MaxSpeedFPS", val->kAutoMaxSpeed = Units.feetToMeters(val)));
+      public static double kAutoMinSpeed = Units.feetToMeters(NTDouble.create(2.5,"DriveConstants/kAuto/MinSpeedFPS", val->kAutoMinSpeed = Units.feetToMeters(val)));
       public static double kAutoAccelLimiter = Units.feetToMeters(NTDouble.create(8,"DriveConstants/kAuto/AccelLimiterFPS2", val->DriveTrain.getInstance().m_autoAccelLimiter = new SlewRateLimiter(Units.feetToMeters(val),-1E9,DriveTrain.getInstance().m_autoSpeed)));
       public static double kAutoMaxRotSpeed = Units.degreesToRadians(NTDouble.create(120,"DriveConstants/kAuto/MaxRotSpeedDPS", val->kAutoMaxRotSpeed = Units.degreesToRadians(val)));
       public static double kAutoTurnToPoseDistance = Units.feetToMeters(NTDouble.create(10, "DriveConstants/kAuto/TurnToPoseDistanceFt", val->kAutoTurnToPoseDistance = Units.feetToMeters(val)));
-      public static double kAutoSlowDist = Units.feetToMeters(NTDouble.create(2,"DriveConstants/kAuto/SlowDistFt",val->kAutoSlowDist=Units.feetToMeters(val)));
+      public static double kAutoSlowDist = Units.feetToMeters(NTDouble.create(4,"DriveConstants/kAuto/SlowDistFt",val->kAutoSlowDist=Units.feetToMeters(val)));
       public static double kAutoToleranceDistance = Units.feetToMeters(NTDouble.create(0.15,"DriveConstants/kAuto/ToleranceDistance",val->kAutoToleranceDistance=Units.feetToMeters(val)));
       public static double kAutoToleranceAngle = Units.degreesToRadians(NTDouble.create(2,"DriveConstants/kAuto/ToleranceAngle",val->kAutoToleranceAngle=Units.degreesToRadians(val)));
 
@@ -443,10 +443,12 @@ public final class Constants {
 
       public static double kGetItOffMeRotationSpeed = Units.degreesToRadians(NTDouble.create(360, "DriveConstants/kGetItOffMeRotSpeed",val -> kGetItOffMeRotationSpeed=Units.degreesToRadians(val)));
 
-      public static double kStoppedRatio = NTDouble.create(0.03, "DriveConstants/kStoppedRatio", val->kStoppedRatio = val);
+      public static double kStoppedRatio = NTDouble.create(0.001, "DriveConstants/kStoppedRatio", val->kStoppedRatio = val);
 
-      public static double kMidPointAccuracyFactor = NTDouble.create(3, "DriveConstants/kMidPointAccuracyFactor", val->kMidPointAccuracyFactor = val);;
+      public static double kMidPointAccuracyFactor = NTDouble.create(3, "DriveConstants/kMidPointAccuracyFactor", val->kMidPointAccuracyFactor = val);
 
+      public static double kAutoCrossTrackKp = NTDouble.create(2.5, "DriveConstants/kAutoCrossTrackKp", (val)->kAutoCrossTrackKp = val);
+      public static double kAutoCrossTrackMax = Units.feetToMeters(NTDouble.create(6, "DriveConstants/kAutoCrossTrackMax", (val)->kAutoCrossTrackMax = Units.feetToMeters(val)));
     }
 
     public static class kSwerveModule {

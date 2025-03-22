@@ -4,12 +4,14 @@
 
 package frc.robot.subsystems;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import frc.utils.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -53,6 +55,8 @@ public class DriveTrain extends SubsystemBase {
   public double m_autoSpeed = 0;
   public SlewRateLimiter m_autoAccelLimiter = new SlewRateLimiter(DriveConstants.kAutoAccelLimiter, -1E9, 0);
 
+  public Pose2d m_poseQueueStart = new Pose2d(0,0,new Rotation2d(0));
+
   private double m_forward, m_left, m_rotate;
   private double m_forwardcmd, m_leftcmd, m_rotatecmd;
   private boolean m_controllerInputActive = false;
@@ -84,12 +88,13 @@ public class DriveTrain extends SubsystemBase {
   public double m_currentHeading;
  
   public double headingError;
-
+  public double crossTrackError = 0;
   final DoublePublisher nt_forward = table.getDoubleTopic("forward").publish();
   final DoublePublisher nt_left = table.getDoubleTopic("left").publish();
   final DoublePublisher nt_rotate = table.getDoubleTopic("rotate").publish();
   final DoublePublisher nt_speed = table.getDoubleTopic("speed").publish();
   final DoublePublisher nt_distance = table.getDoubleTopic("distance").publish();
+  final DoublePublisher nt_xtrackerr = table.getDoubleTopic("xtrackerr").publish();
   final BooleanPublisher nt_fieldCentricDriving = table.getBooleanTopic("HeadingPID/fieldCentricDriving").publish();
 
   public PIDController m_headingPID;
@@ -116,7 +121,8 @@ public class DriveTrain extends SubsystemBase {
   }
 
   public LinkedList<Pose2d> m_poseQueue = new LinkedList<Pose2d>();
-
+  public boolean m_isStoppedConfirmed;
+  public Debouncer stoppedConfirmed = new Debouncer(3, Debouncer.DebounceType.kRising);
   public boolean isStopped(){
     return 
     Math.abs(frontLeft.m_motorDrive.getVelocity()) <= DriveConstants.kStoppedRatio*DriveConstants.kAutoMaxSpeed &&
@@ -139,17 +145,20 @@ public class DriveTrain extends SubsystemBase {
   public void PublishPoseQueue(){
     List<Pose2d> poseQueue = m_poseQueue.stream().map((a)->new Pose2d(a.getTranslation(),
       (a.getRotation()==null ? new Rotation2d(0) : a.getRotation()))).collect(Collectors.toList());
-    poseQueue.add(0, PoseEstimator.getInstance().m_finalPose);
+    poseQueue.add(0,new Pose2d(m_poseQueueStart.getTranslation(),(m_poseQueueStart.getRotation()==null ? new Rotation2d(0) : m_poseQueueStart.getRotation())));
     PoseEstimator.getInstance().m_field.getObject("AutoTraj").setPoses(poseQueue);
   }
 
   private void RunDrive() {
+    ArrayList<Pose2d> poses = new ArrayList<Pose2d>();
+  
+    crossTrackError = 0;
     // Follow Drive to Pose Queue, unless controller input is active, which clears the queue in periodic().
     if (!m_poseQueue.isEmpty()){ 
       Twist2d movement;
       if (VectorUtils.isNear(PoseEstimator.getInstance().m_finalPose, m_poseQueue.peek(), (m_poseQueue.size() > 1 ? DriveConstants.kMidPointAccuracyFactor : 1) * DriveConstants.kAutoToleranceDistance, (m_poseQueue.size() > 1 ? DriveConstants.kMidPointAccuracyFactor : 1) * DriveConstants.kAutoToleranceAngle)){
         // Reached Target Pose
-        m_poseQueue.poll();
+        m_poseQueueStart = m_poseQueue.poll();
         movement = new Twist2d(0,0,0);
         Drive(movement);
         nt_distance.set(0);
@@ -160,7 +169,19 @@ public class DriveTrain extends SubsystemBase {
         nt_distance.set(distance);
         m_autoSpeed = m_autoAccelLimiter.calculate(Math.max(Math.min(1,distance/(DriveConstants.kAutoSlowDist))*DriveConstants.kAutoMaxSpeed, DriveConstants.kAutoMinSpeed));
         Translation2d vector = VectorUtils.vectorInDirectionOf(diff, m_autoSpeed);
-        movement = new Twist2d(vector.getX(), vector.getY(), 0);
+
+
+        // Cross Track Correction
+        Translation2d nearestPoint = VectorUtils.nearestPointOnLine(PoseEstimator.getInstance().m_finalPose.getTranslation(), m_poseQueueStart.getTranslation(), m_poseQueue.peek().getTranslation());
+        poses.add(new Pose2d(nearestPoint,new Rotation2d(0)));
+        Pose2d correction = VectorUtils.poseDiff(new Pose2d(nearestPoint,new Rotation2d(0)),PoseEstimator.getInstance().m_finalPose);
+        poses.add(correction);
+        Translation2d limitedCorrection = VectorUtils.vectorInDirectionOf(correction, Math.max(Math.min(correction.getTranslation().getNorm()*DriveConstants.kAutoCrossTrackKp,DriveConstants.kAutoCrossTrackMax),-DriveConstants.kAutoCrossTrackMax));
+        poses.add(new Pose2d(limitedCorrection, new Rotation2d(0)));
+        Translation2d drivevector = vector.plus(limitedCorrection);
+
+        PoseEstimator.getInstance().m_field.getObject("crossTrack").setPoses(poses);
+        movement = new Twist2d(drivevector.getX(), drivevector.getY(), 0);
         Drive(movement);
         if (m_poseQueue.peek().getRotation() != null && distance < DriveConstants.kAutoTurnToPoseDistance){
           double angle = (m_poseQueue.peek().getRotation().getRadians());
@@ -200,7 +221,8 @@ public class DriveTrain extends SubsystemBase {
       m_left    = m_maxSpeed * m_leftcmd;
     }
     Translation2d translationReq = new Translation2d(m_forward, m_left);
-
+    
+    nt_xtrackerr.set(crossTrackError);
     nt_speed.set(translationReq.getNorm());
 
     // Calculate new Swerve Module states using Reverse Kinematics
@@ -271,6 +293,7 @@ public class DriveTrain extends SubsystemBase {
       m_motorSetupDone = testBool;
     }
 
+    m_isStoppedConfirmed = stoppedConfirmed.calculate(isStopped());
     // Reset target heading on USER button press
     if (!RobotController.isSysActive()){
       m_targetHeading = PoseEstimator.getInstance().m_finalPose.getRotation().getRadians();

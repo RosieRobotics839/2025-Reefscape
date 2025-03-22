@@ -9,14 +9,17 @@ import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DutyCycleEncoder;
+import edu.wpi.first.wpilibj.simulation.DutyCycleEncoderSim;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.ArmConstants;
 import frc.utils.Calibrate;
+import frc.utils.CalibrationMap;
 import frc.utils.Motor;
 import frc.utils.NTValues.NTDouble;
 import frc.robot.Constants.ScoreConstants.ScoreLevel;
+import frc.robot.Robot;
 
 public class Arm extends SubsystemBase{
 
@@ -32,6 +35,8 @@ public class Arm extends SubsystemBase{
 
     public Motor m_motor;
     public DutyCycleEncoder m_angleSensor;
+    public DutyCycleEncoderSim m_angleSensorSim;
+    private CalibrationMap m_angleSensorSimMap;
     public double m_currentAngle = 0;
     public double m_angleTarget = Units.degreesToRadians(NTDouble.create(90, table, "angle/targetAngle",(val)->setPosition(Units.degreesToRadians(val))));
     public double elevatorCurrentHeight;
@@ -117,6 +122,11 @@ public class Arm extends SubsystemBase{
             .withGearRatio(ArmConstants.kArmGearRatio)
             .withSpeedLimit(ArmConstants.kMaxSpeed);
 
+        if (Robot.isSimulation()){
+            m_angleSensorSim = new DutyCycleEncoderSim(m_angleSensor);
+            m_angleSensorSimMap = new CalibrationMap(ArmConstants.kCalibrationY,ArmConstants.kCalibrationX);
+        }
+
         Calibrate.motor("arm",
             ArmConstants.kCalibrationX,
             ArmConstants.kCalibrationY,
@@ -143,6 +153,9 @@ public class Arm extends SubsystemBase{
             case LEVEL4:
                 setPosition(ArmConstants.kTargetAngleLevel4);
                 break;
+            case ALGAE:
+                setPosition(ArmConstants.kAngleMin);
+                break;
             default:
         }
     }
@@ -156,6 +169,10 @@ public class Arm extends SubsystemBase{
 
         if (DriverStation.isDisabled()){
             m_angleTarget = getArmPosition();
+        }
+
+        if (Robot.isSimulation()){
+            m_angleSensorSim.set(m_angleSensorSimMap.get(m_angleTarget));
         }
 
         setArmAngleSafely(m_angleTarget);

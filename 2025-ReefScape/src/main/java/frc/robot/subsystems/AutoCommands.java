@@ -159,28 +159,39 @@ public class AutoCommands {
             tagId,
             new Translation2d(
                 - AutoConstants.kReefStartingDistance - Constants.kChassis.kWheelBase/2.0,
-                Constants.AutoConstants.kReefOffset * (left ? 1 : -1)
-            )
+                Constants.AutoConstants.kReefOffset * (left ? 1 : -1)+ Constants.AutoConstants.kStaticReefOffset
+            ),Units.degreesToRadians(15)
         );
 
         Pose2d target2 = PathPlanning.AprilTagAtDistance(
             tagId,
             new Translation2d(
                 - AutoConstants.kReefDistance - Constants.kChassis.kWheelBase/2.0,
-                Constants.AutoConstants.kReefOffset * (left ? 1 : -1)
+                Constants.AutoConstants.kReefOffset * (left ? 1 : -1) + Constants.AutoConstants.kStaticReefOffset
             )
+        );
+        Pose2d targetbackup = PathPlanning.AprilTagAtDistance(
+            tagId,
+            new Translation2d(
+                - AutoConstants.kReefStartingDistance/2.0 - Constants.kChassis.kWheelBase/2.0,
+                Constants.AutoConstants.kReefOffset * (left ? 1 : -1)+ Constants.AutoConstants.kStaticReefOffset
+            ),Units.degreesToRadians(15)
         );
 
         return Commands.sequence(
-            new InstantCommand(() -> Elevator.getInstance().moveToLevel(level)),
-            new InstantCommand(() -> Arm.getInstance().moveToLevel(level)),
-            new InstantCommand(() -> PathPlanning.getInstance().navigateTo(target1)),
+            Commands.parallel(
+                new InstantCommand(() -> Autonomous.getInstance().m_drivingToReef = true),
+                new InstantCommand(() -> PathPlanning.getInstance().navigateTo(target1))
+            ),
             new InstantCommand(() -> PathPlanning.getInstance().navigateTo(target2)),
-            new InstantCommand(() -> Autonomous.getInstance().m_drivingToReef = true),
-            Commands.waitUntil(() -> DriveTrain.getInstance().m_poseQueue.isEmpty() || VectorUtils.isNear(PoseEstimator.getInstance().m_finalPose, target2, AutoConstants.kReefTolerance)),
-            EndEffector.getInstance().ExpelCommand(()->(level == ScoreLevel.TROUGH ? EffectorConstants.kTroughOuttakeSpeed : EffectorConstants.kOuttakeSpeed), ()->level==ScoreLevel.TROUGH),
+            Commands.waitUntil(() -> DriveTrain.getInstance().m_poseQueue.isEmpty() || DriveTrain.getInstance().m_isStoppedConfirmed || VectorUtils.isNear(PoseEstimator.getInstance().m_finalPose, target1, AutoConstants.kReefArmupTolerance)).withTimeout(3),
+            new InstantCommand(() -> Elevator.getInstance().moveToLevel(level)),
+            Commands.sequence(new InstantCommand(() -> Arm.getInstance().moveToLevel(level))),
+            Commands.waitUntil(() -> DriveTrain.getInstance().m_poseQueue.isEmpty() || DriveTrain.getInstance().m_isStoppedConfirmed || VectorUtils.isNear(PoseEstimator.getInstance().m_finalPose, target2, AutoConstants.kReefTolerance)).withTimeout(6),
+            Commands.waitUntil(() -> Arm.getInstance().isAtPosition() && Elevator.getInstance().isAtPosition()),
+            EndEffector.getInstance().ExpelCommand(()->(level == ScoreLevel.TROUGH ? EffectorConstants.kTroughOuttakeSpeed : EffectorConstants.kOuttakeSpeed), ()->level==ScoreLevel.TROUGH).withTimeout(1.5),
             new InstantCommand(() -> PathPlanning.getInstance().navigateTo(target1)),
-            Commands.waitUntil(() -> DriveTrain.getInstance().m_poseQueue.isEmpty() || VectorUtils.isNear(PoseEstimator.getInstance().m_finalPose, target1, AutoConstants.kReefTolerance))
+            Commands.waitUntil(() -> DriveTrain.getInstance().m_poseQueue.isEmpty() || VectorUtils.isNear(PoseEstimator.getInstance().m_finalPose, target1, AutoConstants.kReefTolerance*2.0))
         );
     }
     
@@ -189,14 +200,14 @@ public class AutoCommands {
         Pose2d target1 = PathPlanning.PoseAtDistance(target,
             new Translation2d(
                 - AutoConstants.kReefStartingDistance - Constants.kChassis.kWheelBase/2.0,
-                Constants.AutoConstants.kReefOffset * (left ? 1 : -1)
-            )
+                Constants.AutoConstants.kReefOffset * (left ? 1 : -1) + 2*0.0254
+            ),Units.degreesToRadians(15)
         );
                 
         Pose2d target2 = PathPlanning.PoseAtDistance(target,
             new Translation2d(
                 - AutoConstants.kReefDistance - Constants.kChassis.kWheelBase/2.0,
-                Constants.AutoConstants.kReefOffset * (left ? 1 : -1)
+                Constants.AutoConstants.kReefOffset * (left ? 1 : -1) + 2*0.0254
             )
         );
 

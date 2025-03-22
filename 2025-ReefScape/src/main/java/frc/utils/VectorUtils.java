@@ -40,7 +40,12 @@ public class VectorUtils {
     }
     
     public static Translation2d vectorInDirectionOf(Pose2d pose, double magnitude){
-      return new Translation2d(magnitude, pose.getTranslation().getAngle());
+      Rotation2d angle = (pose.getTranslation().getNorm() != 0 ? pose.getTranslation().getAngle() : new Rotation2d(0));
+      return new Translation2d(magnitude, angle);
+    }
+
+    public static Translation2d vectorInDirectionOf(Translation2d pose, double magnitude){
+      return new Translation2d(magnitude, pose.getAngle());
     }
 
     public static boolean isInDistanceAndAngle(Pose2d pose, Pose2d target, double meters, double radiansFromTargetFace){
@@ -143,4 +148,31 @@ public class VectorUtils {
       }
       return new Translation2d(r_out, angle_out);
     }
+
+    /**
+     * Returns the nearest point on a line segment to a pose2d object.
+     *
+     * @param point The point to determine the nearest point to.
+     * @param lineStart The starting point of the line segment.
+     * @param lineEnd The ending point of the line segment.
+     * @return The point on the line which is nearest to the point.
+     *         Returns Double.NaN if any input is null.
+     */
+    public static Translation2d nearestPointOnLine(Translation2d point, Translation2d lineStart, Translation2d lineEnd){
+        double dx = lineEnd.getX() - lineStart.getX();
+        double dy = lineEnd.getY() - lineStart.getY();
+
+        if (dx == 0 && dy == 0) {
+            // Line is a point, return the line's point.
+            return point;
+        }
+
+        double t = ((point.getX() - lineStart.getX()) * dx + (point.getY() - lineStart.getY()) * dy) / (dx * dx + dy * dy);
+
+        double nearestX = lineStart.getX() + t * dx;
+        double nearestY = lineStart.getY() + t * dy;
+
+        return new Translation2d(nearestX, nearestY);
+    }
+
 }
