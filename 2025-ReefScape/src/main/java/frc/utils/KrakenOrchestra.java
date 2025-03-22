@@ -3,6 +3,7 @@
 // the WPILib BSD license file in the root directory of this project.
 
 package frc.utils;
+import java.io.ObjectInputFilter.Status;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -40,7 +41,9 @@ public class KrakenOrchestra extends SubsystemBase {
     BooleanPublisher nt_orchestraIsPlaying = table.getBooleanTopic("orchestraIsPlaying").publish();
     BooleanPublisher nt_orchestraIsReady = table.getBooleanTopic("orchestraIsReady").publish();
     IntegerPublisher nt_instrumentCount = table.getIntegerTopic("instrumentCount").publish();
+    IntegerPublisher nt_playStatus = table.getIntegerTopic("playStatus").publish();
     StringPublisher nt_currentFile = table.getStringTopic("currentSongPlaying").publish();
+    DoublePublisher nt_fileTimeStamp = table.getDoubleTopic("fileTimeStamp").publish();
 
     private KrakenOrchestra() {
         // Initialize orchestra with all Kraken motors on the robot
@@ -123,7 +126,7 @@ public class KrakenOrchestra extends SubsystemBase {
         
         status = m_orchestra.loadMusic(filepath);
         if (status.isOK()) {
-            m_orchestra.play();
+            StatusCode playStatus = m_orchestra.play();
             System.out.println("Playing music: " + filepath);
         } else {
             System.out.println("Failed to load music: " + filepath);
@@ -148,12 +151,18 @@ public class KrakenOrchestra extends SubsystemBase {
         return orchestraReady;
     }
 
+    public double getTimeStamp() {
+        return m_orchestra.getCurrentTime();
+    }
+
     @Override
     public void periodic() {
 
         nt_orchestraIsPlaying.set(isPlaying());
         nt_orchestraIsReady.set(orchestraReady);
         nt_instrumentCount.set(instruments.size());
+        nt_fileTimeStamp.set(getTimeStamp());
+        //nt_playStatus.set(playStatus);
 
         // If motors have been initialized since our last check, try initializing instruments again
         if (!orchestraReady) {

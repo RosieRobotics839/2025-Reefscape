@@ -120,6 +120,9 @@ public class Robot extends TimedRobot {
     Shuffleboard.getTab("Music")
     .add("Music Control", startStop)
     .withWidget(BuiltInWidgets.kComboBoxChooser);
+    /*ShuffleBoard.getTab("Music")
+    .add("Load Progress", )
+    .withWidget(BuiltInWidgets.kNumberBar); */
   }
 
   /**
