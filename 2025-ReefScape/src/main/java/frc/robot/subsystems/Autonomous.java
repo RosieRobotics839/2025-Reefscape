@@ -44,18 +44,6 @@ public class Autonomous extends SubsystemBase {
     add(new Translation2d(9.5, 4.475));
     add(new Translation2d(9.5, 3.46));
   }};
-  //public static List<Translation2d> bluespeaker = new ArrayList<Translation2d>(){{
-  //  add(new Translation2d(0,6.85));
-  //  add(new Translation2d(1.112,6.175));
-  //  add(new Translation2d(1.112, 4.724));
-  //  add(new Translation2d(0, 4.084));
-  //}};
-  //public static List<Translation2d> redspeaker = new ArrayList<Translation2d>(){{
-  //  add(new Translation2d(16.542,6.762));
-  //  add(new Translation2d(15.464,6.14));
-  //  add(new Translation2d(15.464, 4.672));
-  //  add(new Translation2d(16.542, 4.119));
-  //}};
 
   // TODO: UPDATE FIELD GEOMETRY!
   public static List<List<Translation2d>> staticObstacles = new ArrayList<List<Translation2d>>(){{
@@ -65,10 +53,6 @@ public class Autonomous extends SubsystemBase {
     add(bluereef);
     add(redreef);
     add(bargecolumn);
-    
-    //List<Translation2d> redspeaker = bluespeaker.stream().map(f->new Translation2d(halffield+(halffield-f.getX()),f.getY())).collect(Collectors.toList());
-    //add(bluespeaker);
-    //add(redspeaker);
 
     var it = iterator();
     Integer i=0;
@@ -143,7 +127,5 @@ public class Autonomous extends SubsystemBase {
       DriveTrain.getInstance().setTargetHeading(heading + m_aimPointRotationOffset);
     }
 
-    //boolean insideStage = PathfindingUtils.PointInPolygon(PoseEstimator.getInstance().m_finalPose.getTranslation(), bluestage);
-    //nt_instage.set(insideStage);
   }
 }

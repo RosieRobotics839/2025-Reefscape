@@ -97,22 +97,6 @@ public class FlightStick extends Joystick {
         DriveTrain.getInstance().setMaxRotate(Units.degreesToRadians(75));
       }));
 
-
-      /* Intake in */
-      /* Btm10Btn.onTrue(new InstantCommand(() -> {
-        IntakeShooter.getInstance().setIntakeSpeedRatio(1);
-      }));
-      Btm10Btn.onFalse(new InstantCommand(() -> {
-        IntakeShooter.getInstance().setIntakeSpeedRatio(0);
-      }));
-      Btm12Btn.whileTrue(new RepeatCommand(new InstantCommand(() -> {
-        m_preventDriverRotation = true;
-        Autonomous.getInstance().aimAtNote();
-      })));
-      Btm12Btn.onFalse(new InstantCommand(() -> {
-        m_preventDriverRotation = false;
-        Vision.getInstance().unlockTarget();
-      })); */
     }
   }
 

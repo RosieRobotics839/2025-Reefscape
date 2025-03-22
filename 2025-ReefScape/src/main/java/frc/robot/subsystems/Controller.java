@@ -137,11 +137,6 @@ public class Controller extends XboxController {
     ScoreConstants.ScoreLevel m_level;
     public Command m_expel = EndEffector.getInstance().ExpelCommand(()->(m_level == ScoreLevel.TROUGH ? EffectorConstants.kTroughOuttakeSpeed : EffectorConstants.kOuttakeSpeed), ()->m_level==ScoreLevel.TROUGH);
 
-    // boolean that decides which game piece we are handling
-    boolean isAlgaeSelected = false;  // Initially set to false (CORAL)
-
-    NTBoolean nt_algaeSelected = new NTBoolean(false,table,"algaeSelected",(val)->{});
-
     AccessoryButtons(Controller controller){
 
       StageDial0 = new JoystickButton(controller, 1);  // Stage Dial Scoring Level 0 (Default/Human Player Intake)

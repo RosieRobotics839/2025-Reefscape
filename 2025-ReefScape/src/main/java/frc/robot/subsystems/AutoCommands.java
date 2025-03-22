@@ -170,6 +170,7 @@ public class AutoCommands {
                 Constants.AutoConstants.kReefOffset * (left ? 1 : -1) + Constants.AutoConstants.kStaticReefOffset
             )
         );
+        @SuppressWarnings("unused")
         Pose2d targetbackup = PathPlanning.AprilTagAtDistance(
             tagId,
             new Translation2d(
