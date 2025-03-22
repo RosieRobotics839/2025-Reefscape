@@ -79,12 +79,13 @@ public class Robot extends TimedRobot {
     // Song Chooser for Music Playing
     songChooser.setDefaultOption("Song 10", Filesystem.getDeployDirectory() + "/" + "song10.chrp");
     songChooser.addOption("Congrats", Filesystem.getDeployDirectory() + "/" + "congrats.chrp");
-    songChooser.addOption("UnderTheSea", Filesystem.getDeployDirectory() + "/" + "underthesea.chrp");
-    songChooser.addOption("SpongeBobOpeningSong", Filesystem.getDeployDirectory() + "/" + "spongebobopening.chrp");
-    songChooser.addOption("WellermanSeaShanty", Filesystem.getDeployDirectory() + "/" + "wellerman.chrp");
+    songChooser.addOption("Under The Sea", Filesystem.getDeployDirectory() + "/" + "underthesea.chrp");
+    songChooser.addOption("SpongeBob Opening Song", Filesystem.getDeployDirectory() + "/" + "spongebobopening.chrp");
+    songChooser.addOption("Wellerman Sea Shanty", Filesystem.getDeployDirectory() + "/" + "wellerman.chrp");
     songChooser.addOption("Jeopardy", Filesystem.getDeployDirectory() + "/" + "jeopardy.chrp");
     songChooser.addOption("Song 2", Filesystem.getDeployDirectory() + "/" + "song2.chrp");
     songChooser.addOption("Song 5", Filesystem.getDeployDirectory() + "/" + "song5.chrp");
+    songChooser.addOption("Eye Of The Tiger", Filesystem.getDeployDirectory() + "/" + "eyetiger.chrp");
 
     startStop.setDefaultOption("Stop", STOP_MUSIC);
     startStop.addOption("Start", START_MUSIC);
