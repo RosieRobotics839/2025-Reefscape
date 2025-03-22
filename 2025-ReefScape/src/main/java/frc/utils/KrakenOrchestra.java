@@ -89,14 +89,27 @@ public class KrakenOrchestra extends SubsystemBase {
         }
     }
 
+    private String extractFilename(String filepath) {
+        if (filepath == null || filepath.isEmpty()) {
+            return "";
+        }
+        
+        // Get just the filename from a filepath
+        int lastSlashIndex = filepath.lastIndexOf('/');
+        return lastSlashIndex == -1 ? filepath : filepath.substring(lastSlashIndex + 1);
+    }
+
     // Playing Music 
     public void playMusic(String filepath) {
         if (filepath == null || filepath.isEmpty()) {
             return;
         }
         
+        // Extract just the filename for display
+        String filename = extractFilename(filepath);
+
         // If we're already playing this song, don't restart it
-        if (isPlaying() && filepath.equals(currentSong)) {
+        if (isPlaying() && filename.equals(extractFilename(currentSong))) {
             return;
         }
         
@@ -116,6 +129,9 @@ public class KrakenOrchestra extends SubsystemBase {
             System.out.println("Failed to load music: " + filepath);
             // Driver Station Log flows too fast to catch this
         }
+
+        // Update Network Table with current song playing
+        nt_currentFile.set(filename);
     }
 
     public void stopMusic(){
@@ -138,7 +154,6 @@ public class KrakenOrchestra extends SubsystemBase {
         nt_orchestraIsPlaying.set(isPlaying());
         nt_orchestraIsReady.set(orchestraReady);
         nt_instrumentCount.set(instruments.size());
-        nt_currentFile.set(currentSong);
 
         // If motors have been initialized since our last check, try initializing instruments again
         if (!orchestraReady) {
