@@ -86,6 +86,9 @@ public class Robot extends TimedRobot {
     songChooser.addOption("Song 2", Filesystem.getDeployDirectory() + "/" + "song2.chrp");
     songChooser.addOption("Song 5", Filesystem.getDeployDirectory() + "/" + "song5.chrp");
     songChooser.addOption("Eye Of The Tiger", Filesystem.getDeployDirectory() + "/" + "eyetiger.chrp");
+    songChooser.addOption("He's a Pirate", Filesystem.getDeployDirectory() + "/" + "hepirate.chrp");
+    songChooser.addOption("Up is Down", Filesystem.getDeployDirectory() + "/" + "updown.chrp");
+    songChooser.addOption("Davy Jones' Theme", Filesystem.getDeployDirectory() + "/" + "davyjones.chrp");
 
     startStop.setDefaultOption("Stop", STOP_MUSIC);
     startStop.addOption("Start", START_MUSIC);
