@@ -5,13 +5,11 @@
 package frc.robot.subsystems;
 
 import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
-import edu.wpi.first.wpilibj2.command.button.POVButton;
 import frc.utils.KrakenOrchestra;
 import frc.utils.VectorUtils;
 import frc.utils.NTValues.NTBoolean;
@@ -119,14 +117,10 @@ public class Controller extends XboxController {
 
   public static class AccessoryButtons {
     public JoystickButton Intake, Outtake, ClimberIn, ClimberOut, GMPCS, StageDial0, StageDial1, StageDial2, StageDial3, StageDial4, LeftScore, RightScore, RS, Home;
-    public POVButton DPadUp, DPadRight, DPadDown, DPadLeft;
+    //public POVButton DPadUp, DPadRight, DPadDown, DPadLeft;
 
     public Command waitForTarget = Commands.sequence(
       Commands.waitUntil(() -> {return Arm.getInstance().isAtPosition() && Elevator.getInstance().isAtPosition();})
-    );
-
-    public Command playSong10 = Commands.sequence(
-      new InstantCommand(()->m_orchestra.playMusic(Filesystem.getDeployDirectory() + "/" + "underthesea.chrp"))
     );
 
     public Command disableDirectControl(){
@@ -163,19 +157,16 @@ public class Controller extends XboxController {
       Outtake    = new JoystickButton(controller, 9);  // Expel Button (Outtake for those who don't know)
       ClimberOut = new JoystickButton(controller, 10);  // Brings Climber Out & Funnel Down
       ClimberIn  = new JoystickButton(controller, 11);  // Brings Climber In & Funnel Up
-      GMPCS      = new JoystickButton(controller, 12);  // Game Piece Selector Button (Algae or Coral)
-      DPadUp     = new POVButton(controller, 0);
 
       //RS       = new JoystickButton(controller, 12); // Right Stick Click
       //Home     = new JoystickButton(controller, 13); // Home Button
+      //DPadUp     = new POVButton(controller, 0);
       //DPadRight    = new POVButton(controller, 90);
       //DPadDown    = new POVButton(controller, 180);
       //DPadLeft    = new POVButton(controller, 270);
 
       // Initializing the selected game piece to be the default; coral.
       m_pieceSelected = ScoreConstants.GamePieceSelected.CORAL;
-
-      DPadUp.onTrue(playSong10);
 
       /* Run Climber Command Sequences */
       ClimberIn.and(()->!ClimberOut.getAsBoolean()).debounce(0.06,DebounceType.kRising).whileTrue(
