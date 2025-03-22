@@ -42,6 +42,9 @@ public class KrakenOrchestra extends SubsystemBase {
     private KrakenOrchestra() {
         // Initialize orchestra with all Kraken motors on the robot
         initializeInstruments();
+
+        // Configure audio settings to allow music in disabled state
+        configureMotorsForMusic();
     }
 
     private void initializeInstruments() {
@@ -74,8 +77,28 @@ public class KrakenOrchestra extends SubsystemBase {
                 }
             }
             orchestraReady = successCount > 0;
+            // Configure motors for music after adding instruments
+            configureMotorsForMusic();
         } catch (Exception e) {
             orchestraReady = false;
+        }
+    }
+
+    public void configureMotorsForMusic() {
+        // Get a list of all TalonFX motors used in orchestra
+        List<TalonFX> orchestraMotors = new ArrayList<>();
+        if (instruments != null) {
+            orchestraMotors.addAll(instruments);
+        }
+        
+        // Configure each motor to allow music during disabled state
+        for (TalonFX motor : orchestraMotors) {
+            // Create audio config
+            var audioConfig = new com.ctre.phoenix6.configs.AudioConfigs();
+            // Set AllowMusicDurDisable to true
+            audioConfig.withAllowMusicDurDisable(true);
+            // Apply the configuration to the motor
+            motor.getConfigurator().apply(audioConfig);
         }
     }
 
