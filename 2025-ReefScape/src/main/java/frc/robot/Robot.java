@@ -137,6 +137,11 @@ public class Robot extends TimedRobot {
       Gyro.getInstance().setGyroInit((myAlliance == Alliance.Blue ? 0 : Math.PI), 0, 0);
       PathPlanning.getInstance().calcFieldGraph();
     }
+
+    // Synchronize the orchestra flag with the actual playing state
+    if (orchestraIsPlaying != m_orchestra.isPlaying()) {
+        orchestraIsPlaying = m_orchestra.isPlaying();
+    }
   
   }
 
@@ -160,6 +165,7 @@ public class Robot extends TimedRobot {
   public void autonomousInit() {
 
     m_orchestra.stopMusic(); // Stopping music when we switch to auto mode
+    orchestraIsPlaying = false;
 
     switch(SmartDashboard.getString("Auto Selector", "Build Your Own A(uto)dventure")) {
       case "Build Your Own A(uto)dventure":
@@ -179,6 +185,7 @@ public class Robot extends TimedRobot {
   public void teleopInit() {
 
     m_orchestra.stopMusic(); // Stopping music when we switch to teleop mode
+    orchestraIsPlaying = false;
     DriveTrain.getInstance().m_poseQueue.clear();
     Autonomous.getInstance().stopAiming();
     if (m_autonomousCommand != null) {
