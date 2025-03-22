@@ -42,9 +42,6 @@ public class KrakenOrchestra extends SubsystemBase {
     private KrakenOrchestra() {
         // Initialize orchestra with all Kraken motors on the robot
         initializeInstruments();
-
-        // Configure audio settings to allow music in disabled state
-        configureMotorsForMusic();
     }
 
     private void initializeInstruments() {
@@ -68,37 +65,24 @@ public class KrakenOrchestra extends SubsystemBase {
             if (dt.rearLeft.m_motorDrive.motor_talon != null) instruments.add(dt.rearLeft.m_motorDrive.motor_talon);
             if (dt.rearRight.m_motorDrive.motor_talon != null) instruments.add(dt.rearRight.m_motorDrive.motor_talon);
             
-            // Add each instrument to the orchestra
+            // Add each instrument to the orchestra and allow it to play music when Driver Station is Disabled
             int successCount = 0;
             for (TalonFX motor : instruments) {
                 StatusCode addStatus = m_orchestra.addInstrument(motor);
+                // Create audio config
+                var audioConfig = new com.ctre.phoenix6.configs.AudioConfigs();
+                // Set AllowMusicDurDisable to true
+                audioConfig.withAllowMusicDurDisable(true);
+                // Apply the configuration to the motor
+                motor.getConfigurator().apply(audioConfig);
+
                 if (addStatus.isOK()) {
                     successCount++;
                 }
             }
             orchestraReady = successCount > 0;
-            // Configure motors for music after adding instruments
-            configureMotorsForMusic();
         } catch (Exception e) {
             orchestraReady = false;
-        }
-    }
-
-    public void configureMotorsForMusic() {
-        // Get a list of all TalonFX motors used in orchestra
-        List<TalonFX> orchestraMotors = new ArrayList<>();
-        if (instruments != null) {
-            orchestraMotors.addAll(instruments);
-        }
-        
-        // Configure each motor to allow music during disabled state
-        for (TalonFX motor : orchestraMotors) {
-            // Create audio config
-            var audioConfig = new com.ctre.phoenix6.configs.AudioConfigs();
-            // Set AllowMusicDurDisable to true
-            audioConfig.withAllowMusicDurDisable(true);
-            // Apply the configuration to the motor
-            motor.getConfigurator().apply(audioConfig);
         }
     }
 
