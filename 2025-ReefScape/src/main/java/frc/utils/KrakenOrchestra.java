@@ -3,7 +3,6 @@
 // the WPILib BSD license file in the root directory of this project.
 
 package frc.utils;
-import java.io.ObjectInputFilter.Status;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -127,8 +126,10 @@ public class KrakenOrchestra extends SubsystemBase {
         status = m_orchestra.loadMusic(filepath);
         if (status.isOK()) {
             StatusCode playStatus = m_orchestra.play();
+            nt_playStatus.set(playStatus.value);
             System.out.println("Playing music: " + filepath);
         } else {
+            nt_playStatus.set(status.value);
             System.out.println("Failed to load music: " + filepath);
             // Driver Station Log flows too fast to catch this
         }
@@ -139,7 +140,8 @@ public class KrakenOrchestra extends SubsystemBase {
 
     public void stopMusic(){
         if (orchestraReady) {
-            m_orchestra.stop();
+            StatusCode stopStatus = m_orchestra.stop();
+            nt_playStatus.set(stopStatus.value);
         }
     }
 
