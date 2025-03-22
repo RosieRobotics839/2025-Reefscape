@@ -61,8 +61,8 @@ public class Robot extends TimedRobot {
   private boolean orchestraIsPlaying = false;
   public String selectedChoice;
   public String selectedSong;
-  private String startMusic = "playing";
-  private String stopMusic = "notPlaying";
+  private static final String START_MUSIC = "playing";
+  private static final String STOP_MUSIC = "notPlaying";
 
   private Debouncer m_recording = new Debouncer(10, Debouncer.DebounceType.kFalling);
   private Action m_recordTrigger = new Action(false).onTrue(()->DataLogManager.start()).onFalse(()->DataLogManager.stop());
@@ -86,8 +86,8 @@ public class Robot extends TimedRobot {
     songChooser.addOption("Song 2", Filesystem.getDeployDirectory() + "/" + "song2.chrp");
     songChooser.addOption("Song 5", Filesystem.getDeployDirectory() + "/" + "song5.chrp");
 
-    startStop.setDefaultOption("Stop", stopMusic);
-    startStop.addOption("Start", startMusic);
+    startStop.setDefaultOption("Stop", STOP_MUSIC);
+    startStop.addOption("Start", START_MUSIC);
 
     Shuffleboard.getTab("Music")
     .add("Song Selector", songChooser)
@@ -199,13 +199,14 @@ public class Robot extends TimedRobot {
 
     selectedSong = songChooser.getSelected();
     selectedChoice = startStop.getSelected();
-        if (!DriverStation.isFMSAttached() && !isTeleopEnabled() && selectedChoice == "playing" && m_orchestra.isReady()) {
+        if (!DriverStation.isFMSAttached() && !isTeleopEnabled() && START_MUSIC.equals(selectedChoice) && m_orchestra.isReady()) {
             if (!orchestraIsPlaying) {
               m_orchestra.playMusic(selectedSong);
               orchestraIsPlaying = true;
             }
-        } else if (!DriverStation.isFMSAttached() && !isTeleopEnabled() && selectedChoice == "notPlaying") {
+        } else if (!DriverStation.isFMSAttached() && !isTeleopEnabled() && STOP_MUSIC.equals(selectedChoice)) {
             m_orchestra.stopMusic();
+            orchestraIsPlaying = false;
         }
   }
 
