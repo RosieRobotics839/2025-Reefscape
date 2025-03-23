@@ -5,7 +5,6 @@
 package frc.utils;
 import java.util.ArrayList;
 import java.util.List;
-
 import com.ctre.phoenix6.Orchestra;
 import com.ctre.phoenix6.StatusCode;
 import com.ctre.phoenix6.hardware.TalonFX;
@@ -35,12 +34,13 @@ public class KrakenOrchestra extends SubsystemBase {
 
     private List<TalonFX> instruments = new ArrayList<>();
     private String currentSong = "";
-    private StatusCode status;
     private boolean orchestraReady = false;
     BooleanPublisher nt_orchestraIsPlaying = table.getBooleanTopic("orchestraIsPlaying").publish();
     BooleanPublisher nt_orchestraIsReady = table.getBooleanTopic("orchestraIsReady").publish();
     IntegerPublisher nt_instrumentCount = table.getIntegerTopic("instrumentCount").publish();
     IntegerPublisher nt_playStatus = table.getIntegerTopic("playStatus").publish();
+    IntegerPublisher nt_stopStatus = table.getIntegerTopic("stopStatus").publish();
+    IntegerPublisher nt_loadStatus = table.getIntegerTopic("loadStatus").publish();
     StringPublisher nt_currentFile = table.getStringTopic("currentSongPlaying").publish();
     DoublePublisher nt_fileTimeStamp = table.getDoubleTopic("fileTimeStamp").publish();
 
@@ -122,26 +122,27 @@ public class KrakenOrchestra extends SubsystemBase {
 
         currentSong = filepath;
         stopMusic(); // Stop any currently playing music
-        
-        status = m_orchestra.loadMusic(filepath);
-        if (status.isOK()) {
+
+        StatusCode loadStatus = m_orchestra.loadMusic(filepath);
+        nt_loadStatus.set(loadStatus.value);
+
+        if (loadStatus.isOK()) {
             StatusCode playStatus = m_orchestra.play();
             nt_playStatus.set(playStatus.value);
             System.out.println("Playing music: " + filepath);
         } else {
-            nt_playStatus.set(status.value);
+            nt_playStatus.set(loadStatus.value);
             System.out.println("Failed to load music: " + filepath);
-            // Driver Station Log flows too fast to catch this
         }
-
-        // Update Network Table with current song playing
-        nt_currentFile.set(filename);
+    
+    // Update Network Table with current song
+    nt_currentFile.set(filename);
     }
 
     public void stopMusic(){
         if (orchestraReady) {
             StatusCode stopStatus = m_orchestra.stop();
-            nt_playStatus.set(stopStatus.value);
+            nt_stopStatus.set(stopStatus.value);
         }
     }
 
@@ -164,7 +165,6 @@ public class KrakenOrchestra extends SubsystemBase {
         nt_orchestraIsReady.set(orchestraReady);
         nt_instrumentCount.set(instruments.size());
         nt_fileTimeStamp.set(getTimeStamp());
-        //nt_playStatus.set(playStatus);
 
         // If motors have been initialized since our last check, try initializing instruments again
         if (!orchestraReady) {
