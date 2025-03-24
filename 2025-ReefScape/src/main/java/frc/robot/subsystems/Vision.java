@@ -29,7 +29,6 @@ import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.IntegerPublisher;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
-import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.VisionConstants;
 import frc.utils.VectorUtils;
@@ -204,16 +203,17 @@ public class Vision extends SubsystemBase {
 
   @Override
   public void periodic() {
-    // This method will be called once per scheduler run
+    if (cam1.isConnected()){
+      photonPoseEstimatorFront.setReferencePose(PoseEstimator.getInstance().m_finalPose3d);
+      var cam1result = processCamera(cam1, photonPoseEstimatorFront, false);
+      nt_posefront.set(cam1result);
+    };
 
-    photonPoseEstimatorFront.setReferencePose(PoseEstimator.getInstance().m_finalPose3d);
-    photonPoseEstimatorRear.setReferencePose(PoseEstimator.getInstance().m_finalPose3d);
-
-    var cam1result = processCamera(cam1, photonPoseEstimatorFront, false);
-    var cam2result = processCamera(cam2, photonPoseEstimatorRear, Autonomous.getInstance().m_drivingToReef);
-    
-    nt_posefront.set(cam1result);
-    nt_poserear.set(cam2result);
+    if (cam2.isConnected()){
+      photonPoseEstimatorRear.setReferencePose(PoseEstimator.getInstance().m_finalPose3d);
+      var cam2result = processCamera(cam2, photonPoseEstimatorRear, Autonomous.getInstance().m_drivingToReef);
+      nt_poserear.set(cam2result);
+    }
     
     // Run the periodic function for the Pixy Camera
     // pixyPeriodic();
