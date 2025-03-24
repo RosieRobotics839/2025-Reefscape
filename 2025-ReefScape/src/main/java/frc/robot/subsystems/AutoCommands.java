@@ -199,14 +199,14 @@ public class AutoCommands {
         Pose2d target1 = PathPlanning.PoseAtDistance(target,
             new Translation2d(
                 - AutoConstants.kReefStartingDistance - Constants.kChassis.kWheelBase/2.0,
-                Constants.AutoConstants.kReefOffset * (left ? 1 : -1) + 2*0.0254
+                Constants.AutoConstants.kReefOffset * (left ? 1 : -1) +  Constants.AutoConstants.kStaticReefOffset
             ),Units.degreesToRadians(15)
         );
                 
         Pose2d target2 = PathPlanning.PoseAtDistance(target,
             new Translation2d(
                 - AutoConstants.kReefDistance - Constants.kChassis.kWheelBase/2.0,
-                Constants.AutoConstants.kReefOffset * (left ? 1 : -1) + 2*0.0254
+                Constants.AutoConstants.kReefOffset * (left ? 1 : -1) +  Constants.AutoConstants.kStaticReefOffset
             )
         );
 

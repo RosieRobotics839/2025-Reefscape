@@ -299,7 +299,7 @@ public final class Constants {
     public static class frontCamera{
       public static final String kCameraName = "FrontCam";
 
-      public static double kCamYawRight = Math.toRadians(NTDouble.create(10, "Vision/"+kCameraName+"/kCamYawRight_deg", val->{kCamYawRight=Math.toRadians(val); Vision.photonPoseEstimatorFront.setRobotToCameraTransform(kCameraToRobot().inverse());}));
+      public static double kCamYawRight = Math.toRadians(NTDouble.create(15, "Vision/"+kCameraName+"/kCamYawRight_deg", val->{kCamYawRight=Math.toRadians(val); Vision.photonPoseEstimatorFront.setRobotToCameraTransform(kCameraToRobot().inverse());}));
       public static double kCamPitchUp = Math.toRadians(NTDouble.create(0, "Vision/"+kCameraName+"/kCamPitchUp_deg", val->{kCamPitchUp=Math.toRadians(val); Vision.photonPoseEstimatorFront.setRobotToCameraTransform(kCameraToRobot().inverse());}));
       public static double kCamDiagFOV = Math.toRadians(NTDouble.create(77.2, "Vision/"+kCameraName+"/kCamDiagFOV_deg", val->{kCamDiagFOV=Math.toRadians(val); Vision.photonPoseEstimatorFront.setRobotToCameraTransform(kCameraToRobot().inverse());}));
       public static double kCamForwardOffset = Units.inchesToMeters(NTDouble.create(6.875, "Vision/"+kCameraName+"/kCamForwardOffset_in", val->{kCamForwardOffset=Units.inchesToMeters(val); Vision.photonPoseEstimatorFront.setRobotToCameraTransform(kCameraToRobot().inverse());}));
@@ -399,7 +399,7 @@ public final class Constants {
     public static double kReefOffset = Units.inchesToMeters(NTDouble.create(6.5,"Autonomous/kReefOffset",val -> kReefOffset = Units.inchesToMeters(val)));
     public static double kTroughClearance = NTDouble.create(2, "Autonomous/kTroughClearance", val -> kTroughClearance = Units.inchesToMeters(val));
     // Ooga Booga Number
-    public static double kStaticReefOffset = Units.inchesToMeters(NTDouble.create(0,"Autonomous/kStaticReefOffset",val -> kStaticReefOffset = Units.inchesToMeters(val)));
+    public static double kStaticReefOffset = Units.inchesToMeters(NTDouble.create(4,"Autonomous/kStaticReefOffset",val -> kStaticReefOffset = Units.inchesToMeters(val)));
     
     public static double kFieldLength = 16.451;
     public static double kFieldWidth = 8.211;
@@ -454,7 +454,7 @@ public final class Constants {
 
       public static double kMidPointAccuracyFactor = NTDouble.create(3, "DriveConstants/kMidPointAccuracyFactor", val->kMidPointAccuracyFactor = val);
 
-      public static double kAutoCrossTrackKp = NTDouble.create(2.5, "DriveConstants/kAutoCrossTrackKp", (val)->kAutoCrossTrackKp = val);
+      public static double kAutoCrossTrackKp = NTDouble.create(6, "DriveConstants/kAutoCrossTrackKp", (val)->kAutoCrossTrackKp = val);
       public static double kAutoCrossTrackMax = Units.feetToMeters(NTDouble.create(6, "DriveConstants/kAutoCrossTrackMax", (val)->kAutoCrossTrackMax = Units.feetToMeters(val)));
     }
 
