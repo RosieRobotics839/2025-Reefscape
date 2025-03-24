@@ -30,6 +30,7 @@ import frc.robot.subsystems.LED;
 import frc.robot.subsystems.PathPlanning;
 import frc.robot.subsystems.Vision;
 import frc.utils.Action;
+import frc.utils.DeviceFinder;
 import frc.robot.subsystems.PoseEstimator;
 import frc.robot.subsystems.SystemLog;
 
@@ -40,6 +41,7 @@ import frc.robot.subsystems.SystemLog;
  */
 public class Robot extends TimedRobot {
 
+  public static DeviceFinder deviceFinder = new DeviceFinder();
   public Command m_autonomousCommand;
   public SystemLog m_systemlog = SystemLog.getInstance();
   public DriveTrain m_drivetrain = DriveTrain.getInstance();
@@ -75,7 +77,7 @@ public class Robot extends TimedRobot {
   public boolean changedAlly = true;
 
   private Debouncer m_recording = new Debouncer(10, Debouncer.DebounceType.kFalling);
-  private Action m_recordTrigger = new Action(false).onTrue(()->DataLogManager.start()).onFalse(()->DataLogManager.stop());
+  private Action m_recordTrigger = new Action(false).onTrue(()->DataLogManager.start("","",0.020)).onFalse(()->DataLogManager.stop());
 
   /**
    * This function is run when the robot is first started up and should be used for any
@@ -174,7 +176,6 @@ public class Robot extends TimedRobot {
   /** This function is called once when teleop is enabled. */
   @Override
   public void teleopInit() {
-
     //IntakeShooter.getInstance().m_aimForDistance = false;
     DriveTrain.getInstance().m_poseQueue.clear();
     Autonomous.getInstance().stopAiming();

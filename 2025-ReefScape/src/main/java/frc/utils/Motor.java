@@ -1,6 +1,7 @@
 package frc.utils;
 
 import com.ctre.phoenix6.hardware.TalonFX;
+
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.controls.VelocityVoltage;
@@ -20,6 +21,8 @@ import com.revrobotics.spark.config.SparkMaxConfig;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.filter.SlewRateLimiter;
+import edu.wpi.first.math.filter.Debouncer;
+import edu.wpi.first.math.filter.Debouncer.DebounceType;
 import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
@@ -49,6 +52,8 @@ public class Motor extends SubsystemBase {
     MyMotorType motorType;
     String name;
 
+    Debouncer m_warningTimer = new Debouncer(5,DebounceType.kRising);
+    
     public static class kFreeRunRPM{
         final double NEO = 5676;
         final double X60 = 6000;
@@ -749,11 +754,19 @@ public class Motor extends SubsystemBase {
         return m_setupMotorDone;
     }
 
+
     @Override
     public void periodic(){
         if (m_setupScheduled == false && m_setupMotorDone == false) {
             scheduleSetup();
         }
+
+        if (m_warningTimer.calculate(motorType == MyMotorType.SIMULATED && (DriverStation.isFMSAttached() || DriverStation.isTest()))){
+            m_warningTimer.calculate(false);
+            String warning = name+" was not detected on the CAN bus at boot and is being SIMULATED!";
+            DriverStation.reportWarning(warning, false);
+        }
+
         if (m_setupMotorDone && !m_testEnable){
             switch (motorType){
                 case KRAKEN:
