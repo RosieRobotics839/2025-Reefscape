@@ -60,14 +60,14 @@ public class Robot extends TimedRobot {
   {
     if (Robot.isSimulation()){
       nt_smartdashboard.getStringTopic("Auto Selector").publish().set("Build Your Own A(uto)dventure");
-      nt_smartdashboard.getStringTopic("DB/String 0").publish().set("Get.Left");
-      nt_smartdashboard.getStringTopic("DB/String 1").publish().set("Score.SS.Left.4");
-      nt_smartdashboard.getStringTopic("DB/String 2").publish().set("Get.Left");
-      nt_smartdashboard.getStringTopic("DB/String 3").publish().set("Score.SS.Right.4");
-      nt_smartdashboard.getStringTopic("DB/String 4").publish().set("");
-      nt_smartdashboard.getStringTopic("DB/String 5").publish().set("");
-      nt_smartdashboard.getStringTopic("DB/String 6").publish().set("");
-      nt_smartdashboard.getStringTopic("DB/String 7").publish().set("");
+      nt_smartdashboard.getStringTopic("DB/String 0").publish().set("Get.Right");
+      nt_smartdashboard.getStringTopic("DB/String 1").publish().set("Score.NW.Left.4");
+      nt_smartdashboard.getStringTopic("DB/String 2").publish().set("Get.Right");
+      nt_smartdashboard.getStringTopic("DB/String 3").publish().set("Score.SW.Right.4");
+      nt_smartdashboard.getStringTopic("DB/String 4").publish().set("Get.Left");
+      nt_smartdashboard.getStringTopic("DB/String 5").publish().set("Score.NE.Left.4");
+      nt_smartdashboard.getStringTopic("DB/String 6").publish().set("Get.Left");
+      nt_smartdashboard.getStringTopic("DB/String 7").publish().set("Score.SE.Left.4");
       nt_smartdashboard.getStringTopic("DB/String 8").publish().set("");
       nt_smartdashboard.getStringTopic("DB/String 9").publish().set("");
     }
