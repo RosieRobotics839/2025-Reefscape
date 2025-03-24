@@ -258,7 +258,7 @@ public final class Constants {
 
 
   public static class GyroConstants{
-    public static boolean kEnabled = false;
+    public static boolean kEnabled = true;
     public static int kCANID = 50;
     public static double kVisionCorrectionMaxRate = Units.degreesToRadians(NTDouble.create(40,"Gyro/kVisionCorrectionMaxRate",val->kVisionCorrectionMaxRate=Units.degreesToRadians(val)));
   }
@@ -460,7 +460,7 @@ public final class Constants {
       public static CANID_t kCANID_RearRight = new CANID_t(1, 14, 13);
 
       public static MyMotorType kDriveType = MyMotorType.KRAKEN;
-      public static MyMotorType kSteerType = MyMotorType.KRAKEN;
+      public static MyMotorType kSteerType = MyMotorType.NEO;
       
       public static double kCalibrationFrontLeft = (kDriveType == MyMotorType.KRAKEN ? 2487.0 : 1502.0);
       public static double kCalibrationFrontRight = (kDriveType == MyMotorType.KRAKEN ? 1104.0 : 2455.0);
