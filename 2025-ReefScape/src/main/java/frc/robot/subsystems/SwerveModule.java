@@ -5,6 +5,8 @@
 package frc.robot.subsystems;
 
 import com.revrobotics.spark.config.ClosedLoopConfig.FeedbackSensor;
+
+import edu.wpi.first.networktables.BooleanPublisher;
 import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
@@ -35,10 +37,14 @@ public class SwerveModule extends SubsystemBase {
 
   public boolean m_setupDriveDone = false;
   public boolean m_setupSteerDone = false;
+  public boolean m_encoderIsReading = false;
 
   public AnalogInput m_analogEncoder;
   public double angleCalibration;
+  public double lastPosition;
   public FirstOrderLag m_magLimiter = new FirstOrderLag(DriveConstants.kLinearAccelerationTau, 0, 0.020);
+
+  BooleanPublisher nt_encoderIsReading = table.getBooleanTopic("encoderIsReading").publish();
 
   DoublePublisher 
     nt_angleinit,
@@ -125,6 +131,12 @@ public class SwerveModule extends SubsystemBase {
     optimizedState = targetState;
   }
 
+  public void updateEncoderStatus() {
+    double currentPosition = m_analogEncoder.getValue(); // Read encoder position
+    m_encoderIsReading = (currentPosition != lastPosition); // True if position changes
+    lastPosition = currentPosition; // Store last position for next check
+  } 
+
   @Override
   public void periodic() {
 
@@ -140,6 +152,8 @@ public class SwerveModule extends SubsystemBase {
       anglecmd = testAngle;
       speedcmd = testSpeed;
     }
+
+    nt_encoderIsReading.set(m_encoderIsReading);
 
     nt_anglecmd.set(anglecmd);
     nt_speedcmd.set(speedcmd);

@@ -35,6 +35,7 @@ public class Arm extends SubsystemBase{
     public double m_currentAngle = 0;
     public double m_angleTarget = Units.degreesToRadians(NTDouble.create(90, table, "angle/targetAngle",(val)->setPosition(Units.degreesToRadians(val))));
     public double elevatorCurrentHeight;
+    private double lastPosition;
     double m_armOffset = 0; //change later
     double m_newArmOffset = 0;
     boolean m_setupDone = false;
@@ -48,7 +49,8 @@ public class Arm extends SubsystemBase{
         nt_motorCommand;
 
     BooleanPublisher
-        nt_setupDone;
+        nt_setupDone,
+        nt_posIsUpdating;
 
     // Checking to see if we are at the score position.
     public Boolean isAtPosition(){
@@ -100,6 +102,13 @@ public class Arm extends SubsystemBase{
         m_angleTarget = radians;
     }
 
+    public boolean posIsUpdating() {
+        double currentPosition = m_motor.getPosition();
+        boolean isChanging = (currentPosition != lastPosition);
+        lastPosition = currentPosition; // Update lastPosition after checking
+        return isChanging;
+    }
+
     public Arm(int CANID, int analogID) {
 
         nt_positionSensor = table.getDoubleTopic("angle/positionSensor").publish();
@@ -108,6 +117,7 @@ public class Arm extends SubsystemBase{
         nt_setupDone = table.getBooleanTopic("debug/setupDone").publish();
         nt_safetyLimit = table.getDoubleTopic("debug/safetyLimit").publish();
         nt_motorCommand = table.getDoubleTopic("debug/motorCommand").publish();
+        nt_posIsUpdating = table.getBooleanTopic("posIsUpdating").publish();
 
         m_angleSensor = new DutyCycleEncoder(analogID);
 
@@ -167,6 +177,7 @@ public class Arm extends SubsystemBase{
         nt_positionSensor.set(m_angleSensor.get());
         nt_currentAngle.set(Units.radiansToDegrees(getArmPosition()));
         nt_targetAngle.set(Units.radiansToDegrees(m_angleTarget));
+        nt_posIsUpdating.set(posIsUpdating());
 
     }
 }

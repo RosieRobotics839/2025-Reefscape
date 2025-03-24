@@ -26,7 +26,7 @@ public class Elevator extends SubsystemBase {
 
     static NetworkTable table = NetworkTableInstance.getDefault().getTable("roboRIO/Elevator");
     DoublePublisher nt_currentHeight, nt_targetHeight;
-    BooleanPublisher nt_calibrated, nt_limitSwitch;
+    BooleanPublisher nt_calibrated, nt_limitSwitch, nt_posIsUpdating;
 
     private static Elevator instance = new Elevator();
     public static Elevator getInstance(){
@@ -37,6 +37,7 @@ public class Elevator extends SubsystemBase {
     boolean setupElevator = false;
     public double m_targetHeight = NTDouble.create(0, table, "targetHeight",(val)->setPosition(Units.inchesToMeters(val)));
     public double m_currentHeight = 0;
+    private double lastPosition;
     ScoreConstants.ScoreLevel m_scoreReefLevel;
     public double armCurrentAngle;
 
@@ -62,6 +63,13 @@ public class Elevator extends SubsystemBase {
     // Check if elevator is at target position
     public boolean isAtPosition() {
         return Math.abs(getPosition() - m_targetHeight) <= ElevatorConstants.kElevatorTolerance/ElevatorConstants.kSprocketCircumference; 
+    }
+
+    public boolean posIsUpdating() {
+        double currentPosition = m_EleMotor.getPosition();
+        boolean isChanging = (currentPosition != lastPosition);
+        lastPosition = currentPosition; // Update lastPosition after checking
+        return isChanging;
     }
 
     public boolean isInDangerZone() {
@@ -97,6 +105,7 @@ public class Elevator extends SubsystemBase {
         nt_targetHeight = table.getDoubleTopic("targetHeight").publish();
         nt_calibrated = table.getBooleanTopic("calibrated").publish();
         nt_limitSwitch = table.getBooleanTopic("limitSwitch").publish();
+        nt_posIsUpdating = table.getBooleanTopic("posIsUpdating").publish();
 
         m_EleMotor = new Motor(ElevatorConstants.kEleCANID, ElevatorConstants.kMotorType, "elevator")
             .inverted(true)
@@ -197,6 +206,7 @@ public class Elevator extends SubsystemBase {
         nt_currentHeight.set(Units.metersToInches(getPosition()));
         nt_targetHeight.set(Units.metersToInches(m_targetHeight));
         nt_limitSwitch.set(limitSwitch.get());
+        nt_posIsUpdating.set(posIsUpdating());
 
     }
 }

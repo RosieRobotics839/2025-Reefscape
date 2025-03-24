@@ -4,6 +4,7 @@ import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 
 import edu.wpi.first.math.filter.Debouncer;
+import edu.wpi.first.networktables.BooleanPublisher;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.DigitalInput;
@@ -35,11 +36,21 @@ public class EndEffector extends SubsystemBase {
     public boolean m_hasGamePiece = false;
     private boolean m_hasCoral = false;
     private double m_algaeRelativePosition;
+    private double lastPosition;
+
+    BooleanPublisher nt_posIsUpdating = table.getBooleanTopic("posIsUpdating").publish();
 
     public Debouncer m_beamDebouncer = new Debouncer(EffectorConstants.kBeamBreakDebounceSec, Debouncer.DebounceType.kBoth);
 
     public boolean hasGamePiece(){
       return m_hasGamePiece;
+    }
+
+    public boolean posIsUpdating() {
+      double currentPosition = m_motor.getPosition();
+      boolean isChanging = (currentPosition != lastPosition);
+      lastPosition = currentPosition; // Update lastPosition after checking
+      return isChanging;
     }
 
     public Command IntakeCommand(){
@@ -92,6 +103,7 @@ public class EndEffector extends SubsystemBase {
     nt_beamBroken.set(m_beamBroken);
     nt_hasGamePiece.set(m_hasGamePiece);
     nt_hasCoral.set(m_hasCoral);
+    nt_posIsUpdating.set(posIsUpdating());
 
     // rising edge trigger on beam break sensor
     beam_trigger = beam_trigger && m_beamBroken;
