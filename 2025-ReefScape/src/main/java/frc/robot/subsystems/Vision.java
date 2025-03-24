@@ -128,7 +128,7 @@ public class Vision extends SubsystemBase {
     }
 
     // If the robot pose is not near the last accepted pose and the last accepted one was observed very recently, don't trust it.
-    if (robotPose.timestampSeconds-m_lastVisionPose.timestampSeconds < 0.5){
+    if (m_lastVisionPose != null && robotPose.timestampSeconds-m_lastVisionPose.timestampSeconds < 0.5){
       if (!VectorUtils.isNear(robotPose.estimatedPose.toPose2d(), m_lastVisionPose.estimatedPose.toPose2d(), 1)){
         return false;
       }
