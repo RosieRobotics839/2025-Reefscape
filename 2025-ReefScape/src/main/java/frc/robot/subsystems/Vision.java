@@ -29,9 +29,9 @@ import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.IntegerPublisher;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
-import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.VisionConstants;
+import frc.utils.VectorUtils;
 import frc.robot.Robot;
 
 public class Vision extends SubsystemBase {
@@ -62,6 +62,10 @@ public class Vision extends SubsystemBase {
   static SimCameraProperties simCameraProperties;
   static Pose3d farTargetPose;
   static VisionTargetSim farTarget;
+
+  static boolean m_visionHasBeenGood = false;
+
+  static EstimatedRobotPose m_lastVisionPose;
 
   public void PublishAprilTags(){
     List<Pose2d> tags = aprilTagFieldLayout.getTags().stream().map(
@@ -116,6 +120,46 @@ public class Vision extends SubsystemBase {
     }
   }
 
+  private boolean checkVisionPose(EstimatedRobotPose robotPose){
+    
+    // Check if the robotPose is within the field boundary.
+    if (!poseIsInField(robotPose.estimatedPose.toPose2d())){
+      return false;
+    }
+
+    // If the robot pose is not near the last accepted pose and the last accepted one was observed very recently, don't trust it.
+    if (m_lastVisionPose != null && robotPose.timestampSeconds-m_lastVisionPose.timestampSeconds < 0.5){
+      if (!VectorUtils.isNear(robotPose.estimatedPose.toPose2d(), m_lastVisionPose.estimatedPose.toPose2d(), 1)){
+        return false;
+      }
+    }
+
+    // Has a vision result ever been near the pose estimator final pose?
+    if (VectorUtils.isNear(robotPose.estimatedPose.toPose2d(), PoseEstimator.getInstance().m_finalPose, 0.5)){
+      m_visionHasBeenGood = true;
+    }
+    
+    // If the pose estimator has been aligned with vision in the past, check that the robotPose is somewhat near the odometry result.
+    if (m_visionHasBeenGood){
+      // Vision is not near the pose estimator final pose, but it once was.
+      if (!VectorUtils.isNear(robotPose.estimatedPose.toPose2d(), PoseEstimator.getInstance().m_finalPose, 2)){
+        return false;
+      }
+    }
+
+    // If all of those succeeded, accept the pose estimate.
+    m_lastVisionPose = robotPose;
+    return true;
+  }
+
+  private boolean poseIsInField(Pose2d pose){
+    return 
+      pose.getX() >= 0 &&
+      pose.getX() <= aprilTagFieldLayout.getFieldLength() &&
+      pose.getY() >= 0 &&
+      pose.getY() <= aprilTagFieldLayout.getFieldWidth();
+  }
+
   /**
    * Executes code to process the last camera result from Photonvision that contains targets from a PhotonCamera and returns the CamResult
    * 
@@ -144,11 +188,12 @@ public class Vision extends SubsystemBase {
           camera.getDistCoeffs()
         );
 
-        double ambiguity = result.getBestTarget().getPoseAmbiguity();
-        if ((ambiguity >= 0 || (DriverStation.isDisabled() && ambiguity == 0)) && ambiguity < VisionConstants.kMaxAmbiguity){
-
-          if (!ignore){
-            PoseEstimator.getInstance().addVisionMeasurement(robotPose,result.metadata.getCaptureTimestampMicros());
+        if (robotPose.isPresent()){
+          double ambiguity = result.getBestTarget().getPoseAmbiguity();
+          if (ambiguity >= 0 && ambiguity < VisionConstants.kMaxAmbiguity){
+            if (!ignore && checkVisionPose(robotPose.get())){
+              PoseEstimator.getInstance().addVisionMeasurement(robotPose,result.metadata.getCaptureTimestampMicros());
+            }
           }
         }
       }
@@ -158,16 +203,17 @@ public class Vision extends SubsystemBase {
 
   @Override
   public void periodic() {
-    // This method will be called once per scheduler run
+    if (cam1.isConnected()){
+      photonPoseEstimatorFront.setReferencePose(PoseEstimator.getInstance().m_finalPose3d);
+      var cam1result = processCamera(cam1, photonPoseEstimatorFront, false);
+      nt_posefront.set(cam1result);
+    };
 
-    photonPoseEstimatorFront.setReferencePose(PoseEstimator.getInstance().m_finalPose3d);
-    photonPoseEstimatorRear.setReferencePose(PoseEstimator.getInstance().m_finalPose3d);
-
-    var cam1result = processCamera(cam1, photonPoseEstimatorFront, false);
-    var cam2result = processCamera(cam2, photonPoseEstimatorRear, Autonomous.getInstance().m_drivingToReef);
-    
-    nt_posefront.set(cam1result);
-    nt_poserear.set(cam2result);
+    if (cam2.isConnected()){
+      photonPoseEstimatorRear.setReferencePose(PoseEstimator.getInstance().m_finalPose3d);
+      var cam2result = processCamera(cam2, photonPoseEstimatorRear, Autonomous.getInstance().m_drivingToReef);
+      nt_poserear.set(cam2result);
+    }
     
     // Run the periodic function for the Pixy Camera
     // pixyPeriodic();
