@@ -59,8 +59,6 @@ public class Climber extends SubsystemBase{
     public Command ClimberInCommand = Commands.sequence(
         new InstantCommand(() -> m_motor.setRelativePosition(ClimberConstants.kRotationInLead*0.020))
     ).repeatedly().until(()->motorCal.get(m_angleSensor.get()) <= Units.radiansToRotations(ClimberConstants.kAngleIn));
-        //new InstantCommand(() -> KrakenOrchestra.getInstance().playMusic().song10.chrp)
-        //Experimental ^^^
     
     public Command ClimberOutCommand = Commands.sequence(
         new InstantCommand(() -> m_motor.setRelativePosition(ClimberConstants.kRotationOutLead*0.020))

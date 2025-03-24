@@ -4,7 +4,6 @@
 
 package frc.robot;
 
-import java.util.Map;
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -121,11 +120,6 @@ public class Robot extends TimedRobot {
     Shuffleboard.getTab("Music")
     .add("Music Control", startStop)
     .withWidget(BuiltInWidgets.kComboBoxChooser);
-    /*Shuffleboard.getTab("Music")
-    .add("Load Progress", 0.0)
-    .withWidget(BuiltInWidgets.kNumberBar)
-    .withProperties(Map.of("Min", 0, "Max", 1))
-    .getEntry();*/
   }
 
   /**
