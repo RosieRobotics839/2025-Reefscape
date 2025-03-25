@@ -34,7 +34,7 @@ public class Funnel extends SubsystemBase{
     public NTBoolean nt_hysteresis = new NTBoolean(false, table, "climberOut", null);
     BooleanPublisher nt_funnelIsUp = table.getBooleanTopic("funnelIsUp").publish();
     BooleanPublisher nt_funnelIsDown = table.getBooleanTopic("funnelIsDown").publish();
-    BooleanPublisher nt_posIsupdating = table.getBooleanTopic("posIsUpdating").publish();
+    BooleanPublisher nt_funnelPosIsupdating = table.getBooleanTopic("posIsUpdating").publish();
 
     public boolean atTargetPosition(){ 
         return Math.abs(getPosition()-m_targetPosition) < FunnelConstants.kFunnelAngleTolerance;
@@ -110,7 +110,7 @@ public class Funnel extends SubsystemBase{
         nt_hysteresis.set(m_climberHysteresis.calculate(Climber.getInstance().motorCal.get(Climber.getInstance().m_angleSensor.get())));
         nt_funnelIsDown.set(funnelIsDown);
         nt_funnelIsUp.set(funnelIsUp);
-        nt_posIsupdating.set(posIsUpdating());
+        nt_funnelPosIsupdating.set(posIsUpdating());
 
         if (m_isStalled.get()){
             m_motorFunnel.setEncoderPosition(FunnelConstants.kFunnelUp);

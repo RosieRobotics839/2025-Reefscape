@@ -26,7 +26,7 @@ public class Elevator extends SubsystemBase {
 
     static NetworkTable table = NetworkTableInstance.getDefault().getTable("roboRIO/Elevator");
     DoublePublisher nt_currentHeight, nt_targetHeight;
-    BooleanPublisher nt_calibrated, nt_limitSwitch, nt_posIsUpdating;
+    BooleanPublisher nt_calibrated, nt_limitSwitch, nt_elevatorPosIsUpdating;
 
     private static Elevator instance = new Elevator();
     public static Elevator getInstance(){
@@ -105,7 +105,7 @@ public class Elevator extends SubsystemBase {
         nt_targetHeight = table.getDoubleTopic("targetHeight").publish();
         nt_calibrated = table.getBooleanTopic("calibrated").publish();
         nt_limitSwitch = table.getBooleanTopic("limitSwitch").publish();
-        nt_posIsUpdating = table.getBooleanTopic("posIsUpdating").publish();
+        nt_elevatorPosIsUpdating = table.getBooleanTopic("posIsUpdating").publish();
 
         m_EleMotor = new Motor(ElevatorConstants.kEleCANID, ElevatorConstants.kMotorType, "elevator")
             .inverted(true)
@@ -206,7 +206,7 @@ public class Elevator extends SubsystemBase {
         nt_currentHeight.set(Units.metersToInches(getPosition()));
         nt_targetHeight.set(Units.metersToInches(m_targetHeight));
         nt_limitSwitch.set(limitSwitch.get());
-        nt_posIsUpdating.set(posIsUpdating());
+        nt_elevatorPosIsUpdating.set(posIsUpdating());
 
     }
 }

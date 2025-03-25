@@ -38,7 +38,7 @@ public class EndEffector extends SubsystemBase {
     private double m_algaeRelativePosition;
     private double lastPosition;
 
-    BooleanPublisher nt_posIsUpdating = table.getBooleanTopic("posIsUpdating").publish();
+    BooleanPublisher nt_effectorPosIsUpdating = table.getBooleanTopic("posIsUpdating").publish();
 
     public Debouncer m_beamDebouncer = new Debouncer(EffectorConstants.kBeamBreakDebounceSec, Debouncer.DebounceType.kBoth);
 
@@ -103,7 +103,7 @@ public class EndEffector extends SubsystemBase {
     nt_beamBroken.set(m_beamBroken);
     nt_hasGamePiece.set(m_hasGamePiece);
     nt_hasCoral.set(m_hasCoral);
-    nt_posIsUpdating.set(posIsUpdating());
+    nt_effectorPosIsUpdating.set(posIsUpdating());
 
     // rising edge trigger on beam break sensor
     beam_trigger = beam_trigger && m_beamBroken;
