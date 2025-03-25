@@ -132,7 +132,7 @@ public class FlightStick extends Joystick {
         DriveTrain.getInstance().setMaxRotate(DriveConstants.kGetItOffMeRotationSpeed);
       }));
       Btm11Btn.onFalse(new InstantCommand(() -> {
-        DriveTrain.getInstance().setMaxRotate(Units.degreesToRadians(75));
+        DriveTrain.getInstance().setMaxRotate(DriveConstants.kMaxRotationVelocity[m_speedSelector]);
       }));
 
 
