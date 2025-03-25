@@ -5,21 +5,30 @@
 package frc.robot.subsystems;
 
 import edu.wpi.first.apriltag.AprilTag;
+import edu.wpi.first.math.filter.Debouncer;
+import edu.wpi.first.math.filter.Debouncer.DebounceType;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Constants.AutoConstants;
 import frc.robot.Constants.kDriveTrain.DriveConstants;
 import frc.utils.VectorUtils;
+import frc.utils.NTValues.NTBoolean;
+import frc.utils.pathfinding.astar.PathfindingUtils;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 public class Autonomous extends SubsystemBase {
+
+  static NetworkTable table = NetworkTableInstance.getDefault().getTable("roboRIO/Autonomous");
 
   private static Autonomous instance = new Autonomous();
   public static Autonomous getInstance(){return instance;}
@@ -29,15 +38,31 @@ public class Autonomous extends SubsystemBase {
   public Boolean m_drivingToReef = false;
   public Pose2d m_aimPoint;
   public double m_aimPointRotationOffset;
+  private NTBoolean nt_isInsideReef = new NTBoolean(false,table,"isInsideReef",null);
+  private Debouncer m_insideReefDebounce = new Debouncer(0.5, DebounceType.kFalling);
 
-  public static List<Translation2d> bluereef = new ArrayList<Translation2d>(){{
-    add(new Translation2d(3.5, 3.4));
-    add(new Translation2d(3.5, 4.6));
-    add(new Translation2d(4.5, 5.15));
-    add(new Translation2d(5.5, 4.6));
-    add(new Translation2d(5.5, 3.4));
-    add(new Translation2d(4.5, 2.85));
-  }};
+  public static Pose2d m_redReefCenter = PathPlanning.AprilTagAtDistance(AutoConstants.kReefRedCenterRefID, AutoConstants.kReefCenterDistance);
+  public static Pose2d m_blueReefCenter = PathPlanning.AprilTagAtDistance(AutoConstants.kReefBlueCenterRefID, AutoConstants.kReefCenterDistance);
+  
+  public static Pose2d reefCenter(){ return (DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == Alliance.Blue ? Autonomous.m_blueReefCenter : Autonomous.m_redReefCenter ); }
+  public static List<Translation2d> reefObstacle(){ return(DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == Alliance.Blue ? Autonomous.bluereef : Autonomous.redreef ); }
+
+  public static List<Translation2d> generateReefKOZ(Pose2d center){
+    return new ArrayList<Translation2d>(){{
+      for (int i=0; i<6; i++){
+        add(center.getTranslation().plus(
+          new Translation2d(
+            AutoConstants.kReefKOZRadius,
+            new Rotation2d(center.getRotation().getRadians()+Units.degreesToRadians(30+60*i))
+          )
+        ));
+      }
+    }};
+  }
+  
+  public static List<Translation2d> redreef = generateReefKOZ(m_redReefCenter);
+  public static List<Translation2d> bluereef = generateReefKOZ(m_blueReefCenter);
+  
   public static List<Translation2d> bargecolumn = new ArrayList<Translation2d>(){{
     add(new Translation2d(8.160,3.46));
     add(new Translation2d(8.160,4.475));
@@ -45,25 +70,40 @@ public class Autonomous extends SubsystemBase {
     add(new Translation2d(9.5, 3.46));
   }};
 
-  // TODO: UPDATE FIELD GEOMETRY!
-  public static List<List<Translation2d>> staticObstacles = new ArrayList<List<Translation2d>>(){{
+  public static List<Translation2d> flipRedToBlue(List<Translation2d> obstacle){
     double halffield = Vision.getInstance().aprilTagFieldLayout.getFieldLength()/2.0;
-    
-    List<Translation2d> redreef = bluereef.stream().map(f->new Translation2d(halffield+(halffield-f.getX()),f.getY())).collect(Collectors.toList());
-    add(bluereef);
-    add(redreef);
-    add(bargecolumn);
+    return obstacle.stream().map(f->new Translation2d(halffield-(f.getX()-halffield),f.getY())).collect(Collectors.toList());
+  }
+  
+  public static List<List<Translation2d>> staticObstacles = generateStaticObstacles();
+  public static List<List<Translation2d>> generateStaticObstacles(){
+    Autonomous.redreef = Autonomous.generateReefKOZ(m_redReefCenter);
+    Autonomous.bluereef = Autonomous.generateReefKOZ(m_blueReefCenter);
+    return new ArrayList<List<Translation2d>>(){{
+      add(bluereef);
+      add(redreef);
+      add(bargecolumn);
+  
+      publishObstacles(this);
+    }};
+  }
 
-    var it = iterator();
+  public static void publishObstacles(List<List<Translation2d>> list){
+    var it = list.iterator();
     Integer i=0;
     while(it.hasNext()){
       var fieldobj=PoseEstimator.getInstance().m_field.getObject("KeepOut"+(i++).toString());
       fieldobj.setPoses(it.next().stream().map(a->new Pose2d(a,new Rotation2d(0))).collect(Collectors.toList()));
-    }    
-  }};
+    } 
+  }
+  
+  public void aimAtPoint(Translation2d aimPoint){
+    aimAtPoint(new Pose2d(aimPoint, new Rotation2d(0)), 0);
+  }
 
-  static NetworkTable table;
-  //final BooleanPublisher nt_instage;
+  public void aimAtPoint(Translation2d aimPoint, double radiansOffset){
+    aimAtPoint(new Pose2d(aimPoint, new Rotation2d(0)), radiansOffset);
+  }
 
   public void aimAtPoint(Pose2d aimPoint){
     aimAtPoint(aimPoint, 0);
@@ -80,8 +120,6 @@ public class Autonomous extends SubsystemBase {
 
   /** Creates a new Autonomous. */
   public Autonomous() {
-    table = NetworkTableInstance.getDefault().getTable("roboRIO/Autonomous");
-    //nt_instage = table.getBooleanTopic("isInStage").publish();
   }
 
   List<AprilTag> allTags;
@@ -106,12 +144,18 @@ public class Autonomous extends SubsystemBase {
     return bestRotation;
   }
 
+  public boolean isInsideReef(){
+    return nt_isInsideReef.get();
+  }
+
   @Override
   public void periodic() {
     
     if (DriveTrain.getInstance().m_poseQueue.isEmpty()){
       m_drivingToReef = false;
     }
+
+    nt_isInsideReef.set(m_insideReefDebounce.calculate(PathfindingUtils.PointInConvexPolygon(PoseEstimator.getInstance().m_finalPose.getTranslation(), reefObstacle())));
 
     // Look for best tag while traveling autonomously
     if (DriveConstants.kAutoTurnToBestTag && DriveTrain.getInstance().m_poseQueue.size() >= 1){
