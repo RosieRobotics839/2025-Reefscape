@@ -29,7 +29,6 @@ public class Climber extends SubsystemBase{
     public Motor m_motor;
     public boolean hasReachedInPos = false;
     public boolean hasReachedOutPos = false;
-    private double lastPosition;
     public CalibrationMap motorCal = new CalibrationMap(ClimberConstants.kCalibrationX, ClimberConstants.kCalibrationY);
     public DutyCycleEncoder m_angleSensor;
     public NTDouble nt_targetPosition = new NTDouble(0, table, "target", null);
@@ -40,7 +39,6 @@ public class Climber extends SubsystemBase{
     BooleanPublisher nt_hasReachedInPos = table.getBooleanTopic("hasReachedInPos").publish();
     BooleanPublisher nt_hasReachedOutPos = table.getBooleanTopic("hasReachedOutPos").publish();
     BooleanPublisher nt_climbMotorMoving = table.getBooleanTopic("climbMotorMoving").publish();
-    BooleanPublisher nt_climberPosIsUpdating = table.getBooleanTopic("posIsUpdating").publish();
     NTDouble nt_relativePosition = new NTDouble(0, table, "relativePosition", (val)->setRelativePosition(Units.degreesToRadians(val)));
     {nt_relativePosition.resetOnRecv = true;}
 
@@ -54,13 +52,6 @@ public class Climber extends SubsystemBase{
      */
     public double getPosition(){
         return m_motor.getPosition();
-    }
-
-    public boolean posIsUpdating() {
-        double currentPosition = m_motor.getPosition();
-        boolean isChanging = (currentPosition != lastPosition);
-        lastPosition = currentPosition; // Update lastPosition after checking
-        return isChanging;
     }
 
     /**
@@ -109,6 +100,5 @@ public class Climber extends SubsystemBase{
         nt_climberCalibrated.set(m_motor.isSetupDone());
         nt_hasReachedInPos.set(hasReachedInPos);
         nt_hasReachedOutPos.set(hasReachedOutPos);
-        nt_climberPosIsUpdating.set(posIsUpdating());
     }
 }
