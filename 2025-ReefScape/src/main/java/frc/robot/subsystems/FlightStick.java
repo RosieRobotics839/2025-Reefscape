@@ -134,6 +134,8 @@ public class FlightStick extends Joystick {
       Btm11Btn.onFalse(new InstantCommand(() -> {
         DriveTrain.getInstance().setMaxRotate(DriveConstants.kMaxRotationVelocity[m_speedSelector]);
       }));
+      Btm12Btn.onTrue(new InstantCommand(()->Gyro.getInstance().m_enableTipDetection = false));
+      Btm12Btn.onFalse(new InstantCommand(()->Gyro.getInstance().m_enableTipDetection = true));
 
 
       /* Intake in */

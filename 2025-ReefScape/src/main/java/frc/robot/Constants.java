@@ -260,6 +260,8 @@ public final class Constants {
 
   public static class GyroConstants{
     public static boolean kEnabled = true;
+    public static double kTippingAngle = Units.degreesToRadians(NTDouble.create(12.5,"Gyro/kTippingAngle",val->kTippingAngle=Units.degreesToRadians(val)));
+    public static double kTippingHysteresis = Units.degreesToRadians(NTDouble.create(5,"Gyro/kTippingHysteresis",val->kTippingHysteresis=Units.degreesToRadians(val)));
     public static int kCANID = 50;
     public static double kVisionCorrectionMaxRate = Units.degreesToRadians(NTDouble.create(40,"Gyro/kVisionCorrectionMaxRate",val->kVisionCorrectionMaxRate=Units.degreesToRadians(val)));
   }

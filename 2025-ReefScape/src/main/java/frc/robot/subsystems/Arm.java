@@ -14,6 +14,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.ArmConstants;
+import frc.utils.Action;
 import frc.utils.Calibrate;
 import frc.utils.CalibrationMap;
 import frc.utils.Motor;
@@ -47,6 +48,8 @@ public class Arm extends SubsystemBase{
     boolean scoringLevels2or3 = false;
     boolean scoringLevel4 = false;
 
+    Action m_tipProtect = new Action(false).onTrue(()->{moveToLevel(ScoreLevel.TROUGH); Controller.getAccessoryInstance().m_directArm=false;});
+    
     DoublePublisher
         nt_positionSensor,
         nt_safetyLimit,
@@ -175,6 +178,8 @@ public class Arm extends SubsystemBase{
             m_angleSensorSim.set(m_angleSensorSimMap.get(m_angleTarget));
         }
 
+        
+        m_tipProtect.calculate(Gyro.getInstance().isTipping());
         setArmAngleSafely(m_angleTarget);
 
         nt_setupDone.set(m_setupDone);
