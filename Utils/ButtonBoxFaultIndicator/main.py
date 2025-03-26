@@ -105,122 +105,130 @@ def send_to_arduino(ser, data):
     
     try:
 
-        # Gamepiece Value
-        has_game_piece =  data.get("hasGamePiece", False)
+        # GAMEPIECE VALUE (1: No gamepiece, 2: Has gamepiece)
+        has_game_piece =  data.get("hasGamePiece")
 
         if has_game_piece:
             gamepiece = 2
         else:
             gamepiece = 1
 
-        # Defining Cameras Value
-        cam1_connected = data.get("cam1IsConnected", False)
-        cam2_connected = data.get("cam2IsConnected", False)
-
-        if cam1_connected and cam2_connected:
-            cameras = 3 # Both Cameras connected
-        elif cam2_connected and not cam1_connected:
-            cameras = 2 # Cam 2 is connected but not cam 1
-        elif cam1_connected and not cam2_connected:
-            cameras = 1 # Cam 1 is connected but not cam 2
+        # CAMERA VALUE (1: Cam 1 connected but not Cam 2, 2: Cam 2 connected but not Cam 1, 3: Both cameras connected)
+        cam1_connected = data.get("cam1IsConnected")
+        cam2_connected = data.get("cam2IsConnected")
+        
+        if cam1_connected is not None and cam2_connected is not None:
+            if not cam2_connected and cam1_connected:
+                cameras = 1 # Cam 1 is connected but not cam 2
+            elif not cam1_connected and cam2_connected:
+                cameras = 2 # Cam 2 is connected but not cam 1
+            else:
+                cameras = 3 # Both Cameras connected
         else:
             cameras = 0 # Not receiving values
         
-        # Defining Gyro Value
-        field_centric_driving = data.get("fieldCentricDriving", False)
-        gyro_hardware_good = data.get("gyroStatus", False)
+        # GYRO VALUE (1: Hardware bad, 2: field centric disabled, 3: field centric enabled)
+        field_centric_driving = data.get("fieldCentricDriving")
+        gyro_hardware_good = data.get("gyroStatus")
 
-        if gyro_hardware_good and field_centric_driving:
-            gyro_value = 3 # Gyro hardware is good and field centric is enabled
-        elif gyro_hardware_good and not field_centric_driving:
-            gyro_value = 2 # Gyro hardware is good but field centric is disabled
-        elif not gyro_hardware_good:
-            gyro_value = 1 # Gyro hardware is bad
+        if gyro_hardware_good is not None:
+            if not gyro_hardware_good:
+                gyro_value = 1  # Gyro hardware is bad
+            elif not field_centric_driving:
+                gyro_value = 2  # Gyro hardware is good, but field centric is disabled
+            elif field_centric_driving:
+                gyro_value = 3  # Gyro hardware is good, and field centric is enabled
         else:
             gyro_value = 0 # Not receiving values
 
-        # Match Time
-        remaining_match_time = data.get("remainingMatchTime", 0.0)
+        # MATCH TIME
+        remaining_match_time = data.get("remainingMatchTime")
 
         match_time = remaining_match_time
 
-        # Defining Drive Train Value
-        drivetrain_motor_temp_high = data.get("driveTrainMotorsTempHigh", False)
-        drive_motor_setup_done = data.get("driveMotorSetupDone", False)
+        # DRIVETRAIN VALUE (1: overheated, 2: not calibrated, 3: all good)
+        drivetrain_motor_temp_high = data.get("driveTrainMotorsTempHigh")
+        drive_motor_setup_done = data.get("driveMotorSetupDone")
 
-        if not drivetrain_motor_temp_high and drive_motor_setup_done:
-            drivetrain = 3 # Everything is good
-        elif data.get("driveMotorSetupDone", False):
-            drivetrain = 2 # Drive motor setup is not done
-        elif data.get("driveTrainMotorsTempHigh", False):
-            drivetrain = 1 # Drive motors are overheating
+        if drivetrain_motor_temp_high is not None and drive_motor_setup_done is not None:
+            if drivetrain_motor_temp_high:
+                drivetrain = 1  # Overheated
+            elif not drive_motor_setup_done:
+                drivetrain = 2  # Not calibrated
+            else:
+                drivetrain = 3  # Everything correct
         else:
-            drivetrain = 0 # Not receiving values
+            drivetrain = 0  # Not receiving values
 
-        # Defining Elevator Value
-        elevator_motor_temp_high = data.get("elevatorMotorTempHigh", False)
-        elevator_status = data.get("elevatorStatus", False)
+        # ELEVATOR VALUE (1: overheated, 2: not calibrated, 3: all good)
+        elevator_motor_temp_high = data.get("elevatorMotorTempHigh")
+        elevator_status = data.get("elevatorStatus")
 
-        if not elevator_motor_temp_high and elevator_status:
-            elevator = 3 # Everything is good
-        elif data.get("elevatorStatus", False):
-            elevator = 2 # Elevator motor status is bad
-        elif data.get("elevatorMotorTempHigh", False):
-            elevator = 1 # Elevator motor is overheating
+        if elevator_motor_temp_high is not None and elevator_status is not None:
+            if elevator_motor_temp_high:
+                elevator = 1  # Overheated
+            elif not elevator_status:
+                elevator = 2  # Not calibrated
+            else:
+                elevator = 3  # Everything correct
         else:
-            elevator = 0 # Not receiving values
+            elevator = 0  # Not receiving values
 
-        # Defining Arm Value
-        arm_motor_temp_high = data.get("armMotorTempHigh", False)
-        arm_status = data.get("armStatus", False)
+        # ARM VALUE (1: overheated, 2: not calibrated, 3: all good)
+        arm_motor_temp_high = data.get("armMotorTempHigh")
+        arm_status = data.get("armStatus")
 
-        if not arm_motor_temp_high  and arm_status:
-            gantry_arm = 3 # Everything is good
-        elif data.get("armStatus", False):
-            gantry_arm = 2 # Arm motor status is bad
-        elif data.get("armMotorTempHigh", False):
-            gantry_arm = 1 # Arm motor is overheating
+        if arm_motor_temp_high is not None and arm_status is not None:
+            if arm_motor_temp_high:
+                gantry_arm = 1  # Overheated
+            elif not arm_status:
+                gantry_arm = 2  # Not calibrated
+            else:
+                gantry_arm = 3  # Everything correct
         else:
             gantry_arm = 0 # Not receiving values
 
-        # Defining Intake Value
-        effector_motor_temp_high = data.get("effectorMotorTempHigh", False)
+        # INTAKE VALUE (1: overheated, 2: all good)
+        effector_motor_temp_high = data.get("effectorMotorTempHigh")
 
-        if not effector_motor_temp_high:
-            intake = 2 # Everything is good
-        elif data.get("effectorMotorTempHigh", False):
-            intake = 1 # EndEffector motor is overheating
+        if effector_motor_temp_high is not None:
+            if effector_motor_temp_high:
+                intake = 1  # Overheated
+            else:
+                intake = 2  # Everything correct
         else:
-            intake = 0 # Not receiving values
+            intake = 0  # Not receiving values
 
-        # Defining Funnel Value
-        funnel_motor_temp_high = data.get("funnelMotorTempHigh", False)
-        funnel_is_down = data.get("funnelIsDown", False)
-        funnel_is_up = data.get("funnelIsUp", False)
+        # FUNNEL VALUE (1: overheated, 2: funnel up, 3: funnel down)
+        funnel_motor_temp_high = data.get("funnelMotorTempHigh")
+        funnel_is_down = data.get("funnelIsDown")
+        funnel_is_up = data.get("funnelIsUp")
 
-        if not funnel_motor_temp_high and funnel_is_down:
-            funnel = 3 # Everything is good, funnel is down
-        elif not funnel_motor_temp_high and funnel_is_up:
-            funnel = 2 # Everything is good, funnel is up
-        elif data.get("funnelMotorTempHigh", False):
-            funnel = 1 # Funnel motor is overheating
+        if funnel_motor_temp_high is not None:
+            if funnel_motor_temp_high:
+                funnel = 1  # Overheated
+            elif funnel_is_up:
+                funnel = 2  # Funnel up, everything good
+            elif funnel_is_down:
+                funnel = 3  # Funnel down, everything good
         else:
-            funnel = 0 # Not receiving values
+            funnel = 0  # Not receiving values
 
-        # Defining Climber Value
-        climber_motor_temp_high = data.get("climberMotorTempHigh", False)
-        climber_calibrated = data.get("climberCalibrated", False)
-        climber_is_in = data.get("climberIsIn", False)
-        climber_is_out = data.get("climberIsOut", False)
+        # CLIMBER VALUE (1: overheated, 2: Not calibrated, 3: climber out, 4: climber in)
+        climber_motor_temp_high = data.get("climberMotorTempHigh")
+        climber_calibrated = data.get("climberCalibrated")
+        climber_is_in = data.get("climberIsIn")
+        climber_is_out = data.get("climberIsOut")
 
-        if not climber_motor_temp_high and climber_calibrated and climber_is_in:
-            climber = 4 # Everything is good, climber is in
-        elif not climber_motor_temp_high and climber_calibrated and climber_is_out:
-            climber = 3 # Everything is good, climber is out
-        elif data.get("climberCalibrated", False):
-            climber = 2 # Climber motor isnt calibrated
-        elif data.get("climberMotorTempHigh", False):
-            climber = 1 # Climber motor is overheating
+        if climber_motor_temp_high is not None and climber_calibrated is not None:
+            if climber_motor_temp_high:
+                climber = 1  # Climber motor is overheating
+            elif not climber_calibrated:
+                climber = 2  # Climber motor isn’t calibrated
+            elif climber_is_out:
+                climber = 3  # Everything is good, climber is out
+            elif climber_is_in:
+                climber = 4  # Everything is good, climber is in
         else:
             climber = 0 # Not receiving values
 
