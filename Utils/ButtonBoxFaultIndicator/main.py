@@ -5,8 +5,8 @@ import serial
 import time
 import json
 
-ROBOT_IP = "10.83.9.2"   # The Team's robot IP
-ARDUINO_PORT = "COM2"    # Laptop Port
+ROBOT_IP = "10.8.39.2"   # The Team's robot IP
+ARDUINO_PORT = "COM4"    # Laptop Port
 BAUD_RATE = "115200"     # Arduino baud rate
 
 def connect_to_networktables(ip):
@@ -20,6 +20,7 @@ def connect_to_networktables(ip):
     return NetworkTables.isConnected()
 
 def get_robot_data():
+
     """
     Retrieve the specific data we want from NetworkTables
 
@@ -27,12 +28,14 @@ def get_robot_data():
     try:
         # Getting subsystem data from network tables
         drivetrain = NetworkTables.getTable("roboRIO/Drivetrain")
-        endeffector = NetworkTables.getTable("roboRIO/EndEffector")
+        drivetrain_wheel = NetworkTables.getTable("roboRIO/Drivetrain/wheel")
+        endeffector = NetworkTables.getTable("roboRIO/EndEffector/Effector")
         gyro = NetworkTables.getTable("roboRIO/Gyro")
         elevator = NetworkTables.getTable("roboRIO/Elevator")
-        arm = NetworkTables.getTable("roboRIO/Arm")
+        arm = NetworkTables.getTable("roboRIO/Arm/table")
+        arm_debug = NetworkTables.getTable("roboRIO/Arm/table/debug")
         climber = NetworkTables.getTable("roboRIO/Climber")
-        funnel = NetworkTables.getTable("roboRIO/Funnel")
+        funnel = NetworkTables.getTable("roboRIO/Funnel/table")
         vision = NetworkTables.getTable("roboRIO/Vision")
         flightstick = NetworkTables.getTable("roboRIO/FlightStick")
         led = NetworkTables.getTable("roboRIO/LED")
@@ -49,7 +52,7 @@ def get_robot_data():
         remaining_match_time = led.getNumber("remainingMatchTime", 7500)
 
         drivetrain_motor_temp_high = led.getBoolean("driveTrainMotorsTempHigh", False)
-        encoder_is_reading = drivetrain.getBoolean("encoderIsReading", False)
+        encoder_is_reading = drivetrain_wheel.getBoolean("encoderIsReading", False)
         drive_motor_setup_done = drivetrain.getBoolean("driveMotorSetupDone", False)
 
         elevator_motor_temp_high = led.getBoolean("elevatorMotorTempHigh", False)
@@ -58,7 +61,7 @@ def get_robot_data():
 
         arm_motor_temp_high = led.getBoolean("armMotorTempHigh", False)
         arm_pos_is_updating = arm.getBoolean("armPosIsUpdating", False)
-        arm_status = arm.getBoolean("setupDone", False)
+        arm_status = arm_debug.getBoolean("setupDone", False)
 
         effector_motor_temp_high = led.getBoolean("effectorMotorTempHigh", False)
         effector_pos_is_updating = endeffector.getBoolean("effectorPosIsUpdating", False)
@@ -78,7 +81,7 @@ def get_robot_data():
             "hasGamePiece": has_game_piece,
             "cam1IsConnected": cam1_connected,
             "cam2IsConnected": cam2_connected,
-            "status":gyro_status,
+            "gyroStatus":gyro_status,
             "fieldCentricDriving":field_centric_driving,
             "remainingMatchTime":remaining_match_time,
             "driveTrainMotorsTempHigh":drivetrain_motor_temp_high,
@@ -86,10 +89,10 @@ def get_robot_data():
             "driveMotorSetupDone":drive_motor_setup_done,
             "elevatorMotorTempHigh":elevator_motor_temp_high,
             "elevatorPosIsUpdating":elevator_pos_is_updating,
-            "isCalibrated":elevator_status,
+            "elevatorStatus":elevator_status,
             "armMotorTempHigh":arm_motor_temp_high,
             "armPosIsUpdating":arm_pos_is_updating,
-            "setupDone":arm_status,
+            "armStatus":arm_status,
             "effectorMotorTempHigh":effector_motor_temp_high,
             "effectorPosIsUpdating":effector_pos_is_updating,
             "funnelMotorTempHigh":funnel_motor_temp_high,
@@ -99,8 +102,8 @@ def get_robot_data():
             "climberMotorTempHigh":climber_motor_temp_high,
             "climberPosIsUpdating":climber_pos_is_updating,
             "climberCalibrated":climber_calibrated,
-            "hasReachedInPos":climber_is_in,
-            "hasReachedOutPos":climber_is_out
+            "climberIsIn":climber_is_in,
+            "climberIsOut":climber_is_out
         }
     except:
         print("Error getting NetworkTables data")
@@ -117,11 +120,16 @@ def send_to_arduino(ser, data):
     try:
 
         # Gamepiece Value
-        gamepiece = 2 if data.get("has_game_piece", True) else 1
+        has_game_piece =  data.get("hasGamePiece", False)
+
+        if has_game_piece:
+            gamepiece = 2
+        else:
+            gamepiece = 1
 
         # Defining Cameras Value
-        cam1_connected = data.get("cam1_connected", False)
-        cam2_connected = data.get("cam2_connected", False)
+        cam1_connected = data.get("cam1IsConnected", False)
+        cam2_connected = data.get("cam2IsConnected", False)
 
         if cam1_connected and cam2_connected:
             cameras = 3 # Both Cameras connected
@@ -130,123 +138,123 @@ def send_to_arduino(ser, data):
         elif cam2_connected and not cam1_connected:
             cameras = 2 # Cam 2 is connected but not cam 1
         else:
-            cameras = 0 # Not recieving values
+            cameras = 0 # Not receiving values
         
         # Defining Gyro Value
-        field_centric_driving = data.get("field_centric_driving", False)
-        gyro_hardware_good = data.get("gyro_status", False)
+        field_centric_driving = data.get("fieldCentricDriving", False)
+        gyro_hardware_good = data.get("gyroStatus", False)
 
         if gyro_hardware_good and field_centric_driving:
             gyro_value = 3 # Gyro hardware is good and field centric is enabled
-        if gyro_hardware_good and not field_centric_driving:
+        elif gyro_hardware_good and not field_centric_driving:
             gyro_value = 2 # Gyro hardware is good but field centric is disabled
-        if not gyro_hardware_good:
+        elif not gyro_hardware_good:
             gyro_value = 1 # Gyro hardware is bad
         else:
-            gyro_value = 0 # Not recieving values
+            gyro_value = 0 # Not receiving values
 
         # Match Time
-        remaining_match_time = data.get("remaining_match_time", 0.0)
+        remaining_match_time = data.get("remainingMatchTime", 0.0)
 
         match_time = remaining_match_time
 
         # Defining Drive Train Value
-        drivetrain_motor_temp_high = data.get("drivetrain_motor_temp_high", False)
-        encoder_is_reading = data.get("encoder_is_reading", False)
-        drive_motor_setup_done = data.get("drive_motor_setup_done", False)
+        drivetrain_motor_temp_high = data.get("driveTrainMotorsTempHigh", False)
+        encoder_is_reading = data.get("encoderIsReading", False)
+        drive_motor_setup_done = data.get("driveMotorSetupDone", False)
 
-        if not drivetrain_motor_temp_high and encoder_is_reading and drive_motor_setup_done:
+        if not drivetrain_motor_temp_high and drive_motor_setup_done:
             drivetrain = 4 # Everything is good
-        elif data.get("drivetrain_motor_temp_high", False):
+        elif data.get("driveTrainMotorsTempHigh", False):
             drivetrain = 1 # Drive motors are overheating
-        elif data.get("drive_motor_setup_done", False):
+        elif data.get("driveMotorSetupDone", False):
             drivetrain = 2 # Drive motor setup is not done
-        elif data.get("encoder_is_reading", False):
+        elif data.get("encoderIsReading", False):
             drivetrain = 3 # Swerve pod analog encoders are not reading
         else:
-            drivetrain = 0 # Not recieving values
+            drivetrain = 0 # Not receiving values
 
         # Defining Elevator Value
-        elevator_motor_temp_high = data.get("elevator_motor_temp_high", False)
-        elevator_pos_is_updating = data.get("elevator_pos_is_updating", False)
-        elevator_status = data.get("elevator_status", False)
+        elevator_motor_temp_high = data.get("elevatorMotorTempHigh", False)
+        elevator_pos_is_updating = data.get("elevatorPosIsUpdating", False)
+        elevator_status = data.get("elevatorStatus", False)
 
-        if not elevator_motor_temp_high and elevator_pos_is_updating and elevator_status:
+        if not elevator_motor_temp_high  and elevator_status:
             elevator = 4 # Everything is good
-        elif data.get("elevator_motor_temp_high", False):
+        elif data.get("elevatorMotorTempHigh", False):
             elevator = 1 # Elevator motor is overheating
-        elif data.get("elevator_status", False):
+        elif data.get("elevatorStatus", False):
             elevator = 2 # Elevator motor status is bad
-        elif data.get("elevator_pos_is_updating", False):
+        elif data.get("elevatorPosIsUpdating", False):
             elevator = 3 # Elevator motor position isnt updating
         else:
-            elevator = 0 # Not recieving values
+            elevator = 0 # Not receiving values
 
         # Defining Arm Value
-        arm_motor_temp_high = data.get("arm_motor_temp_high", False)
-        arm_pos_is_updating = data.get("arm_pos_is_updating", False)
-        arm_status = data.get("arm_status", False)
+        arm_motor_temp_high = data.get("armMotorTempHigh", False)
+        arm_pos_is_updating = data.get("armPosIsUpdating", False)
+        arm_status = data.get("armStatus", False)
 
-        if not arm_motor_temp_high and arm_pos_is_updating and arm_status:
+        if not arm_motor_temp_high  and arm_status:
             gantry_arm = 4 # Everything is good
-        elif data.get("arm_motor_temp_high", False):
+        elif data.get("armMotorTempHigh", False):
             gantry_arm = 1 # Arm motor is overheating
-        elif data.get("arm_status", False):
+        elif data.get("armStatus", False):
             gantry_arm = 2 # Arm motor status is bad
-        elif data.get("arm_pos_is_updating", False):
+        elif data.get("armPosIsUpdating", False):
             gantry_arm = 3 # Arm motor position isnt updating
         else:
-            gantry_arm = 0 # Not recieving values
+            gantry_arm = 0 # Not receiving values
 
         # Defining Intake Value
-        effector_motor_temp_high = data.get("effector_motor_temp_high", False)
-        effector_pos_is_updating = data.get("effector_pos_is_updating", False)
+        effector_motor_temp_high = data.get("effectorMotorTempHigh", False)
+        effector_pos_is_updating = data.get("effectorPosIsUpdating", False)
 
-        if not effector_motor_temp_high and effector_pos_is_updating:
+        if not effector_motor_temp_high:
             intake = 3 # Everything is good
-        elif data.get("effector_motor_temp_high", False):
+        elif data.get("effectorMotorTempHigh", False):
             intake = 1 # EndEffector motor is overheating
-        elif data.get("effector_pos_is_updating", False):
+        elif data.get("effectorPosIsUpdating", False):
             intake = 2 # EndEffector motor position isnt updating
         else:
-            intake = 0 # Not recieving values
+            intake = 0 # Not receiving values
 
         # Defining Funnel Value
-        funnel_motor_temp_high = data.get("funnel_motor_temp_high", False)
-        funnel_pos_is_updating = data.get("funnel_pos_is_updating", False)
-        funnel_is_down = data.get("funnel_is_down", False)
-        funnel_is_up = data.get("funnel_is_up", False)
+        funnel_motor_temp_high = data.get("funnelMotorTempHigh", False)
+        funnel_pos_is_updating = data.get("funnelPosIsUpdating", False)
+        funnel_is_down = data.get("funnelIsDown", False)
+        funnel_is_up = data.get("funnelIsUp", False)
 
-        if not funnel_motor_temp_high and funnel_pos_is_updating and funnel_is_down:
+        if not funnel_motor_temp_high and funnel_is_down:
             funnel = 3 # Everything is good, funnel is down
         elif not funnel_motor_temp_high and funnel_pos_is_updating and funnel_is_up:
             funnel = 4 # Everything is good, funnel is up
-        elif data.get("funnel_motor_temp_high", False):
+        elif data.get("funnelMotorTempHigh", False):
             funnel = 1 # Funnel motor is overheating
-        elif data.get("funnel_pos_is_updating", False):
+        elif data.get("funnelPosIsUpdating", False):
             funnel = 2 # Funnel motor position isnt updating
         else:
-            funnel = 0 # Not recieving values
+            funnel = 0 # Not receiving values
 
         # Defining Climber Value
-        climber_motor_temp_high = data.get("climber_motor_temp_high", False)
-        climber_pos_is_updating = data.get("climber_pos_is_updating", False)
-        climber_calibrated = data.get("climber_calibrated", False)
-        climber_is_in = data.get("climber_is_in", False)
-        climber_is_out = data.get("climber_is_out", False)
+        climber_motor_temp_high = data.get("climberMotorTempHigh", False)
+        climber_pos_is_updating = data.get("climberPosIsUpdating", False)
+        climber_calibrated = data.get("climberCalibrated", False)
+        climber_is_in = data.get("climberIsIn", False)
+        climber_is_out = data.get("climberIsOut", False)
 
-        if not climber_motor_temp_high and climber_pos_is_updating and climber_calibrated and climber_is_in:
+        if not climber_motor_temp_high and climber_calibrated and climber_is_in:
             climber = 4 # Everything is good, climber is in
         elif not climber_motor_temp_high and climber_pos_is_updating and climber_calibrated and climber_is_out:
             climber = 5 # Everything is good, climber is out
-        elif data.get("climber_motor_temp_high", False):
+        elif data.get("climberMotorTempHigh", False):
             climber = 1 # Climber motor is overheating
-        elif data.get("climber_calibrated", False):
+        elif data.get("climberCalibrated", False):
             climber = 2 # Climber motor isnt calibrated
-        elif data.get("climber_pos_is_updating", False):
+        elif data.get("climberPosIsUpdating", False):
             climber = 3 # Climber motor position isnt updating
         else:
-            climber = 0 # Not recieving values
+            climber = 0 # Not receiving values
 
         # Format the final string with the required pattern
         message = f"<{gamepiece}, {cameras}, {gyro_value}, {match_time}, {drivetrain}, {elevator}, {gantry_arm}, {intake}, {funnel}, {climber}>\n"
