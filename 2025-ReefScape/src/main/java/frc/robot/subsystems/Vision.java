@@ -213,9 +213,6 @@ public class Vision extends SubsystemBase {
       nt_posefront.set(cam1result);
     };
 
-    photonPoseEstimatorFront.setReferencePose(PoseEstimator.getInstance().m_finalPose3d);
-    photonPoseEstimatorRear.setReferencePose(PoseEstimator.getInstance().m_finalPose3d);
-
     nt_cam1IsConnected.set(cam1.isConnected());
     nt_cam2IsConnected.set(cam2.isConnected());
 
