@@ -18,6 +18,7 @@ import frc.robot.Constants.ArmConstants;
 import frc.robot.Constants.AutoConstants;
 import frc.robot.Constants.EffectorConstants;
 import frc.robot.Constants.ScoreConstants;
+import frc.robot.Constants.VisionConstants;
 import frc.robot.Constants.ScoreConstants.ScoreLevel;
 import frc.utils.VectorUtils;
 
@@ -94,19 +95,25 @@ public class AutoCommands {
     }
     
     public static Command GetCoral(int tagId){
-        return Commands.sequence(
-            new InstantCommand(() -> Elevator.getInstance().setPosition(0)),
-            new InstantCommand(() -> Arm.getInstance().setPosition(ArmConstants.kAngleMax)),
+        return Commands.parallel(
             Commands.sequence(
-                new InstantCommand(() -> PathPlanning.getInstance().navigateTo(PathPlanning.AprilTagAtDistance(tagId, -AutoConstants.kSourceStartingDistance - Constants.kChassis.kWheelBase/2.0, Math.PI))),
+                Commands.waitUntil(() -> !Autonomous.getInstance().isInsideReef()),
+                new InstantCommand(() -> {
+                    Elevator.getInstance().setPosition(0);
+                    Arm.getInstance().setPosition(ArmConstants.kAngleMax);
+                })),
+            Commands.sequence(
+                new InstantCommand(() -> {
+                    PathPlanning.getInstance().navigateTo(PathPlanning.AprilTagAtDistance(tagId, -AutoConstants.kSourceStartingDistance - Constants.kChassis.kWheelBase/2.0, Math.PI));
+                }),
                 new InstantCommand(() -> PathPlanning.getInstance().navigateTo(PathPlanning.AprilTagAtDistance(tagId, -AutoConstants.kSourceDistance - Constants.kChassis.kWheelBase/2.0, Math.PI))),
-                Commands.waitUntil(() -> VectorUtils.isNear(PoseEstimator.getInstance().m_finalPose,PathPlanning.AprilTagAtDistance(tagId, -AutoConstants.kSourceDistance - Constants.kChassis.kWheelBase/2.0), AutoConstants.kSourceTolerance)),
+                Commands.waitUntil(() -> VectorUtils.isNear(PoseEstimator.getInstance().m_finalPose,PathPlanning.AprilTagAtDistance(tagId, -AutoConstants.kSourceStartingDistance - Constants.kChassis.kWheelBase/2.0), AutoConstants.kSourceTolerance)),
                 Commands.parallel(
                     EndEffector.getInstance().IntakeCommand().asProxy(),
                     wiggle.asProxy()
                 ).withTimeout(5)
             ).repeatedly().handleInterrupt(()->DriveTrain.getInstance().m_poseQueue.clear())
-        ).until(()->EndEffector.getInstance().hasGamePiece());
+        ).until(()->{return !Autonomous.getInstance().isInsideReef() && EndEffector.getInstance().hasGamePiece();});
     }
 
     public static Command wiggle = Commands.sequence(
@@ -172,18 +179,18 @@ public class AutoCommands {
         );
 
         return Commands.sequence(
-            new InstantCommand(() -> Elevator.getInstance().moveToLevel(level)),
-            Commands.parallel(
-                Commands.sequence(new InstantCommand(() -> Arm.getInstance().moveToLevel(level))),
-                new InstantCommand(() -> Autonomous.getInstance().m_drivingToReef = true),
-                new InstantCommand(() -> PathPlanning.getInstance().navigateTo(target1))
-            ),
-            Commands.waitUntil(() -> Arm.getInstance().isAtPosition() && Elevator.getInstance().isAtPosition()),
+            new InstantCommand(()->{Autonomous.getInstance().m_drivingToReef = true;
+                                    Autonomous.getInstance().aimAtPoint(Autonomous.reefCenter(), VisionConstants.frontCamera.kCamYawRight);
+                                    PathPlanning.getInstance().navigateTo(target1);
+                                }),
             new InstantCommand(() -> PathPlanning.getInstance().navigateTo(target2)),
+            Commands.waitUntil(() -> DriveTrain.getInstance().m_poseQueue.isEmpty() || DriveTrain.getInstance().m_isStoppedConfirmed || VectorUtils.isNear(PoseEstimator.getInstance().m_finalPose, target1, AutoConstants.kReefArmupTolerance)).withTimeout(3),
+            new InstantCommand(() -> Elevator.getInstance().moveToLevel(level)),
+            Commands.sequence(new InstantCommand(() -> Arm.getInstance().moveToLevel(level))),
+            new InstantCommand(() -> Autonomous.getInstance().stopAiming()),
             Commands.waitUntil(() -> DriveTrain.getInstance().m_poseQueue.isEmpty() || DriveTrain.getInstance().m_isStoppedConfirmed || VectorUtils.isNear(PoseEstimator.getInstance().m_finalPose, target2, AutoConstants.kReefTolerance)).withTimeout(6),
-            EndEffector.getInstance().ExpelCommand(()->(level == ScoreLevel.TROUGH ? EffectorConstants.kTroughOuttakeSpeed : EffectorConstants.kOuttakeSpeed), ()->level==ScoreLevel.TROUGH).withTimeout(3),
-            new InstantCommand(() -> PathPlanning.getInstance().navigateTo(target1)),
-            Commands.waitUntil(() -> DriveTrain.getInstance().m_poseQueue.isEmpty() || VectorUtils.isNear(PoseEstimator.getInstance().m_finalPose, target1, AutoConstants.kReefTolerance))
+            Commands.waitUntil(() -> Arm.getInstance().isAtPosition() && Elevator.getInstance().isAtPosition()),
+            EndEffector.getInstance().ExpelCommand(()->(level == ScoreLevel.TROUGH ? EffectorConstants.kTroughOuttakeSpeed : EffectorConstants.kOuttakeSpeed), ()->level==ScoreLevel.TROUGH).withTimeout(1.5)
         );
     }
     
@@ -192,14 +199,14 @@ public class AutoCommands {
         Pose2d target1 = PathPlanning.PoseAtDistance(target,
             new Translation2d(
                 - AutoConstants.kReefStartingDistance - Constants.kChassis.kWheelBase/2.0,
-                Constants.AutoConstants.kReefOffset * (left ? 1 : -1) + 2*0.0254
+                Constants.AutoConstants.kReefOffset * (left ? 1 : -1) +  Constants.AutoConstants.kStaticReefOffset
             ),Units.degreesToRadians(15)
         );
                 
         Pose2d target2 = PathPlanning.PoseAtDistance(target,
             new Translation2d(
                 - AutoConstants.kReefDistance - Constants.kChassis.kWheelBase/2.0,
-                Constants.AutoConstants.kReefOffset * (left ? 1 : -1) + 2*0.0254
+                Constants.AutoConstants.kReefOffset * (left ? 1 : -1) +  Constants.AutoConstants.kStaticReefOffset
             )
         );
 

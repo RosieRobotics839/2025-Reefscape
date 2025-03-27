@@ -28,6 +28,12 @@ public class Hysteresis {
     public void set(boolean state){
         m_state = state;
     }
+
+    /**
+     * Specifies the amount the value needs to increase or decrease above the threshold in order to change the state.
+     * @param hysteresis
+     * @return
+     */
     public Hysteresis withHysteresis(double hysteresis){
         m_hysteresis = hysteresis;
         return this;
@@ -44,5 +50,7 @@ public class Hysteresis {
         m_onFalse = action;
         return this;
     }
-
+    public Boolean get(){
+        return m_state;
+    }
 }

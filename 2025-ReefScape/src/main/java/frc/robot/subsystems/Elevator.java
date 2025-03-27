@@ -13,9 +13,11 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.Robot;
 import frc.robot.Constants.ElevatorConstants;
 import frc.robot.Constants.ScoreConstants;
 import frc.robot.Constants.ScoreConstants.ScoreLevel;
+import frc.utils.Action;
 import frc.utils.Motor;
 import frc.utils.Motor.GainSlot;
 import frc.utils.NTValues.NTBoolean;
@@ -32,6 +34,8 @@ public class Elevator extends SubsystemBase {
     public static Elevator getInstance(){
         return instance;
     }
+
+    Action m_tipProtect = new Action(false).onTrue(()->{Controller.getAccessoryInstance().m_directElevator=false; moveToLevel(ScoreLevel.FUNNEL);});
 
     public Motor m_EleMotor;
     boolean setupElevator = false;
@@ -179,13 +183,18 @@ public class Elevator extends SubsystemBase {
     @Override
     public void periodic() {
 
+        if (Robot.isSimulation()){
+            m_isCalibrated.set(true);
+        }
         if (DriverStation.isDisabled()){
             m_targetHeight = getPosition();
         }
 
+        m_tipProtect.calculate(Gyro.getInstance().isTipping());
+        
         // Start calibration sequence
         if (DriverStation.isEnabled()){
-            if (!m_isCalibrated.get() && m_isCalibrating.get()==0){
+            if (Robot.isReal() && !m_isCalibrated.get() && m_isCalibrating.get()==0){
                 m_calibrate.schedule();
             }
 

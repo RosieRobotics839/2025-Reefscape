@@ -12,7 +12,11 @@ import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
+import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
@@ -30,6 +34,7 @@ import frc.robot.subsystems.LED;
 import frc.robot.subsystems.PathPlanning;
 import frc.robot.subsystems.Vision;
 import frc.utils.Action;
+import frc.utils.KrakenOrchestra;
 import frc.robot.subsystems.PoseEstimator;
 import frc.robot.subsystems.SystemLog;
 
@@ -53,6 +58,7 @@ public class Robot extends TimedRobot {
   public Arm m_arm = Arm.getInstance();
   public Climber m_climber = Climber.getInstance();
   public Funnel m_funnel = Funnel.getInstance();
+  public KrakenOrchestra m_orchestra = KrakenOrchestra.getInstance();
 
   Alliance myAlliance = Alliance.Red;
 
@@ -60,22 +66,29 @@ public class Robot extends TimedRobot {
   {
     if (Robot.isSimulation()){
       nt_smartdashboard.getStringTopic("Auto Selector").publish().set("Build Your Own A(uto)dventure");
-      nt_smartdashboard.getStringTopic("DB/String 0").publish().set("Get.Left");
-      nt_smartdashboard.getStringTopic("DB/String 1").publish().set("Score.SS.Left.4");
-      nt_smartdashboard.getStringTopic("DB/String 2").publish().set("Get.Left");
-      nt_smartdashboard.getStringTopic("DB/String 3").publish().set("Score.SS.Right.4");
-      nt_smartdashboard.getStringTopic("DB/String 4").publish().set("");
-      nt_smartdashboard.getStringTopic("DB/String 5").publish().set("");
-      nt_smartdashboard.getStringTopic("DB/String 6").publish().set("");
-      nt_smartdashboard.getStringTopic("DB/String 7").publish().set("");
+      nt_smartdashboard.getStringTopic("DB/String 0").publish().set("Get.Right");
+      nt_smartdashboard.getStringTopic("DB/String 1").publish().set("Score.NW.Left.4");
+      nt_smartdashboard.getStringTopic("DB/String 2").publish().set("Get.Right");
+      nt_smartdashboard.getStringTopic("DB/String 3").publish().set("Score.SW.Right.4");
+      nt_smartdashboard.getStringTopic("DB/String 4").publish().set("Get.Left");
+      nt_smartdashboard.getStringTopic("DB/String 5").publish().set("Score.NE.Left.4");
+      nt_smartdashboard.getStringTopic("DB/String 6").publish().set("Get.Left");
+      nt_smartdashboard.getStringTopic("DB/String 7").publish().set("Score.SE.Left.4");
       nt_smartdashboard.getStringTopic("DB/String 8").publish().set("");
       nt_smartdashboard.getStringTopic("DB/String 9").publish().set("");
     }
   }
   public boolean changedAlly = true;
+  private boolean orchestraIsPlaying = false;
+  public String selectedChoice;
+  public String selectedSong;
+  private static final String START_MUSIC = "playing";
+  private static final String STOP_MUSIC = "notPlaying";
 
   private Debouncer m_recording = new Debouncer(10, Debouncer.DebounceType.kFalling);
   private Action m_recordTrigger = new Action(false).onTrue(()->DataLogManager.start()).onFalse(()->DataLogManager.stop());
+  private SendableChooser<String> songChooser = new SendableChooser<>();
+  private SendableChooser<String> startStop = new SendableChooser<>();
 
   /**
    * This function is run when the robot is first started up and should be used for any
@@ -83,6 +96,30 @@ public class Robot extends TimedRobot {
    */
   public Robot() {
     addPeriodic(()->Controller.getAccessoryInstance().accessoryPeriodic(),0.020,0.010);
+
+    // Song Chooser for Music Playing
+    songChooser.setDefaultOption("Song 10", Filesystem.getDeployDirectory() + "/" + "song10.chrp");
+    songChooser.addOption("Congrats", Filesystem.getDeployDirectory() + "/" + "congrats.chrp");
+    songChooser.addOption("Under The Sea", Filesystem.getDeployDirectory() + "/" + "underthesea.chrp");
+    songChooser.addOption("SpongeBob Opening Song", Filesystem.getDeployDirectory() + "/" + "spongebobopening.chrp");
+    songChooser.addOption("Wellerman Sea Shanty", Filesystem.getDeployDirectory() + "/" + "wellerman.chrp");
+    songChooser.addOption("Jeopardy", Filesystem.getDeployDirectory() + "/" + "jeopardy.chrp");
+    songChooser.addOption("Song 2", Filesystem.getDeployDirectory() + "/" + "song2.chrp");
+    songChooser.addOption("Song 5", Filesystem.getDeployDirectory() + "/" + "song5.chrp");
+    songChooser.addOption("Eye Of The Tiger", Filesystem.getDeployDirectory() + "/" + "eyetiger.chrp");
+    songChooser.addOption("He's a Pirate", Filesystem.getDeployDirectory() + "/" + "hepirate.chrp");
+    songChooser.addOption("Up is Down", Filesystem.getDeployDirectory() + "/" + "updown.chrp");
+    songChooser.addOption("Davy Jones' Theme", Filesystem.getDeployDirectory() + "/" + "davyjones.chrp");
+
+    startStop.setDefaultOption("Stop", STOP_MUSIC);
+    startStop.addOption("Start", START_MUSIC);
+
+    Shuffleboard.getTab("Music")
+    .add("Song Selector", songChooser)
+    .withWidget(BuiltInWidgets.kComboBoxChooser);
+    Shuffleboard.getTab("Music")
+    .add("Music Control", startStop)
+    .withWidget(BuiltInWidgets.kComboBoxChooser);
   }
 
   /**
@@ -121,6 +158,11 @@ public class Robot extends TimedRobot {
       Gyro.getInstance().setGyroInit((myAlliance == Alliance.Blue ? 0 : Math.PI), 0, 0);
       PathPlanning.getInstance().calcFieldGraph();
     }
+
+    // Synchronize the orchestra flag with the actual playing state
+    if (orchestraIsPlaying != m_orchestra.isPlaying()) {
+        orchestraIsPlaying = m_orchestra.isPlaying();
+    }
   
   }
 
@@ -147,8 +189,11 @@ public class Robot extends TimedRobot {
     PoseEstimator.getInstance().m_field.getObject("poseFrom").setPose(0,0, new Rotation2d(0));
   }
 
-   @Override
+  @Override
   public void autonomousInit() {
+
+    m_orchestra.stopMusic(); // Stopping music when we switch to auto mode
+    orchestraIsPlaying = false;
 
     switch(SmartDashboard.getString("Auto Selector", "Build Your Own A(uto)dventure")) {
       default:
@@ -175,7 +220,8 @@ public class Robot extends TimedRobot {
   @Override
   public void teleopInit() {
 
-    //IntakeShooter.getInstance().m_aimForDistance = false;
+    m_orchestra.stopMusic(); // Stopping music when we switch to teleop mode
+    orchestraIsPlaying = false;
     DriveTrain.getInstance().m_poseQueue.clear();
     Autonomous.getInstance().stopAiming();
     if (m_autonomousCommand != null) {
@@ -196,7 +242,20 @@ public class Robot extends TimedRobot {
 
   /** This function is called periodically when disabled. */
   @Override
-  public void disabledPeriodic() {}
+  public void disabledPeriodic() {
+
+    selectedSong = songChooser.getSelected();
+    selectedChoice = startStop.getSelected();
+        if (!DriverStation.isFMSAttached() && !isTeleopEnabled() && START_MUSIC.equals(selectedChoice) && m_orchestra.isReady()) {
+            if (!orchestraIsPlaying) {
+              m_orchestra.playMusic(selectedSong);
+              orchestraIsPlaying = true;
+            }
+        } else if (!DriverStation.isFMSAttached() && !isTeleopEnabled() && STOP_MUSIC.equals(selectedChoice)) {
+            m_orchestra.stopMusic();
+            orchestraIsPlaying = false;
+        }
+  }
 
   /** This function is called once when test mode is enabled. */
   @Override

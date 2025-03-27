@@ -80,9 +80,6 @@ public class Motor extends SubsystemBase {
     boolean m_lowspeedreverse;
     ControlType m_controlType = ControlType.NONE;
     GainSlot m_gainslot = GainSlot.POSITION;
-
-    double m_testSpeed;
-    double m_testPosition;
     
     Boolean m_isStopped = true;
     boolean m_testEnable;
@@ -764,7 +761,7 @@ public class Motor extends SubsystemBase {
                 case NEO:
                     break;
                 case SIMULATED:
-                    if (m_testPosition == 0){
+                    if (m_controlType == ControlType.SPEED){
                         m_simPosition = m_simPosition + m_simSpeed * 0.020; // Move simulated motor over a 20ms period.
                     }
                     break;
