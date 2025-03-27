@@ -35,7 +35,7 @@ public class Elevator extends SubsystemBase {
         return instance;
     }
 
-    Action m_tipProtect = new Action(false).onTrue(()->{moveToLevel(ScoreLevel.TROUGH); Controller.getAccessoryInstance().m_directElevator=false;});
+    Action m_tipProtect = new Action(false).onTrue(()->{Controller.getAccessoryInstance().m_directElevator=false; moveToLevel(ScoreLevel.FUNNEL);});
 
     public Motor m_EleMotor;
     boolean setupElevator = false;

@@ -48,7 +48,7 @@ public class Arm extends SubsystemBase{
     boolean scoringLevels2or3 = false;
     boolean scoringLevel4 = false;
 
-    Action m_tipProtect = new Action(false).onTrue(()->{moveToLevel(ScoreLevel.TROUGH); Controller.getAccessoryInstance().m_directArm=false;});
+    Action m_tipProtect = new Action(false).onTrue(()->{Controller.getAccessoryInstance().m_directArm=false; moveToLevel(ScoreLevel.FUNNEL);});
     
     DoublePublisher
         nt_positionSensor,

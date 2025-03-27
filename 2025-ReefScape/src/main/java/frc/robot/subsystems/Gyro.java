@@ -69,6 +69,11 @@ public class Gyro extends SubsystemBase {
   final DoublePublisher nt_roll = table.getDoubleTopic("roll").publish();
   final DoublePublisher nt_offset = table.getDoubleTopic("offset").publish();
   final BooleanPublisher nt_status = table.getBooleanTopic("status").publish();
+  final BooleanPublisher nt_isTipped = table.getBooleanTopic("isTipped").publish();
+  final DoublePublisher nt_tipHeading = table.getDoubleTopic("tipHeading").publish();
+  final DoublePublisher nt_gvx = table.getDoubleTopic("gvx").publish();
+  final DoublePublisher nt_gvy = table.getDoubleTopic("gvy").publish();
+  final DoublePublisher nt_gvz = table.getDoubleTopic("gvz").publish();
 
   final NTDouble nt_simOffset = new NTDouble(0.0,table,"CAUTION/offset",val->initypr[0]=initypr[0]+val); {nt_simOffset.resetOnRecv=true;}
   final DoublePublisher nt_simYaw = table.getDoubleTopic("sim/yaw").publish();
@@ -109,8 +114,8 @@ public class Gyro extends SubsystemBase {
     
     // Get new ypr values in degrees
     double [] newypr = getypr();
-
-    m_isTipped.calculate(m_enableTipDetection ? VectorUtils.SRSS(getPitch(),getRoll()) : 0);
+    getTippingAngle();
+    m_isTipped.calculate(m_enableTipDetection ? VectorUtils.SRSS(VectorUtils.angleDifference(0,getPitch()),VectorUtils.angleDifference(0,getRoll())) : 0);
 
     // Convert the continuous values offset by the init or vision correction to radians, this outputs values between 0 and 2*pi
     ypr[0] = (((newypr[0]+initypr[0]) % 360)*(Math.PI)/180.0 + 2*Math.PI) % (2*Math.PI);
@@ -122,6 +127,7 @@ public class Gyro extends SubsystemBase {
       initypr[0] += 180.0/Math.PI * Math.max(Math.min(VectorUtils.angleDifference(PoseEstimator.getInstance().m_visionTheta.getRadians(),ypr[0]), GyroConstants.kVisionCorrectionMaxRate * 0.020), -GyroConstants.kVisionCorrectionMaxRate * 0.020);
     }
 
+    nt_isTipped.set(m_isTipped.get());
     nt_status.set(getStatus());
     nt_yaw.set(Units.radiansToDegrees(ypr[0]));
     nt_pitch.set(Units.radiansToDegrees(ypr[1]));
@@ -141,8 +147,8 @@ public class Gyro extends SubsystemBase {
       simstate.addYaw(Units.radiansToDegrees(VectorUtils.angleDifference(simyawrad,lastSimYawRad)));
     }
     double yaw = (pidgey.getYaw().getValueAsDouble() % 360 + 360) % 360;
-    double pitch = pidgey.getPitch().getValueAsDouble();
-    double roll = pidgey.getRoll().getValueAsDouble(); 
+    double pitch = pidgey.getRoll().getValueAsDouble();
+    double roll = pidgey.getPitch().getValueAsDouble(); 
 
     return new double[]{yaw, pitch, roll};
   }
@@ -165,12 +171,16 @@ public class Gyro extends SubsystemBase {
    * @return angle from forward in radians
    */
   public double getTippingAngle(){
-    double gvx = pidgey.getGravityVectorX().getValueAsDouble();
-    double gvy = pidgey.getGravityVectorY().getValueAsDouble();
-    if (gvx <= 1e-6 && gvy <= 1e-6){
+    double gvx = -pidgey.getGravityVectorY().getValueAsDouble();
+    double gvy = pidgey.getGravityVectorX().getValueAsDouble();
+    nt_gvx.set(gvx);
+    nt_gvy.set(gvy);
+    if (Math.abs(gvx) <= 1e-6 && Math.abs(gvy) <= 1e-6){
       return 0;
     }
-    return new Translation2d(gvx,gvy).getAngle().getRadians();
+    double tipHeading = new Translation2d(gvx,gvy).getAngle().getRadians();
+    nt_tipHeading.set(Units.radiansToDegrees(tipHeading));
+    return tipHeading;
   }
 
   public void resetPrimarySensor() {
