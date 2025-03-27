@@ -70,6 +70,8 @@ public class DriveTrain extends SubsystemBase {
     m_maxRotate = maxRotateRadiansPerSecond;
   }
 
+  public boolean m_tippingRecovery = false;
+
   // Create new swerve modules
   public SwerveModule frontLeft = new SwerveModule(kDriveTrain.kSwerveModule.kCANID_FrontLeft, kDriveTrain.kSwerveModule.kCalibrationFrontLeft, "frontLeft");
   public SwerveModule frontRight = new SwerveModule(kDriveTrain.kSwerveModule.kCANID_FrontRight, kDriveTrain.kSwerveModule.kCalibrationFrontRight, "frontRight");
@@ -321,7 +323,14 @@ public class DriveTrain extends SubsystemBase {
       m_targetHeading = m_currentHeading;
     }
 
-    RunDrive();
+    // If robot is tipping, align the swerve modules in the direction of the tip only let the motors drive away from the obstacle.
+    if (Gyro.getInstance().isTipping()){
+      double speed = VectorUtils.SRSS(FlightStick.forward, FlightStick.left)*m_maxSpeed;
+      SwerveModuleState state = new SwerveModuleState(speed,new Rotation2d(Gyro.getInstance().getTippingAngle()));
+      forEachSwerveModule((m)->{m.setState(state);});
+    } else {
+      RunDrive();
+    }
   }
 
   public static void forEachSwerveModule(Consumer<SwerveModule> lambda){

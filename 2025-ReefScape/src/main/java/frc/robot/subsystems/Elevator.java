@@ -17,6 +17,7 @@ import frc.robot.Robot;
 import frc.robot.Constants.ElevatorConstants;
 import frc.robot.Constants.ScoreConstants;
 import frc.robot.Constants.ScoreConstants.ScoreLevel;
+import frc.utils.Action;
 import frc.utils.Motor;
 import frc.utils.Motor.GainSlot;
 import frc.utils.NTValues.NTBoolean;
@@ -33,6 +34,8 @@ public class Elevator extends SubsystemBase {
     public static Elevator getInstance(){
         return instance;
     }
+
+    Action m_tipProtect = new Action(false).onTrue(()->{Controller.getAccessoryInstance().m_directElevator=false; moveToLevel(ScoreLevel.FUNNEL);});
 
     public Motor m_EleMotor;
     boolean setupElevator = false;
@@ -187,6 +190,8 @@ public class Elevator extends SubsystemBase {
             m_targetHeight = getPosition();
         }
 
+        m_tipProtect.calculate(Gyro.getInstance().isTipping());
+        
         // Start calibration sequence
         if (DriverStation.isEnabled()){
             if (Robot.isReal() && !m_isCalibrated.get() && m_isCalibrating.get()==0){
