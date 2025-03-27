@@ -69,18 +69,6 @@ public class Autonomous extends SubsystemBase {
     add(new Translation2d(9.5, 4.475));
     add(new Translation2d(9.5, 3.46));
   }};
-  //public static List<Translation2d> bluespeaker = new ArrayList<Translation2d>(){{
-  //  add(new Translation2d(0,6.85));
-  //  add(new Translation2d(1.112,6.175));
-  //  add(new Translation2d(1.112, 4.724));
-  //  add(new Translation2d(0, 4.084));
-  //}};
-  //public static List<Translation2d> redspeaker = new ArrayList<Translation2d>(){{
-  //  add(new Translation2d(16.542,6.762));
-  //  add(new Translation2d(15.464,6.14));
-  //  add(new Translation2d(15.464, 4.672));
-  //  add(new Translation2d(16.542, 4.119));
-  //}};
 
   public static List<Translation2d> flipRedToBlue(List<Translation2d> obstacle){
     double halffield = Vision.getInstance().aprilTagFieldLayout.getFieldLength()/2.0;
@@ -183,7 +171,5 @@ public class Autonomous extends SubsystemBase {
       DriveTrain.getInstance().setTargetHeading(heading + m_aimPointRotationOffset);
     }
 
-    //boolean insideStage = PathfindingUtils.PointInPolygon(PoseEstimator.getInstance().m_finalPose.getTranslation(), bluestage);
-    //nt_instage.set(insideStage);
   }
 }

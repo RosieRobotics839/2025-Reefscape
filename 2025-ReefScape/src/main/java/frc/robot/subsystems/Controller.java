@@ -11,6 +11,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
+import frc.utils.KrakenOrchestra;
 import frc.utils.VectorUtils;
 import frc.utils.NTValues.NTBoolean;
 import frc.utils.NTValues.NTDouble;
@@ -46,6 +47,7 @@ public class Controller extends XboxController {
   public static Controller accessoryController = new Controller(1);
   
   public static AccessoryButtons accessoryButtons = new AccessoryButtons(accessoryController);
+  public static KrakenOrchestra m_orchestra = KrakenOrchestra.getInstance();
 
   public static Controller getDriveInstance(){
     return driveController;
@@ -126,6 +128,7 @@ public class Controller extends XboxController {
 
   public static class AccessoryButtons {
     public JoystickButton Intake, Outtake, ClimberIn, ClimberOut, ByeAlgae, StageDial0, StageDial1, StageDial2, StageDial3, StageDial4, LeftScore, RightScore, RS, Home;
+    //public POVButton DPadUp, DPadRight, DPadDown, DPadLeft;
 
     public Command disableDirectControl(){
       return new InstantCommand(()->{getAccessoryInstance().m_directElevator = false; getAccessoryInstance().m_directArm = false;});
@@ -133,11 +136,6 @@ public class Controller extends XboxController {
 
     ScoreConstants.ScoreLevel m_level;
     public Command m_expel = EndEffector.getInstance().ExpelCommand(()->(m_level == ScoreLevel.TROUGH ? EffectorConstants.kTroughOuttakeSpeed : EffectorConstants.kOuttakeSpeed), ()->m_level==ScoreLevel.TROUGH);
-
-    // boolean that decides which game piece we are handling
-    boolean isAlgaeSelected = false;  // Initially set to false (CORAL)
-
-    NTBoolean nt_algaeSelected = new NTBoolean(false,table,"algaeSelected",(val)->{});
 
     AccessoryButtons(Controller controller){
 
@@ -156,7 +154,7 @@ public class Controller extends XboxController {
 
       //RS       = new JoystickButton(controller, 12); // Right Stick Click
       //Home     = new JoystickButton(controller, 13); // Home Button
-      //DPadUp    = new POVButton(controller, 0);
+      //DPadUp     = new POVButton(controller, 0);
       //DPadRight    = new POVButton(controller, 90);
       //DPadDown    = new POVButton(controller, 180);
       //DPadLeft    = new POVButton(controller, 270);

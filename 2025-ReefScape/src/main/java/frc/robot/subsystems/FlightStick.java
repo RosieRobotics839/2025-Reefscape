@@ -84,44 +84,6 @@ public class FlightStick extends Joystick {
       }));
 
       Btm8Btn.onTrue(new InstantCommand(()->AutoCommands.DriveReefOffset(Controller.m_scoreLeft)));
-      // Btm4Btn.onFalse(new InstantCommand(() -> {
-      //   IntakeShooter.getInstance().setIntakeSpeed(0);
-      // }));
-      // Btm5Btn.onTrue(new InstantCommand(() -> {
-      //   IntakeShooter.getInstance().setShooterSpeed(1);
-      // }));
-      // Btm5Btn.onFalse(new InstantCommand(() -> {
-      //   IntakeShooter.getInstance().setShooterSpeed(0);
-      // }));
-
-
-        /* Aim at Speaker */
-
-      /* Btm8Btn.onTrue(new InstantCommand(()->{
-        Autonomous.getInstance().aimAtPoint(Vision.getInstance().aprilTagFieldLayout.getTagPose(AutonomousCommands.speakerTag()).get().toPose2d(),Units.degreesToRadians(180));
-      }));
-      Btm8Btn.onFalse(new InstantCommand(()->{
-        Autonomous.getInstance().stopAiming();
-      }));
-
-
-      Btm7Btn.onTrue(new InstantCommand(()->{
-        Autonomous.getInstance().aimAtPoint(Vision.getInstance().aprilTagFieldLayout.getTagPose(AutonomousCommands.ampTag()).get().toPose2d(),Units.degreesToRadians(180));
-      }));
-      Btm7Btn.onFalse(new InstantCommand(()->{
-        Autonomous.getInstance().stopAiming();
-      })); */
-      /* Go to HP / Amp */
-
-      /* Top4Btn.onTrue(new InstantCommand(()->{
-        PathPlanning.getInstance().navigateTo(new Pose2d(PathPlanning.AprilTagAtDistance(5,Units.feetToMeters(2)).getTranslation(),new Rotation2d(Units.degreesToRadians(-90))));
-        IntakeShooter.getInstance().setShooterAngle(ShooterConstants.kAnglePreset.Amp);
-      }));
-      Top3Btn.onTrue(new InstantCommand(()->{
-        PathPlanning.getInstance().navigateTo(new Pose2d(PathPlanning.AprilTagAtDistance(4,Units.feetToMeters(6)).getTranslation(),new Rotation2d(Units.degreesToRadians(180))));
-        IntakeShooter.getInstance().setShooterAngle(ShooterConstants.kAnglePreset.Speaker);
-      })); */
-
 
       /* Swap between field centric and proportional */
 
@@ -135,22 +97,6 @@ public class FlightStick extends Joystick {
         DriveTrain.getInstance().setMaxRotate(DriveConstants.kMaxRotationVelocity[m_speedSelector]);
       }));
 
-
-      /* Intake in */
-      /* Btm10Btn.onTrue(new InstantCommand(() -> {
-        IntakeShooter.getInstance().setIntakeSpeedRatio(1);
-      }));
-      Btm10Btn.onFalse(new InstantCommand(() -> {
-        IntakeShooter.getInstance().setIntakeSpeedRatio(0);
-      }));
-      Btm12Btn.whileTrue(new RepeatCommand(new InstantCommand(() -> {
-        m_preventDriverRotation = true;
-        Autonomous.getInstance().aimAtNote();
-      })));
-      Btm12Btn.onFalse(new InstantCommand(() -> {
-        m_preventDriverRotation = false;
-        Vision.getInstance().unlockTarget();
-      })); */
     }
   }
 
