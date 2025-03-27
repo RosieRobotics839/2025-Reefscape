@@ -216,11 +216,6 @@ public class Vision extends SubsystemBase {
     photonPoseEstimatorFront.setReferencePose(PoseEstimator.getInstance().m_finalPose3d);
     photonPoseEstimatorRear.setReferencePose(PoseEstimator.getInstance().m_finalPose3d);
 
-    var cam1result = processCamera(cam1, photonPoseEstimatorFront, false);
-    var cam2result = processCamera(cam2, photonPoseEstimatorRear, Autonomous.getInstance().m_drivingToReef);
-    
-    nt_posefront.set(cam1result);
-    nt_poserear.set(cam2result);
     nt_cam1IsConnected.set(cam1.isConnected());
     nt_cam2IsConnected.set(cam2.isConnected());
 
