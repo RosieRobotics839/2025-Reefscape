@@ -211,6 +211,8 @@ def send_to_arduino(ser, data):
                 funnel = 2  # Funnel up, everything good
             elif funnel_is_down:
                 funnel = 3  # Funnel down, everything good
+            else:
+                funnel = 0 # No current funnel state detected
         else:
             funnel = 0  # Not receiving values
 
