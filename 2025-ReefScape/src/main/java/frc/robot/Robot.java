@@ -102,12 +102,13 @@ public class Robot extends TimedRobot {
     songChooser.addOption("Congrats", Filesystem.getDeployDirectory() + "/" + "congrats.chrp");
     songChooser.addOption("Under The Sea", Filesystem.getDeployDirectory() + "/" + "underthesea.chrp");
     songChooser.addOption("SpongeBob Opening Song", Filesystem.getDeployDirectory() + "/" + "spongebobopening.chrp");
-    songChooser.addOption("Wellerman Sea Shanty", Filesystem.getDeployDirectory() + "/" + "wellerman.chrp");
+    //songChooser.addOption("Wellerman Sea Shanty", Filesystem.getDeployDirectory() + "/" + "wellerman.chrp"); This one sounds good but the other one might sound better, keep both
+    songChooser.addOption("Wellerman Sea Shanty", Filesystem.getDeployDirectory() + "/" + "wellermans.chrp");
     songChooser.addOption("Jeopardy", Filesystem.getDeployDirectory() + "/" + "jeopardy.chrp");
     songChooser.addOption("Song 2", Filesystem.getDeployDirectory() + "/" + "song2.chrp");
     songChooser.addOption("Song 5", Filesystem.getDeployDirectory() + "/" + "song5.chrp");
     songChooser.addOption("Eye Of The Tiger", Filesystem.getDeployDirectory() + "/" + "eyetiger.chrp");
-    songChooser.addOption("He's a Pirate", Filesystem.getDeployDirectory() + "/" + "hepirate.chrp");
+    songChooser.addOption("He's a Pirate", Filesystem.getDeployDirectory() + "/" + "hespirate.chrp");
     songChooser.addOption("Up is Down", Filesystem.getDeployDirectory() + "/" + "updown.chrp");
     songChooser.addOption("Davy Jones' Theme", Filesystem.getDeployDirectory() + "/" + "davyjones.chrp");
 
