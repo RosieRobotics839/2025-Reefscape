@@ -65,17 +65,13 @@ public class Climber extends SubsystemBase{
     public Command ClimberInCommand = Commands.sequence(
         Commands.repeatingSequence(
             new InstantCommand(() -> m_motor.setRelativePosition(ClimberConstants.kRotationInLead*0.020))
-        ).until(()->motorCal.get(m_angleSensor.get()) <= Units.radiansToRotations(ClimberConstants.kAngleIn)),
-            new InstantCommand(() -> hasReachedInPos = true),
-            new InstantCommand(() -> hasReachedOutPos = false)
+        ).until(()->motorCal.get(m_angleSensor.get()) <= Units.radiansToRotations(ClimberConstants.kAngleIn))
     );
     
     public Command ClimberOutCommand = Commands.sequence(
         Commands.repeatingSequence(
             new InstantCommand(() -> m_motor.setRelativePosition(ClimberConstants.kRotationOutLead*0.020))
-        ).until(()->motorCal.get(m_angleSensor.get()) >= Units.radiansToRotations(ClimberConstants.kAngleOut)),
-            new InstantCommand(() -> hasReachedOutPos = true),
-            new InstantCommand(() -> hasReachedInPos = false)
+        ).until(()->motorCal.get(m_angleSensor.get()) >= Units.radiansToRotations(ClimberConstants.kAngleOut))
     );
     
     public Climber(int CANID, int analogID) {
@@ -93,6 +89,13 @@ public class Climber extends SubsystemBase{
 
     @Override
     public void periodic() {
+
+        if (getPosition() <= ClimberConstants.kAngleIn) {
+            hasReachedInPos = true;
+        } else if (getPosition() >= ClimberConstants.kAngleOut) {
+            hasReachedOutPos = true;
+        }
+
         nt_targetPosition.set(m_motor.getTargetPosition());
         nt_position.set(m_motor.getPosition());
         nt_positionSensor.set(m_angleSensor.get());

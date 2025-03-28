@@ -25,8 +25,8 @@ public class Funnel extends SubsystemBase{
 
     public Motor m_motorFunnel;
     private double m_targetPosition;
-    public boolean funnelIsUp;
-    public boolean funnelIsDown;
+    public boolean funnelIsUp = false;
+    public boolean funnelIsDown = true;
 
     public Debouncer m_debouncer = new Debouncer(FunnelConstants.kFunnelStallSec, Debouncer.DebounceType.kRising);
     public NTBoolean m_isStalled = new NTBoolean(false, table, "stalled", null);
