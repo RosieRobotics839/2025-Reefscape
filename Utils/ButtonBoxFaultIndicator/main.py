@@ -144,7 +144,7 @@ def send_to_arduino(ser, data):
         # MATCH TIME
         remaining_match_time = data.get("remainingMatchTime")
 
-        match_time = remaining_match_time
+        match_time = int(remaining_match_time)
 
         # DRIVETRAIN VALUE (1: overheated, 2: not calibrated, 3: all good)
         drivetrain_motor_temp_high = data.get("driveTrainMotorsTempHigh")
