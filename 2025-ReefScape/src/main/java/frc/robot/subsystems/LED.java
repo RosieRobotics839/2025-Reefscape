@@ -36,6 +36,7 @@ public class LED extends SubsystemBase {
   public boolean m_effectorMotorTempHigh = false;
   public boolean m_funnelMotorTempHigh = false;
   public boolean m_climberMotorTempHigh = false;
+  public int TestTimeRemaining = 150; // 2 and a half minutes;
 
   BooleanPublisher nt_driveTrainMotorsTempHigh = table.getBooleanTopic("driveTrainMotorsTempHigh").publish();
   BooleanPublisher nt_elevatorMotorTempHigh = table.getBooleanTopic("elevatorMotorTempHigh").publish();
@@ -98,6 +99,25 @@ public class LED extends SubsystemBase {
     setPixels(c2, pixels2);
   }
 
+  private double lastTime = 0;
+
+  public void updateMatchTimer() {
+      double currentTime = Timer.getFPGATimestamp();
+      
+      if (DriverStation.isEnabled()) {
+          if (currentTime - lastTime >= 1.0) { // Decrease once per second
+              if (TestTimeRemaining > 0) {
+                  TestTimeRemaining--;
+              }
+              lastTime = currentTime;
+          }
+          
+          if (TestTimeRemaining < 30 && TestTimeRemaining > 25) {
+              flash(() -> setPixels(LEDConstants.kClimbColor, LEDConstants.kAllLEDs));
+          }
+      }
+  }
+
   boolean m_systemhealthy;
 
   @Override
@@ -106,6 +126,8 @@ public class LED extends SubsystemBase {
     m_systemhealthy = true;
     
     setPixels(LEDConstants.kUnhealthyColor, LEDConstants.kAllLEDs);
+
+    updateMatchTimer();
 
     /* Arm */
     
@@ -209,18 +231,8 @@ public class LED extends SubsystemBase {
       flash(()->setPixels(LEDConstants.kSetupAwarenessFailColor, LEDConstants.kGyroLEDs));
     }
 
-    int TestTimeRemaining = 7500; // 2 and a half minutes
-
     if (m_systemhealthy){
       setAltColors(LEDConstants.kHealthyColor1, LEDConstants.kHealthyColor2, LEDConstants.kAllLEDs);
-      if (DriverStation.isEnabled()){
-        if (TestTimeRemaining > 0){
-          TestTimeRemaining--;
-        }
-        if (/*timeRemaining < 30 && timeRemaining > 25*/ TestTimeRemaining < 30 && TestTimeRemaining > 25 ) {
-          flash(() ->setPixels(LEDConstants.kClimbColor, LEDConstants.kAllLEDs));
-        }
-      }
 	  }
       
       // Checking to see if we have a game piece
