@@ -27,7 +27,7 @@ public class Climber extends SubsystemBase{
     }
 
     public Motor m_motor;
-    public boolean hasReachedInPos = false;
+    public boolean hasReachedInPos = true;
     public CalibrationMap motorCal = new CalibrationMap(ClimberConstants.kCalibrationX, ClimberConstants.kCalibrationY);
     public DutyCycleEncoder m_angleSensor;
     public NTDouble nt_targetPosition = new NTDouble(0, table, "target", null);

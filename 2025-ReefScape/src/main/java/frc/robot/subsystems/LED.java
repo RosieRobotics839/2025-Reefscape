@@ -112,9 +112,6 @@ public class LED extends SubsystemBase {
               lastTime = currentTime;
           }
           
-          if (TestTimeRemaining < 30 && TestTimeRemaining > 25) {
-              flash(() -> setPixels(LEDConstants.kClimbColor, LEDConstants.kAllLEDs));
-          }
       }
   }
 
@@ -233,18 +230,24 @@ public class LED extends SubsystemBase {
 
     if (m_systemhealthy){
       setAltColors(LEDConstants.kHealthyColor1, LEDConstants.kHealthyColor2, LEDConstants.kAllLEDs);
+      if (DriverStation.isEnabled()) {
+        if (/*FMSTimeRemaining < 20 && FMSTimeRemaining > 17*/ TestTimeRemaining <= 20 && TestTimeRemaining >= 17) {
+          flash(() -> setPixels(LEDConstants.kClimbColor, LEDConstants.kAllLEDs));
+        }
+      }
 	  }
       
       // Checking to see if we have a game piece
-      if (EndEffector.getInstance().hasGamePiece()){
+      if (EndEffector.getInstance().hasGamePiece() && /*(FMSTimeRemaining > 20 || FMSTimeRemaining < 17)*/ (TestTimeRemaining > 20 || TestTimeRemaining < 17)){
         flash(()->setPixels(LEDConstants.kActivityColor, LEDConstants.kAllLEDs));
       }
 
       // Check PoseEstimator Updating
       PoseEstimator pe = PoseEstimator.getInstance();
-      if (pe.m_gyroResidual > LEDConstants.kPoseResidualRot || 
+      if ((pe.m_gyroResidual > LEDConstants.kPoseResidualRot || 
           pe.m_visionPoseResidual.getTranslation().getNorm() > LEDConstants.kPoseResidualDist ||
-          pe.m_visionPoseResidual.getRotation().getRadians() > LEDConstants.kPoseResidualRot){
+          pe.m_visionPoseResidual.getRotation().getRadians() > LEDConstants.kPoseResidualRot) &&
+          (/*FMSTimeRemaining > 20 || FMSTimeRemaining < 17*/ TestTimeRemaining > 20 || TestTimeRemaining < 17)){
           setPixels(LEDConstants.kActivityColor, LEDConstants.kAllLEDs);
       }
       
