@@ -35,6 +35,7 @@ import frc.robot.subsystems.PathPlanning;
 import frc.robot.subsystems.Vision;
 import frc.utils.Action;
 import frc.utils.KrakenOrchestra;
+import frc.utils.TwentyFiveChain;
 import frc.robot.subsystems.PoseEstimator;
 import frc.robot.subsystems.SystemLog;
 
@@ -59,6 +60,7 @@ public class Robot extends TimedRobot {
   public Climber m_climber = Climber.getInstance();
   public Funnel m_funnel = Funnel.getInstance();
   public KrakenOrchestra m_orchestra = KrakenOrchestra.getInstance();
+  public TwentyFiveChain chain = new TwentyFiveChain();
 
   Alliance myAlliance = Alliance.Red;
 
@@ -95,6 +97,7 @@ public class Robot extends TimedRobot {
    * initialization code.
    */
   public Robot() {
+    chain.whereIsIt("?");
     addPeriodic(()->Controller.getAccessoryInstance().accessoryPeriodic(),0.020,0.010);
 
     // Song Chooser for Music Playing
