@@ -59,6 +59,7 @@ public class DriveTrain extends SubsystemBase {
   private double m_forward, m_left, m_rotate;
   private double m_forwardcmd, m_leftcmd, m_rotatecmd;
   private boolean m_controllerInputActive = false;
+  private boolean headingLocked = false;
 
   private double m_maxSpeed = DriveConstants.kMaxSpeedMetersPerSecond[DriveConstants.kMaxSpeedDefault];
   private double m_maxRotate = DriveConstants.kMaxRotationVelocity[DriveConstants.kMaxSpeedDefault];
@@ -97,6 +98,7 @@ public class DriveTrain extends SubsystemBase {
   final DoublePublisher nt_distance = table.getDoubleTopic("distance").publish();
   final DoublePublisher nt_xtrackerr = table.getDoubleTopic("xtrackerr").publish();
   final BooleanPublisher nt_fieldCentricDriving = table.getBooleanTopic("HeadingPID/fieldCentricDriving").publish();
+  final BooleanPublisher nt_headingLocked = table.getBooleanTopic("HeadingPID/headingLocked").publish();
   BooleanPublisher nt_driveMotorSetupDone = table.getBooleanTopic("driveMotorSetupDone").publish();
 
   public PIDController m_headingPID;
@@ -197,8 +199,12 @@ public class DriveTrain extends SubsystemBase {
     lastTime = System.currentTimeMillis();
 
     /* Rotation Control Logic */
-    m_targetHeading += m_rotatecmd * dt * m_maxRotate;
-    m_targetHeading = MathUtil.inputModulus(m_targetHeading, 0, 2*Math.PI);
+    if (!headingLocked){ 
+      m_targetHeading += m_rotatecmd * dt * m_maxRotate;
+      m_targetHeading = MathUtil.inputModulus(m_targetHeading, 0, 2*Math.PI);
+    } else {
+      m_rotatecmd = 0;
+    }
     m_currentHeading = PoseEstimator.getInstance().m_finalPose.getRotation().getRadians();
     m_currentHeading = MathUtil.inputModulus(m_currentHeading, 0, 2*Math.PI);
     double directRotate = (Autonomous.getInstance().m_aimPoint == null ? DriveConstants.kRotationDirectControlRatio : 0);
@@ -254,7 +260,15 @@ public class DriveTrain extends SubsystemBase {
   }
 
   public void setTargetHeading(double targetHeading) {
+    if (!headingLocked) this.m_targetHeading = targetHeading;
+  }
+
+  public void lockTargetHeading(double targetHeading) {
     this.m_targetHeading = targetHeading;
+    headingLocked = true;
+  }
+  public void unlockTargetHeading() {
+    headingLocked = false;
   }
 
   public void syncHeading() {

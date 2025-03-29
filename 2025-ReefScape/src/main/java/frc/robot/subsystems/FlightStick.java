@@ -91,6 +91,8 @@ public class FlightStick extends Joystick {
       }));
 
       Btm8Btn.onTrue(new InstantCommand(()->AutoCommands.DriveReefOffset(Controller.m_scoreLeft)));
+      Btm7Btn.onTrue(new InstantCommand(()->AutoCommands.AimAtClosestSource()));
+      Btm7Btn.onFalse(new InstantCommand(()->DriveTrain.getInstance().unlockTargetHeading()));
 
       /* Swap between field centric and proportional */
 
