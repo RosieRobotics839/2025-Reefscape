@@ -69,7 +69,7 @@ public class Funnel extends SubsystemBase{
     private Hysteresis m_climberHysteresis = new Hysteresis()
     .withThreshold(Units.degreesToRotations(0))
     .withHysteresis(Units.degreesToRotations(5))
-    .onFalse(()->FunnelUpCommand.schedule());
+    .onTrue(()->FunnelUpCommand.schedule());
     
     public Funnel(int CANID) {
     
