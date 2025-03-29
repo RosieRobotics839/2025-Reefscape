@@ -28,7 +28,6 @@ public class Climber extends SubsystemBase{
 
     public Motor m_motor;
     public boolean hasReachedInPos = false;
-    public boolean hasReachedOutPos = false;
     public CalibrationMap motorCal = new CalibrationMap(ClimberConstants.kCalibrationX, ClimberConstants.kCalibrationY);
     public DutyCycleEncoder m_angleSensor;
     public NTDouble nt_targetPosition = new NTDouble(0, table, "target", null);
@@ -37,7 +36,6 @@ public class Climber extends SubsystemBase{
     DoublePublisher nt_currentAngle = table.getDoubleTopic("currentAngle").publish();
     BooleanPublisher nt_climberCalibrated = table.getBooleanTopic("climberCalibrated").publish();
     BooleanPublisher nt_hasReachedInPos = table.getBooleanTopic("hasReachedInPos").publish();
-    BooleanPublisher nt_hasReachedOutPos = table.getBooleanTopic("hasReachedOutPos").publish();
     BooleanPublisher nt_climbMotorMoving = table.getBooleanTopic("climbMotorMoving").publish();
     NTDouble nt_relativePosition = new NTDouble(0, table, "relativePosition", (val)->setRelativePosition(Units.degreesToRadians(val)));
     {nt_relativePosition.resetOnRecv = true;}
@@ -93,7 +91,7 @@ public class Climber extends SubsystemBase{
         if (getPosition() <= ClimberConstants.kAngleIn) {
             hasReachedInPos = true;
         } else if (getPosition() >= ClimberConstants.kAngleOut) {
-            hasReachedOutPos = true;
+            hasReachedInPos = false;
         }
 
         nt_targetPosition.set(m_motor.getTargetPosition());
@@ -102,6 +100,5 @@ public class Climber extends SubsystemBase{
         nt_currentAngle.set(Units.rotationsToDegrees(motorCal.get(m_angleSensor.get())));
         nt_climberCalibrated.set(m_motor.isSetupDone());
         nt_hasReachedInPos.set(hasReachedInPos);
-        nt_hasReachedOutPos.set(hasReachedOutPos);
     }
 }

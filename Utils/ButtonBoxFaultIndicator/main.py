@@ -67,7 +67,6 @@ def get_robot_data():
         climber_motor_temp_high = led.getBoolean("climberMotorTempHigh", False)
         climber_calibrated = climber.getBoolean("climberCalibrated", False)
         climber_is_in = climber.getBoolean("hasReachedInPos", False)
-        climber_is_out = climber.getBoolean("hasReachedOutPos", False)
         
         return {
             "hasGamePiece": has_game_piece,
@@ -88,8 +87,7 @@ def get_robot_data():
             "funnelIsUp":funnel_is_up,
             "climberMotorTempHigh":climber_motor_temp_high,
             "climberCalibrated":climber_calibrated,
-            "climberIsIn":climber_is_in,
-            "climberIsOut":climber_is_out
+            "climberIsIn":climber_is_in
         }
     except:
         print("Error getting NetworkTables data")
@@ -220,17 +218,18 @@ def send_to_arduino(ser, data):
         climber_motor_temp_high = data.get("climberMotorTempHigh")
         climber_calibrated = data.get("climberCalibrated")
         climber_is_in = data.get("climberIsIn")
-        climber_is_out = data.get("climberIsOut")
 
         if climber_motor_temp_high is not None and climber_calibrated is not None:
             if climber_motor_temp_high:
                 climber = 1  # Climber motor is overheating
             elif not climber_calibrated:
                 climber = 2  # Climber motor isn’t calibrated
-            elif climber_is_out:
+            elif not climber_is_in:
                 climber = 3  # Everything is good, climber is out
             elif climber_is_in:
                 climber = 4  # Everything is good, climber is in
+            else:
+                climber = 0
         else:
             climber = 0 # Not receiving values
 
