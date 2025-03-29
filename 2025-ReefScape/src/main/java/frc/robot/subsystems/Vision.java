@@ -25,6 +25,7 @@ import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.networktables.BooleanPublisher;
 import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.IntegerPublisher;
 import edu.wpi.first.networktables.NetworkTable;
@@ -44,6 +45,9 @@ public class Vision extends SubsystemBase {
   NetworkTableInstance ntinst = NetworkTableInstance.getDefault();
   NetworkTable table = ntinst.getTable("roboRIO/Vision");
   NetworkTable pixytable = ntinst.getTable("PIXY");
+
+  BooleanPublisher nt_cam1IsConnected = table.getBooleanTopic("cam1IsConnected").publish();
+  BooleanPublisher nt_cam2IsConnected = table.getBooleanTopic("cam2IsConnected").publish();
   
   NTCamResult nt_posefront = new NTCamResult(table, "poseFront");
   NTCamResult nt_poserear = new NTCamResult(table, "poseRear");
@@ -209,11 +213,15 @@ public class Vision extends SubsystemBase {
       nt_posefront.set(cam1result);
     };
 
+    nt_cam1IsConnected.set(cam1.isConnected());
+    nt_cam2IsConnected.set(cam2.isConnected());
+
     if (cam2.isConnected()){
       photonPoseEstimatorRear.setReferencePose(PoseEstimator.getInstance().m_finalPose3d);
       var cam2result = processCamera(cam2, photonPoseEstimatorRear, Autonomous.getInstance().m_drivingToReef);
       nt_poserear.set(cam2result);
     }
+
     
     // Run the periodic function for the Pixy Camera
     // pixyPeriodic();

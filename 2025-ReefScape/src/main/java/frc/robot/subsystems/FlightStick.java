@@ -10,11 +10,16 @@ import frc.robot.Constants.kDriveTrain.DriveConstants;
 import frc.utils.VectorUtils;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.networktables.BooleanPublisher;
+import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 
 public class FlightStick extends Joystick {
+
+  static NetworkTable table = NetworkTableInstance.getDefault().getTable("roboRIO/FlightStick");
 
   public static double forward;
   public static double left;
@@ -29,6 +34,8 @@ public class FlightStick extends Joystick {
   public static DriveButtons driveButtons = new DriveButtons(driveController);
 
   public static boolean m_preventDriverRotation = false;
+  public static boolean fieldCentricDriving = false;
+  public static BooleanPublisher nt_fieldCentricDriving = table.getBooleanTopic("fieldCentricDriving").publish();
 
   public static FlightStick getDriveInstance(){
     return driveController;
@@ -89,6 +96,8 @@ public class FlightStick extends Joystick {
 
       Btm9Btn.onTrue(new InstantCommand(() -> {
         OperatorConstants.kFieldCentricDriving = !OperatorConstants.kFieldCentricDriving;
+        fieldCentricDriving = OperatorConstants.kFieldCentricDriving;
+        nt_fieldCentricDriving.set(fieldCentricDriving);
       }));
       Btm11Btn.onTrue(new InstantCommand(() -> {
         DriveTrain.getInstance().setMaxRotate(DriveConstants.kGetItOffMeRotationSpeed);

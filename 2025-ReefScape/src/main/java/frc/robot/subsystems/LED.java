@@ -6,6 +6,10 @@ package frc.robot.subsystems;
 
 import java.util.stream.LongStream;
 
+import edu.wpi.first.networktables.BooleanPublisher;
+import edu.wpi.first.networktables.DoublePublisher;
+import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.AddressableLED;
 import edu.wpi.first.wpilibj.AddressableLEDBuffer;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -15,6 +19,8 @@ import frc.robot.Constants.LEDConstants;
 
 public class LED extends SubsystemBase {
 
+  static NetworkTable table = NetworkTableInstance.getDefault().getTable("roboRIO/LED");
+
   private static final LED led = new LED();
   public static LED getInstance() {
     return led;
@@ -23,9 +29,25 @@ public class LED extends SubsystemBase {
   AddressableLED m_led;
   AddressableLEDBuffer m_ledBuffer;
   
-  private boolean testBool = true; 
+  private boolean testBool = true;
+  public boolean m_driveTrainMotorsTempHigh = false;
+  public boolean m_elevatorMotorTempHigh = false;
+  public boolean m_armMotorTempHigh = false;
+  public boolean m_effectorMotorTempHigh = false;
+  public boolean m_funnelMotorTempHigh = false;
+  public boolean m_climberMotorTempHigh = false;
+  public int TestTimeRemaining = 150; // 2 and a half minutes;
+
+  BooleanPublisher nt_driveTrainMotorsTempHigh = table.getBooleanTopic("driveTrainMotorsTempHigh").publish();
+  BooleanPublisher nt_elevatorMotorTempHigh = table.getBooleanTopic("elevatorMotorTempHigh").publish();
+  BooleanPublisher nt_armMotorTempHigh = table.getBooleanTopic("armMotorTempHigh").publish();
+  BooleanPublisher nt_effectorMotorTempHigh = table.getBooleanTopic("effectorMotorTempHigh").publish();
+  BooleanPublisher nt_funnelMotorTempHigh = table.getBooleanTopic("funnelMotorTempHigh").publish();
+  BooleanPublisher nt_climberMotorTempHigh = table.getBooleanTopic("climberMotorTempHigh").publish();
+  DoublePublisher nt_remainingMatchTime = table.getDoubleTopic("remainingMatchTime").publish();
+
   private double lastFlash = Timer.getFPGATimestamp(); 
-  double timeRemaining = Timer.getMatchTime();
+  double FMSTimeRemaining = Timer.getMatchTime();
 
   double lastUpdate = 0;
 
@@ -77,6 +99,25 @@ public class LED extends SubsystemBase {
     setPixels(c2, pixels2);
   }
 
+  private double lastTime = 0;
+
+  public void updateMatchTimer() {
+      double currentTime = Timer.getFPGATimestamp();
+      
+      if (DriverStation.isEnabled()) {
+          if (currentTime - lastTime >= 1.0) { // Decrease once per second
+              if (TestTimeRemaining > 0) {
+                  TestTimeRemaining--;
+              }
+              lastTime = currentTime;
+          }
+          
+          if (TestTimeRemaining < 30 && TestTimeRemaining > 25) {
+              flash(() -> setPixels(LEDConstants.kClimbColor, LEDConstants.kAllLEDs));
+          }
+      }
+  }
+
   boolean m_systemhealthy;
 
   @Override
@@ -86,6 +127,8 @@ public class LED extends SubsystemBase {
     
     setPixels(LEDConstants.kUnhealthyColor, LEDConstants.kAllLEDs);
 
+    updateMatchTimer();
+
     /* Arm */
     
     Arm _arm = Arm.getInstance();
@@ -93,7 +136,10 @@ public class LED extends SubsystemBase {
     testBool = _arm.m_motor.getMotorTemperature() > LEDConstants.kMaxMotorTemp;
     if (testBool){
       m_systemhealthy = false;
+      m_armMotorTempHigh = true;
       setPixels(LEDConstants.kMotorTempColor, LEDConstants.kArmLEDs);
+    } else {
+      m_armMotorTempHigh = false;
     }
 
     // Arm Setup Detection
@@ -109,7 +155,10 @@ public class LED extends SubsystemBase {
     testBool = _elevator.m_EleMotor.getMotorTemperature() > LEDConstants.kMaxMotorTemp;
     if (testBool) {
       m_systemhealthy = false;
+      m_elevatorMotorTempHigh = true;
       setPixels(LEDConstants.kMotorTempColor, LEDConstants.kElevatorLEDs);
+    } else {
+      m_elevatorMotorTempHigh = false;
     }
 
     // Elevator setup detection
@@ -125,8 +174,11 @@ public class LED extends SubsystemBase {
     testBool = _effector.m_motor.getMotorTemperature() > LEDConstants.kMaxMotorTemp;
     if (testBool){
       m_systemhealthy = false;
+      m_effectorMotorTempHigh = true;
       setPixels(LEDConstants.kMotorTempColor, LEDConstants.kEffectorLEDs);
-    } 
+    } else {
+      m_effectorMotorTempHigh = false;
+    }
 
     /* Elevator */
     
@@ -135,7 +187,10 @@ public class LED extends SubsystemBase {
     testBool = _climber.m_motor.getMotorTemperature() > LEDConstants.kMaxMotorTemp;
     if (testBool){
       m_systemhealthy = false;
+      m_climberMotorTempHigh = true;
       setPixels(LEDConstants.kMotorTempColor, LEDConstants.kClimberLEDs);
+    } else {
+      m_climberMotorTempHigh = false;
     }
 
     // Climber setup detection
@@ -151,7 +206,10 @@ public class LED extends SubsystemBase {
     DriveTrain.forEachSwerveModule((s)->testBool = testBool || s.m_motorDrive.getMotorTemperature() > LEDConstants.kMaxMotorTemp || s.m_motorSteer.getMotorTemperature() > LEDConstants.kMaxMotorTemp);
     if (testBool){
       m_systemhealthy = false;
+      m_driveTrainMotorsTempHigh = true;
       setPixels(LEDConstants.kMotorTempColor, LEDConstants.kSwerveLEDs);
+    } else {
+      m_driveTrainMotorsTempHigh = false;
     }
 
     // Swerve Setup Detection 
@@ -175,11 +233,6 @@ public class LED extends SubsystemBase {
 
     if (m_systemhealthy){
       setAltColors(LEDConstants.kHealthyColor1, LEDConstants.kHealthyColor2, LEDConstants.kAllLEDs);
-      if (DriverStation.isEnabled()){
-        if (/*timeRemaining < 30*/ LEDConstants.kTestTimeRemaining < 30 && LEDConstants.kTestTimeRemaining > 25 ) {
-          flash(() ->setPixels(LEDConstants.kClimbColor, LEDConstants.kAllLEDs));
-        }
-      }
 	  }
       
       // Checking to see if we have a game piece
@@ -199,6 +252,15 @@ public class LED extends SubsystemBase {
       if (Vision.getInstance().m_numTargets > 0){
         //setPixels(LEDConstants.kActivityColor, LEDConstants.kAllLEDs);
       }
+
+      nt_driveTrainMotorsTempHigh.set(m_driveTrainMotorsTempHigh);
+      nt_elevatorMotorTempHigh.set(m_elevatorMotorTempHigh);
+      nt_armMotorTempHigh.set(m_armMotorTempHigh);
+      nt_effectorMotorTempHigh.set(m_effectorMotorTempHigh);
+      nt_funnelMotorTempHigh.set(m_funnelMotorTempHigh);
+      nt_climberMotorTempHigh.set(m_climberMotorTempHigh);
+      nt_remainingMatchTime.set(TestTimeRemaining /*FMSTimeRemaining*/);
+
       sendData();
   }
 }

@@ -216,7 +216,7 @@ public final class Constants {
     public static double kUpdateTime = NTDouble.create(0.100, "LED/kUpdateTime", (val)->kUpdateTime=val);
     public static double kBrightness = NTDouble.create((Robot.isSimulation() ? 1 : 0.1), "LED/kBrightness", (val)->kBrightness=val);
     public static double kFlashTime = NTDouble.create(2, "LED/kFlashTime", (val)->kFlashTime=val);
-    public static double kTestTimeRemaining = NTDouble.create(100, "LED/kTestTimeRemaining", val -> kTestTimeRemaining = (val));
+    //public static double kTestTimeRemaining = NTDouble.create(150, "LED/kTestTimeRemaining", val -> kTestTimeRemaining = (val));
   
   }
 
@@ -369,11 +369,11 @@ public final class Constants {
     public static double kMotorTolerance = Units.degreesToRadians(NTDouble.create(3, "Climber/kClimberAngleTolerance", val -> kMotorTolerance = Units.degreesToRadians(val)));
 
     public static double kMaxSpeed = 4; // Rotations Per Second
-    public static double kRotationInLead = NTDouble.create(-9,"Climber/kAngleInLead",(val) ->kRotationInLead=val); // Change once we can test
-    public static double kRotationOutLead = NTDouble.create(5,"Climber/kAngleOutLead",(val) ->kRotationOutLead=val); // Change once we can test
+    public static double kRotationInLead = NTDouble.create(-9,"Climber/kAngleInLead",(val) ->kRotationInLead=val); 
+    public static double kRotationOutLead = NTDouble.create(5,"Climber/kAngleOutLead",(val) ->kRotationOutLead=val); 
 
-    public static double kAngleIn = Units.degreesToRadians(NTDouble.create(-82,"Climber/kAngleIn",(val) ->kAngleIn=Units.degreesToRadians(val))); // Change once we can test
-    public static double kAngleOut = Units.degreesToRadians(NTDouble.create(15,"Climber/kAngleOut",(val) ->kAngleOut=Units.degreesToRadians(val))); // Change once we can test
+    public static double kAngleIn = Units.degreesToRadians(NTDouble.create(-82,"Climber/kAngleIn",(val) ->kAngleIn=Units.degreesToRadians(val))); 
+    public static double kAngleOut = Units.degreesToRadians(NTDouble.create(15,"Climber/kAngleOut",(val) ->kAngleOut=Units.degreesToRadians(val))); 
 
     public static double [] kCalibrationX = new double[]{.19, 0.507191, 0.581880, 0.829728, 0.989784}; //analog values from encoder
     public static double [] kCalibrationY = new double[]{Units.degreesToRotations(131.17), Units.degreesToRotations(25), Units.degreesToRotations(0), Units.degreesToRotations(-90), Units.degreesToRotations(-148)};

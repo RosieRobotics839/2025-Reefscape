@@ -97,6 +97,7 @@ public class DriveTrain extends SubsystemBase {
   final DoublePublisher nt_distance = table.getDoubleTopic("distance").publish();
   final DoublePublisher nt_xtrackerr = table.getDoubleTopic("xtrackerr").publish();
   final BooleanPublisher nt_fieldCentricDriving = table.getBooleanTopic("HeadingPID/fieldCentricDriving").publish();
+  BooleanPublisher nt_driveMotorSetupDone = table.getBooleanTopic("driveMotorSetupDone").publish();
 
   public PIDController m_headingPID;
 
@@ -286,6 +287,8 @@ public class DriveTrain extends SubsystemBase {
       forEachSwerveModule((s)->testBool = testBool && s.m_setupDriveDone && s.m_setupSteerDone);
       m_motorSetupDone = testBool;
     }
+
+    nt_driveMotorSetupDone.set(m_motorSetupDone);
 
     m_isStoppedConfirmed = stoppedConfirmed.calculate(isStopped());
     // Reset target heading on USER button press
