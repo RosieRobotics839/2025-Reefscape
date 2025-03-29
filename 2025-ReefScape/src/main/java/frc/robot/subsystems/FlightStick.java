@@ -5,12 +5,11 @@
 package frc.robot.subsystems;
 
 import frc.robot.Constants.OperatorConstants;
-//import frc.robot.Constants.ShooterConstants;
 import frc.robot.Constants.kDriveTrain.DriveConstants;
 import frc.utils.VectorUtils;
+import frc.utils.NTValues.NTBoolean;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.networktables.BooleanPublisher;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.Joystick;
@@ -34,8 +33,7 @@ public class FlightStick extends Joystick {
   public static DriveButtons driveButtons = new DriveButtons(driveController);
 
   public static boolean m_preventDriverRotation = false;
-  public static boolean fieldCentricDriving = false;
-  public static BooleanPublisher nt_fieldCentricDriving = table.getBooleanTopic("fieldCentricDriving").publish();
+  public static NTBoolean nt_fieldCentricDriving = new NTBoolean(OperatorConstants.kFieldCentricDriving, table, "fieldCentricDriving", (val)-> {});
 
   public static FlightStick getDriveInstance(){
     return driveController;
@@ -98,8 +96,7 @@ public class FlightStick extends Joystick {
 
       Btm9Btn.onTrue(new InstantCommand(() -> {
         OperatorConstants.kFieldCentricDriving = !OperatorConstants.kFieldCentricDriving;
-        fieldCentricDriving = OperatorConstants.kFieldCentricDriving;
-        nt_fieldCentricDriving.set(fieldCentricDriving);
+        nt_fieldCentricDriving.set(OperatorConstants.kFieldCentricDriving);
       }));
       Btm11Btn.onTrue(new InstantCommand(() -> {
         DriveTrain.getInstance().setMaxRotate(DriveConstants.kGetItOffMeRotationSpeed);
@@ -134,6 +131,5 @@ public class FlightStick extends Joystick {
     Translation2d Rstick = new Translation2d(this.getZ(),0);
     Rstick = VectorUtils.deadband(Rstick,0.35,1);
     rotate = -Rstick.getX();             // CCW is Positive
-
   }
 }
