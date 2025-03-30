@@ -132,8 +132,8 @@ public final class Constants {
     public static double kElevatorGearRatio = 16;
     public static double kSprocketCircumference = Units.inchesToMeters(1.685)*Math.PI;
 
-    public static double kMaxSpeedPositive = Units.inchesToMeters(32); // Inches per second
-    public static double kMaxSpeedNegative = Units.inchesToMeters(-16); // Inches per second
+    public static double kMaxSpeedPositive = Units.inchesToMeters(36); // Inches per second
+    public static double kMaxSpeedNegative = Units.inchesToMeters(-24); // Inches per second
 
     public static Motor.Gains kGainPosition = new Motor.Gains(19.2,0.625,0,0);
     public static double kCalibrationUpTravel = Units.inchesToMeters(NTDouble.create(1, "Elevator/Calibration/UpTravel", (val)->kCalibrationUpTravel = Units.inchesToMeters(val)));
