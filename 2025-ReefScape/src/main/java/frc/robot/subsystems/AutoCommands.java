@@ -17,6 +17,7 @@ import frc.robot.Constants;
 import frc.robot.Constants.ArmConstants;
 import frc.robot.Constants.AutoConstants;
 import frc.robot.Constants.EffectorConstants;
+import frc.robot.Constants.ElevatorConstants;
 import frc.robot.Constants.ScoreConstants;
 import frc.robot.Constants.VisionConstants;
 import frc.robot.Constants.ScoreConstants.ScoreLevel;
@@ -195,6 +196,19 @@ public class AutoCommands {
             Commands.waitUntil(() -> DriveTrain.getInstance().m_poseQueue.isEmpty() || DriveTrain.getInstance().m_isStoppedConfirmed || VectorUtils.isNear(PoseEstimator.getInstance().m_finalPose, target2, AutoConstants.kReefTolerance)).withTimeout(6),
             Commands.waitUntil(() -> Arm.getInstance().isAtPosition() && Elevator.getInstance().isAtPosition()),
             EndEffector.getInstance().ExpelCommand(()->(level == ScoreLevel.TROUGH ? EffectorConstants.kTroughOuttakeSpeed : EffectorConstants.kOuttakeSpeed), ()->level==ScoreLevel.TROUGH).withTimeout(1.5)
+        );
+    }
+
+    public static Command BargeFling(){
+        return Commands.sequence(
+            new InstantCommand(() -> Elevator.getInstance().setPosition(ElevatorConstants.kMaxHeight)),
+            new InstantCommand(() -> Arm.getInstance().setPosition(ArmConstants.kAngleMin)),
+            Commands.waitUntil(() -> Arm.getInstance().isAtPosition()),
+            Commands.waitUntil(() -> Elevator.getInstance().isAtPosition()),
+            Commands.waitSeconds(1),
+            new InstantCommand(() -> Arm.getInstance().setPosition(ArmConstants.kAngleMax)),
+            Commands.waitUntil(() -> Arm.getInstance().isNearPosition()),
+            new InstantCommand(() -> EndEffector.getInstance().JustShootIt())
         );
     }
     
