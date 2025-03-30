@@ -61,6 +61,15 @@ public class EndEffector extends SubsystemBase {
       .finallyDo(()->{m_motor.setSpeed(0); if (Robot.isSimulation()){m_beamBreakTestSensor.set(false);}});
     };
 
+    public Command JustShootIt(){
+      return Commands.sequence( //Outtake unconditionally
+        Commands.waitUntil(() -> {return m_motor.setSpeed((m_hasCoral ? 1 : -1) * EffectorConstants.kOuttakeSpeed);}), // If we have the coral ( ? ) then forward, anything else backward.
+        Commands.waitSeconds(2)
+      ).withTimeout(4).onlyWhile(()->DriverStation.isEnabled())
+      .beforeStarting(()->m_intakeRunning=false)
+      .finallyDo(()->{m_motor.setSpeed(0); if (Robot.isSimulation()){m_beamBreakTestSensor.set(false);}});
+    };
+
     public EndEffector(int CANID) {
 
       m_motor = new Motor(Constants.EffectorConstants.kCANID, EffectorConstants.kMotorType, "effector")

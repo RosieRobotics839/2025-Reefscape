@@ -62,6 +62,9 @@ public class Arm extends SubsystemBase{
     public Boolean isAtPosition(){
         return Math.abs(getArmPosition() - m_angleTarget) < ArmConstants.kAngleTolerance; 
     }
+    public Boolean isNearPosition(){
+        return Math.abs(getArmPosition() - m_angleTarget) < ArmConstants.kAngleNearTolerance; 
+    }
 
     /**
      * Returns arm position in radians
