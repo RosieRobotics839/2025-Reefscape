@@ -52,6 +52,10 @@ public final class Constants {
     public enum ScoreLevel{
       FUNNEL, TROUGH, LEVEL2, LEVEL3, LEVEL4, ALGAE
     }
+
+    public enum ReefSide {
+      LEFT, CENTER, RIGHT
+    }
     
   }
   

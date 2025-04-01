@@ -39,7 +39,7 @@ public class Controller extends XboxController {
   public double Ry, Rx, Ry_pre, Rx_pre;
   public boolean m_directElevator = false;
   public boolean m_directArm = false;
-  public static boolean m_scoreLeft;
+  public static ScoreConstants.ReefSide m_reefSide;
 
   public static Integer speedSelect = DriveConstants.kMaxSpeedDefault;
 
@@ -100,7 +100,7 @@ public class Controller extends XboxController {
         DriveTrain.getInstance().setTargetHeading(DriveTrain.getInstance().getTargetHeading()-Units.degreesToRadians(90)); // CW 90 Degrees
       }));
       controller.leftTrigger(0.2).onTrue(new InstantCommand(()->
-        AutoCommands.DriveReefOffset(Controller.m_scoreLeft
+        AutoCommands.DriveReefOffset(Controller.m_reefSide
       )));
       controller.rightStick().onTrue(new InstantCommand(() -> {
         OperatorConstants.kFieldCentricDriving = !OperatorConstants.kFieldCentricDriving;
@@ -229,12 +229,12 @@ public class Controller extends XboxController {
 
       LeftScore.onTrue(
         Commands.sequence(
-          new InstantCommand(()->m_scoreLeft = true)
+          new InstantCommand(()->m_reefSide = true)
         )
       );
       RightScore.onTrue(
         Commands.sequence(
-          new InstantCommand(()->m_scoreLeft = false)
+          new InstantCommand(()->m_reefSide = false)
         )
       );
 
@@ -305,6 +305,6 @@ public class Controller extends XboxController {
 
     nt_yStickXAxis.set(Lx);
     nt_yStickYAxis.set(Ly);
-    nt_scoreLeft.set(m_scoreLeft);
+    nt_scoreLeft.set(m_reefSide);
   }
 }
