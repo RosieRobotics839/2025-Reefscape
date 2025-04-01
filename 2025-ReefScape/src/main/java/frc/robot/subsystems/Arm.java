@@ -148,19 +148,31 @@ public class Arm extends SubsystemBase{
                 setPosition(ArmConstants.kAngleMax);
                 break;
             case TROUGH:
-                setPosition(ArmConstants.kTargetAngleTrough);
+                setPosition(ArmConstants.kTargetCoral1);
                 break;
-            case LEVEL2:
-                setPosition(ArmConstants.kTargetAngleLevelMiddle);
+            case CORAL2:
+                setPosition(ArmConstants.kTargetCoral2);
                 break;
-            case LEVEL3:
-                setPosition(ArmConstants.kTargetAngleLevelMiddle);
+            case CORAL3:
+                setPosition(ArmConstants.kTargetCoral3);
                 break;
-            case LEVEL4:
-                setPosition(ArmConstants.kTargetAngleLevel4);
+            case CORAL4:
+                setPosition(ArmConstants.kTargetCoral4);
                 break;
-            case ALGAE:
-                setPosition(ArmConstants.kAngleMin);
+            case ALGAE0:
+                setPosition(ArmConstants.kTargetAlgae0);
+                break;
+            case ALGAE1:
+                setPosition(ArmConstants.kTargetAlgae1);
+                break;
+            case ALGAE2:
+                setPosition(ArmConstants.kTargetAlgae2);
+                break;
+            case ALGAE3:
+                setPosition(ArmConstants.kTargetAlgae3);
+                break;
+            case ALGAE4:
+                setPosition(ArmConstants.kTargetAlgae4);
                 break;
             default:
         }

@@ -34,6 +34,7 @@ import frc.robot.subsystems.LED;
 import frc.robot.subsystems.PathPlanning;
 import frc.robot.subsystems.Vision;
 import frc.utils.Action;
+import frc.utils.Encouragement;
 import frc.utils.KrakenOrchestra;
 import frc.utils.TwentyFiveChain;
 import frc.robot.subsystems.PoseEstimator;
@@ -61,6 +62,7 @@ public class Robot extends TimedRobot {
   public Funnel m_funnel = Funnel.getInstance();
   public KrakenOrchestra m_orchestra = KrakenOrchestra.getInstance();
   public TwentyFiveChain chain = new TwentyFiveChain();
+  public Encouragement encouraging = new Encouragement();
 
   Alliance myAlliance = Alliance.Red;
 

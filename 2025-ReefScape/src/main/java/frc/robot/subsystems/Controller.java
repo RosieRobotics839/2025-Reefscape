@@ -13,18 +13,19 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import frc.utils.KrakenOrchestra;
 import frc.utils.VectorUtils;
-import frc.utils.NTValues.NTBoolean;
 import frc.utils.NTValues.NTDouble;
 import edu.wpi.first.math.filter.Debouncer.DebounceType;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.networktables.StringPublisher;
 import frc.robot.Constants.ArmConstants;
 import frc.robot.Constants.EffectorConstants;
 import frc.robot.Constants.ElevatorConstants;
 import frc.robot.Constants.OperatorConstants;
 import frc.robot.Constants.ScoreConstants;
+import frc.robot.Constants.ScoreConstants.ReefAlignment;
 import frc.robot.Constants.ScoreConstants.ScoreLevel;
 import frc.robot.Constants.kDriveTrain.DriveConstants;
 public class Controller extends XboxController {
@@ -39,7 +40,7 @@ public class Controller extends XboxController {
   public double Ry, Rx, Ry_pre, Rx_pre;
   public boolean m_directElevator = false;
   public boolean m_directArm = false;
-  public static boolean m_scoreLeft;
+  public static ScoreConstants.ReefAlignment m_reefAlign;
 
   public static Integer speedSelect = DriveConstants.kMaxSpeedDefault;
 
@@ -100,8 +101,8 @@ public class Controller extends XboxController {
         DriveTrain.getInstance().setTargetHeading(DriveTrain.getInstance().getTargetHeading()-Units.degreesToRadians(90)); // CW 90 Degrees
       }));
       controller.leftTrigger(0.2).onTrue(new InstantCommand(()->
-        AutoCommands.DriveReefOffset(Controller.m_scoreLeft
-      )));
+      AutoCommands.DriveReefOffset()
+      ));
       controller.rightStick().onTrue(new InstantCommand(() -> {
         OperatorConstants.kFieldCentricDriving = !OperatorConstants.kFieldCentricDriving;
       }));
@@ -124,10 +125,10 @@ public class Controller extends XboxController {
   static NTDouble nt_yStickXAxis = new NTDouble(0,table,"Accessory/yStickXAxis",(val)->{});
   static NTDouble nt_rStickYAxis = new NTDouble(0,table,"Accessory/rStickYAxis",(val)->{});
   static NTDouble nt_yStickYAxis = new NTDouble(0,table,"Accessory/yStickYAxis",(val)->{});
-  static NTBoolean nt_scoreLeft = new NTBoolean(true,table,"scoreleft",(val)->{});
+  static StringPublisher nt_scoreAlignment = table.getStringTopic("scoreAlignment").publish();
 
   public static class AccessoryButtons {
-    public JoystickButton Intake, Outtake, ClimberIn, ClimberOut, ByeAlgae, StageDial0, StageDial1, StageDial2, StageDial3, StageDial4, LeftScore, RightScore, RS, Home;
+    public JoystickButton Intake, Outtake, ClimberIn, ClimberOut, ByeAlgae, StageDial0, StageDial1, StageDial2, StageDial3, StageDial4, LeftScore, RightScore, CenterAlign, Home;
     //public POVButton DPadUp, DPadRight, DPadDown, DPadLeft;
 
     public Command disableDirectControl(){
@@ -139,20 +140,20 @@ public class Controller extends XboxController {
 
     AccessoryButtons(Controller controller){
 
-      StageDial0 = new JoystickButton(controller, 1);  // Stage Dial Scoring Level 0 (Default/Human Player Intake)
-      StageDial1 = new JoystickButton(controller, 2);  // Stage Dial Scoring Level 1 (Trough)
-      StageDial2 = new JoystickButton(controller, 3);  // Stage Dial Scoring Level 2
-      StageDial3 = new JoystickButton(controller, 4);  // Stage Dial Scoring Level 3
-      StageDial4 = new JoystickButton(controller, 5);  // Stage Dial Scoring Level 4
-      RightScore = new JoystickButton(controller, 6); // Scoring Right of Reef Face (Switch)
-      LeftScore  = new JoystickButton(controller, 7); // Scoring Left of Reef Face (Switch)
-      Intake     = new JoystickButton(controller, 8);  // Intake Button
-      Outtake    = new JoystickButton(controller, 9);  // Expel Button (Outtake for those who don't know)
-      ClimberOut = new JoystickButton(controller, 10);  // Brings Climber Out & Funnel Down
-      ClimberIn  = new JoystickButton(controller, 11);  // Brings Climber In & Funnel Up
-      ByeAlgae      = new JoystickButton(controller, 12);  // Game Piece Selector Button (Algae or Coral)
+      StageDial0  = new JoystickButton(controller, 1); // Stage Dial Scoring Level 0 (Default/Human Player Intake)
+      StageDial1  = new JoystickButton(controller, 2); // Stage Dial Scoring Level 1 (Trough)
+      StageDial2  = new JoystickButton(controller, 3); // Stage Dial Scoring Level 2
+      StageDial3  = new JoystickButton(controller, 4); // Stage Dial Scoring Level 3
+      StageDial4  = new JoystickButton(controller, 5); // Stage Dial Scoring Level 4
+      RightScore  = new JoystickButton(controller, 6); // Scoring Right of Reef Face (Switch)
+      LeftScore   = new JoystickButton(controller, 7); // Scoring Left of Reef Face (Switch)
+      Intake      = new JoystickButton(controller, 8); // Intake Button
+      Outtake     = new JoystickButton(controller, 9); // Expel Button (Outtake for those who don't know)
+      ClimberOut  = new JoystickButton(controller, 10); // Brings Climber Out & Funnel Down
+      ClimberIn   = new JoystickButton(controller, 11); // Brings Climber In & Funnel Up
+      ByeAlgae    = new JoystickButton(controller, 12); // Game Piece Selector Button (Algae or Coral)
+      CenterAlign = new JoystickButton(controller, 13); // Center Alignment
 
-      //RS       = new JoystickButton(controller, 12); // Right Stick Click
       //Home     = new JoystickButton(controller, 13); // Home Button
       //DPadUp     = new POVButton(controller, 0);
       //DPadRight    = new POVButton(controller, 90);
@@ -184,57 +185,109 @@ public class Controller extends XboxController {
       /* Setting Stage Dial Values */
 
     StageDial0.whileTrue(
-      Commands.sequence(
-        disableDirectControl(),
-        new InstantCommand(()->m_level = ScoreLevel.FUNNEL),
-        Elevator.getInstance().moveToLevelCommand(()->m_level),
-        Arm.getInstance().moveToLevelCommand(()->m_level)
-      )
+      Commands.either(
+        Commands.sequence(
+          disableDirectControl(),
+          new InstantCommand(()->m_level = ScoreLevel.ALGAE0),
+          Elevator.getInstance().moveToLevelCommand(()->m_level),
+          Arm.getInstance().moveToLevelCommand(()->m_level)
+        ),
+        Commands.sequence(
+          disableDirectControl(),
+          new InstantCommand(()->m_level = ScoreLevel.FUNNEL),
+          Elevator.getInstance().moveToLevelCommand(()->m_level),
+          Arm.getInstance().moveToLevelCommand(()->m_level)
+        )
+      ,()->m_reefAlign == ReefAlignment.CENTER)
     );
       
     StageDial1.debounce(0.2,DebounceType.kRising).whileTrue(
-      Commands.sequence(
-        disableDirectControl(),
-        new InstantCommand(()->m_level = ScoreConstants.ScoreLevel.TROUGH),
-        Elevator.getInstance().moveToLevelCommand(()->m_level),
-        Arm.getInstance().moveToLevelCommand(()->m_level)
-    ));
+      Commands.either(
+        Commands.sequence(
+          disableDirectControl(),
+          new InstantCommand(()->m_level = ScoreLevel.ALGAE1),
+          Elevator.getInstance().moveToLevelCommand(()->m_level),
+          Arm.getInstance().moveToLevelCommand(()->m_level)
+        ),
+        Commands.sequence(
+          disableDirectControl(),
+          new InstantCommand(()->m_level = ScoreLevel.TROUGH),
+          Elevator.getInstance().moveToLevelCommand(()->m_level),
+          Arm.getInstance().moveToLevelCommand(()->m_level)
+        )
+      ,()->m_reefAlign == ReefAlignment.CENTER)
+    );
 
     StageDial2.debounce(0.2,DebounceType.kRising).whileTrue(
-      Commands.sequence(
-        disableDirectControl(),
-        new InstantCommand(()->m_level = ScoreConstants.ScoreLevel.LEVEL2),
-        Elevator.getInstance().moveToLevelCommand(()->m_level),
-        Arm.getInstance().moveToLevelCommand(()->m_level)
-    ));
+      Commands.either(
+        Commands.sequence(
+          disableDirectControl(),
+          new InstantCommand(()->m_level = ScoreLevel.ALGAE2),
+          Elevator.getInstance().moveToLevelCommand(()->m_level),
+          Arm.getInstance().moveToLevelCommand(()->m_level)
+        ),
+        Commands.sequence(
+          disableDirectControl(),
+          new InstantCommand(()->m_level = ScoreLevel.CORAL2),
+          Elevator.getInstance().moveToLevelCommand(()->m_level),
+          Arm.getInstance().moveToLevelCommand(()->m_level)
+        )
+      ,()->m_reefAlign == ReefAlignment.CENTER)
+    );
 
     StageDial3.debounce(0.2,DebounceType.kRising).whileTrue(
-      Commands.sequence(
-        disableDirectControl(),
-        new InstantCommand(()->m_level = ScoreConstants.ScoreLevel.LEVEL3),
-        Elevator.getInstance().moveToLevelCommand(()->m_level),
-        Arm.getInstance().moveToLevelCommand(()->m_level)
-    ));
+      Commands.either(
+        Commands.sequence(
+          disableDirectControl(),
+          new InstantCommand(()->m_level = ScoreLevel.ALGAE3),
+          Elevator.getInstance().moveToLevelCommand(()->m_level),
+          Arm.getInstance().moveToLevelCommand(()->m_level)
+        ),
+        Commands.sequence(
+          disableDirectControl(),
+          new InstantCommand(()->m_level = ScoreLevel.CORAL3),
+          Elevator.getInstance().moveToLevelCommand(()->m_level),
+          Arm.getInstance().moveToLevelCommand(()->m_level)
+        )
+      ,()->m_reefAlign == ReefAlignment.CENTER)
+    );
 
     StageDial4.whileTrue(
-      Commands.sequence(
-        disableDirectControl(),
-        new InstantCommand(()->m_level = ScoreConstants.ScoreLevel.LEVEL4),
-        Elevator.getInstance().moveToLevelCommand(()->m_level),
-        Arm.getInstance().moveToLevelCommand(()->m_level)
-    ));
-
+      Commands.either(
+        Commands.sequence(
+          disableDirectControl(),
+          new InstantCommand(()->m_level = ScoreLevel.ALGAE4),
+          Elevator.getInstance().moveToLevelCommand(()->m_level),
+          Arm.getInstance().moveToLevelCommand(()->m_level)
+        ),
+        Commands.sequence(
+          disableDirectControl(),
+          new InstantCommand(()->m_level = ScoreLevel.CORAL4),
+          Elevator.getInstance().moveToLevelCommand(()->m_level),
+          Arm.getInstance().moveToLevelCommand(()->m_level)
+        )
+      ,()->m_reefAlign == ReefAlignment.CENTER)
+    );
 
       /* Side Positioning for Scoring */
 
       LeftScore.onTrue(
         Commands.sequence(
-          new InstantCommand(()->m_scoreLeft = true)
+          new InstantCommand(()->m_reefAlign = ReefAlignment.LEFT),
+          new InstantCommand(()->nt_scoreAlignment.set("LEFT"))
         )
       );
       RightScore.onTrue(
         Commands.sequence(
-          new InstantCommand(()->m_scoreLeft = false)
+          new InstantCommand(()->m_reefAlign = ReefAlignment.RIGHT),
+          new InstantCommand(()->nt_scoreAlignment.set("RIGHT"))
+        )
+      );
+
+      CenterAlign.onTrue(
+        Commands.sequence(
+          new InstantCommand(()->m_reefAlign = ReefAlignment.CENTER),
+          new InstantCommand(()->nt_scoreAlignment.set("CENTER"))
         )
       );
 
@@ -305,6 +358,5 @@ public class Controller extends XboxController {
 
     nt_yStickXAxis.set(Lx);
     nt_yStickYAxis.set(Ly);
-    nt_scoreLeft.set(m_scoreLeft);
   }
 }
