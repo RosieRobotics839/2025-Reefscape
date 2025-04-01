@@ -19,8 +19,8 @@ import frc.robot.Constants.AutoConstants;
 import frc.robot.Constants.EffectorConstants;
 import frc.robot.Constants.ElevatorConstants;
 import frc.robot.Constants.ScoreConstants;
-import frc.robot.Constants.VisionConstants;
 import frc.robot.Constants.ScoreConstants.ScoreLevel;
+import frc.robot.Constants.VisionConstants;
 import frc.utils.VectorUtils;
 
 public class AutoCommands {
@@ -208,21 +208,56 @@ public class AutoCommands {
         );
     }
     
-    public static void DriveReefOffset(boolean left){
+    public static void DriveReefOffset() {
         Pose2d target = PoseEstimator.getInstance().m_finalPose.nearest(reefPoses());
-        Pose2d target1 = PathPlanning.PoseAtDistance(target,
-            new Translation2d(
-                - AutoConstants.kReefStartingDistance - Constants.kChassis.kWheelBase/2.0,
-                Constants.AutoConstants.kReefOffset * (left ? 1 : -1) +  Constants.AutoConstants.kStaticReefOffset
-            ),Units.degreesToRadians(15)
-        );
-                
-        Pose2d target2 = PathPlanning.PoseAtDistance(target,
-            new Translation2d(
-                - AutoConstants.kReefDistance - Constants.kChassis.kWheelBase/2.0,
-                Constants.AutoConstants.kReefOffset * (left ? 1 : -1) +  Constants.AutoConstants.kStaticReefOffset
-            )
-        );
+        Pose2d target1;
+        Pose2d target2;
+
+        switch (Controller.m_reefAlign) {
+            case CENTER:
+                target1 = PathPlanning.PoseAtDistance(target,
+                    new Translation2d(
+                        - AutoConstants.kReefStartingDistance - Constants.kChassis.kWheelBase/2.0,
+                        Constants.AutoConstants.kStaticReefOffset
+                    ),Units.degreesToRadians(15)
+                );
+                target2 = PathPlanning.PoseAtDistance(target,
+                    new Translation2d(
+                        - AutoConstants.kReefDistance - Constants.kChassis.kWheelBase/2.0,
+                        Constants.AutoConstants.kStaticReefOffset
+                    )
+                );
+                break;
+            case RIGHT:
+                target1 = PathPlanning.PoseAtDistance(target,
+                    new Translation2d(
+                        - AutoConstants.kReefStartingDistance - Constants.kChassis.kWheelBase/2.0,
+                        (Constants.AutoConstants.kReefOffset * -1) + Constants.AutoConstants.kStaticReefOffset
+                    ),Units.degreesToRadians(15)
+                );
+                target2 = PathPlanning.PoseAtDistance(target,
+                    new Translation2d(
+                        - AutoConstants.kReefDistance - Constants.kChassis.kWheelBase/2.0,
+                        (Constants.AutoConstants.kReefOffset * -1) + Constants.AutoConstants.kStaticReefOffset
+                    )
+                );
+                break;
+            case LEFT:
+            default:
+                target1 = PathPlanning.PoseAtDistance(target,
+                    new Translation2d(
+                        - AutoConstants.kReefStartingDistance - Constants.kChassis.kWheelBase/2.0,
+                        Constants.AutoConstants.kReefOffset + Constants.AutoConstants.kStaticReefOffset
+                    ),Units.degreesToRadians(15)
+                );
+                target2 = PathPlanning.PoseAtDistance(target,
+                    new Translation2d(
+                        - AutoConstants.kReefDistance - Constants.kChassis.kWheelBase/2.0,
+                        Constants.AutoConstants.kReefOffset + Constants.AutoConstants.kStaticReefOffset
+                    )
+                );
+                break;
+        }
 
         PathPlanning.getInstance().navigateTo(target1);
         PathPlanning.getInstance().navigateTo(target2);
