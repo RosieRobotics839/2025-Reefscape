@@ -100,6 +100,9 @@ public class Controller extends XboxController {
       controller.leftBumper().onTrue(new InstantCommand(() -> {
         DriveTrain.getInstance().setTargetHeading(DriveTrain.getInstance().getTargetHeading()-Units.degreesToRadians(90)); // CW 90 Degrees
       }));
+      controller.leftTrigger(0.2).onTrue(new InstantCommand(()->
+      AutoCommands.DriveReefOffset()
+      ));
       controller.rightStick().onTrue(new InstantCommand(() -> {
         OperatorConstants.kFieldCentricDriving = !OperatorConstants.kFieldCentricDriving;
       }));
