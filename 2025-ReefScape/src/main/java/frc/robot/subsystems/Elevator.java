@@ -65,7 +65,7 @@ public class Elevator extends SubsystemBase {
 
     // Check if elevator is at target position
     public boolean isAtPosition() {
-        return Math.abs(getPosition() - m_targetHeight) <= ElevatorConstants.kElevatorTolerance/ElevatorConstants.kSprocketCircumference; 
+        return Math.abs(getPosition() - m_targetHeight) <= ElevatorConstants.kElevatorTolerance; 
     }
 
     public boolean isInDangerZone() {
