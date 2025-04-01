@@ -99,7 +99,9 @@ public class Dashboard{
                 case GETCORAL:
                     return AutoCommands.GetCoral(left);
                 case SCORE:
-                    return AutoCommands.AutoScore(var1,left,var0);
+                    // limit scoring level to trough through reef level 4
+                    var level = Constants.ScoreConstants.ScoreLevel.values()[Math.max(1,Math.min(4,var0))];
+                    return AutoCommands.AutoScore(var1,left,level);
                 default:
                     return AutoCommands.noop(); //noop noop
             }

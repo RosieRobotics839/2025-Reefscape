@@ -117,16 +117,31 @@ public class Elevator extends SubsystemBase {
                 setPosition(ElevatorConstants.kMinHeight);
                 break;
             case TROUGH:
-                setPosition(ElevatorConstants.kHeight1);
+                setPosition(ElevatorConstants.kCoralL1);
                 break;
-            case LEVEL2:
-                setPosition(ElevatorConstants.kHeight2);
+            case CORAL2:
+                setPosition(ElevatorConstants.kCoralL2);
                 break;
-            case LEVEL3:
-                setPosition(ElevatorConstants.kHeight3);
+            case CORAL3:
+                setPosition(ElevatorConstants.kCoralL3);
                 break;
-            case LEVEL4:
+            case CORAL4:
                 setPosition(ElevatorConstants.kMaxHeight);
+                break;
+            case ALGAE0:
+                setPosition(ElevatorConstants.kAlgaeL0);
+                break;
+            case ALGAE1:
+                setPosition(ElevatorConstants.kAlgaeL1);
+                break;
+            case ALGAE2:
+                setPosition(ElevatorConstants.kAlgaeL2);
+                break;
+            case ALGAE3:
+                setPosition(ElevatorConstants.kAlgaeL3);
+                break;
+            case ALGAE4:
+                setPosition(ElevatorConstants.kAlgaeL4);
                 break;
             default:
         }

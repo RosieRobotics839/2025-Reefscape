@@ -50,10 +50,10 @@ public final class Constants {
   public static class ScoreConstants {
 
     public enum ScoreLevel{
-      FUNNEL, TROUGH, LEVEL2, LEVEL3, LEVEL4, ALGAE
+      FUNNEL, TROUGH, CORAL2, CORAL3, CORAL4, ALGAE0, ALGAE1, ALGAE2, ALGAE3, ALGAE4
     }
 
-    public enum ReefSide {
+    public enum ReefAlignment {
       LEFT, CENTER, RIGHT
     }
     
@@ -75,10 +75,17 @@ public final class Constants {
     public static double kAngleMax = Units.degreesToRadians(NTDouble.create(95, "Arm/kAngleMax", (val)->kAngleMax = Units.degreesToRadians(val)));
     public static double kAngleMin = Units.degreesToRadians(NTDouble.create(-3, "Arm/kAngleMin", (val)->kAngleMin = Units.degreesToRadians(val)));
 
-    public static double kTargetAngleTrough = Units.degreesToRadians(NTDouble.create(63, "Arm/Target/kAngleTrough", (val)->kTargetAngleTrough = Units.degreesToRadians(val)));
-    public static double kTargetAngleLevelMiddle = Units.degreesToRadians(NTDouble.create(63, "Arm/Target/kLevelMiddle", (val)->kTargetAngleLevelMiddle = Units.degreesToRadians(val)));
-    public static double kTargetAngleLevel4 = Units.degreesToRadians(NTDouble.create(79, "Arm/Target/kLevel4", (val)->kTargetAngleLevel4 = Units.degreesToRadians(val)));
+    public static double kTargetCoral1 = Units.degreesToRadians(NTDouble.create(63, "Arm/Target/kCoral1", (val)->kTargetCoral1 = Units.degreesToRadians(val)));
+    public static double kTargetCoral2 = Units.degreesToRadians(NTDouble.create(63, "Arm/Target/kCoral2", (val)->kTargetCoral2 = Units.degreesToRadians(val)));
+    public static double kTargetCoral3 = Units.degreesToRadians(NTDouble.create(63, "Arm/Target/kCoral3", (val)->kTargetCoral3 = Units.degreesToRadians(val)));
+    public static double kTargetCoral4 = Units.degreesToRadians(NTDouble.create(79, "Arm/Target/kCoral4", (val)->kTargetCoral4 = Units.degreesToRadians(val)));
 
+    public static double kTargetAlgae0 = Units.degreesToRadians(NTDouble.create(0, "Arm/Target/kAlgae0", (val)->kTargetAlgae0 = Units.degreesToRadians(val)));
+    public static double kTargetAlgae1 = Units.degreesToRadians(NTDouble.create(0, "Arm/Target/kAlgae1", (val)->kTargetAlgae1 = Units.degreesToRadians(val)));
+    public static double kTargetAlgae2 = Units.degreesToRadians(NTDouble.create(0, "Arm/Target/kAlgae2", (val)->kTargetAlgae2 = Units.degreesToRadians(val)));
+    public static double kTargetAlgae3 = Units.degreesToRadians(NTDouble.create(0, "Arm/Target/kAlgae3", (val)->kTargetAlgae3 = Units.degreesToRadians(val)));
+    public static double kTargetAlgae4 = Units.degreesToRadians(NTDouble.create(0, "Arm/Target/kAlgae4", (val)->kTargetAlgae4 = Units.degreesToRadians(val)));
+    
     public static double [] kCalibrationX = new double[]{ 0.32, 0.60}; //analog values
     public static double [] kCalibrationY = new double[]{Units.degreesToRotations(-2), Units.degreesToRotations(90)};
 
@@ -125,14 +132,18 @@ public final class Constants {
     public static int kElevatorMotorCurrentLimit = (NTInteger.create(40, "Elevator/kCurrentLimit", (val) ->Elevator.getInstance().m_EleMotor.withStatorLimit(val)));
 
     // Values in inches that the elevator should be raised from the bottom to score different heights of coral and algae
-    // These need to be tested and adjusted
     public static double kMaxHeight = Units.inchesToMeters(NTDouble.create(27.65, "Elevator/MaxHeightInch", (val)->kMaxHeight = Units.inchesToMeters(val)));; // 16.6 Rotations of the Axle
-    public static double kHeight3 = Units.inchesToMeters(NTDouble.create(18, "Elevator/Height3Inch", (val)->kHeight3 = Units.inchesToMeters(val)));
-    public static double kHeight2 = Units.inchesToMeters(NTDouble.create(9, "Elevator/Height2Inch", (val)->kHeight2 = Units.inchesToMeters(val)));
-    public static double kHeight1 = Units.inchesToMeters(NTDouble.create(3, "Elevator/Height1Inch", (val)->kHeight1 = Units.inchesToMeters(val)));
     public static double kMinHeight = Units.inchesToMeters(NTDouble.create(0, "Elevator/MinHeightInch", (val)->kMinHeight = Units.inchesToMeters(val)));
-
-    public static double kElevatorTolerance = Units.inchesToMeters(0.75);
+    public static double kCoralL3 = Units.inchesToMeters(NTDouble.create(18, "Elevator/Target/kCoral3", (val)->kCoralL3 = Units.inchesToMeters(val)));
+    public static double kCoralL2 = Units.inchesToMeters(NTDouble.create(9, "Elevator/Target/kCoral2", (val)->kCoralL2 = Units.inchesToMeters(val)));
+    public static double kCoralL1 = Units.inchesToMeters(NTDouble.create(3, "Elevator/Target/kCoral1", (val)->kCoralL1 = Units.inchesToMeters(val)));
+    public static double kAlgaeL0 = Units.inchesToMeters(NTDouble.create(9, "Elevator/Target/kAlgae0", (val)->kAlgaeL0 = Units.inchesToMeters(val)));
+    public static double kAlgaeL1 = Units.inchesToMeters(NTDouble.create(13, "Elevator/Target/kAlgae1", (val)->kAlgaeL1 = Units.inchesToMeters(val)));
+    public static double kAlgaeL2 = Units.inchesToMeters(NTDouble.create(18, "Elevator/Target/kAlgae2", (val)->kAlgaeL2 = Units.inchesToMeters(val)));
+    public static double kAlgaeL3 = Units.inchesToMeters(NTDouble.create(22, "Elevator/Target/kAlgae3", (val)->kAlgaeL3 = Units.inchesToMeters(val)));
+    public static double kAlgaeL4 = Units.inchesToMeters(NTDouble.create(25, "Elevator/Target/kAlgae4", (val)->kAlgaeL4 = Units.inchesToMeters(val)));
+    
+    public static double kElevatorTolerance = Units.inchesToMeters(2);
     public static double kElevatorGearRatio = 16;
     public static double kSprocketCircumference = Units.inchesToMeters(1.685)*Math.PI;
 

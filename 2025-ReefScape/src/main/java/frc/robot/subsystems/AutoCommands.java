@@ -138,10 +138,6 @@ public class AutoCommands {
         );
     }
 
-    public static Command AutoScore(String tag, boolean left, int level){
-        return AutoScore(tag, left, Constants.ScoreConstants.ScoreLevel.values()[level]);
-    }
-
     public static Command AutoScore(String tag, boolean left, ScoreLevel level){
         int tagId;
         switch (tag){
