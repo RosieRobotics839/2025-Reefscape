@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.filter.SlewRateLimiter;
+import frc.utils.Hysteresis;
 import frc.utils.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -58,7 +59,7 @@ public class DriveTrain extends SubsystemBase {
 
   private double m_forward, m_left, m_rotate;
   private double m_forwardcmd, m_leftcmd, m_rotatecmd;
-  private boolean m_controllerInputActive = false;
+
   private boolean headingLocked = false;
 
   private double m_maxSpeed = DriveConstants.kMaxSpeedMetersPerSecond[DriveConstants.kMaxSpeedDefault];
@@ -125,6 +126,11 @@ public class DriveTrain extends SubsystemBase {
   }
 
   public LinkedList<Pose2d> m_poseQueue = new LinkedList<Pose2d>();
+  private Hysteresis m_controllerInputActive = new Hysteresis()
+      .withThreshold(OperatorConstants.kControllerActiveThreshold)
+      .withHysteresis(OperatorConstants.kControllerActiveHysteresis)
+      .onTrue(()->{m_poseQueue.clear(); PublishPoseQueue();});
+
   public boolean m_isStoppedConfirmed;
   public Debouncer stoppedConfirmed = new Debouncer(3, Debouncer.DebounceType.kRising);
   public boolean isStopped(){
@@ -310,23 +316,17 @@ public class DriveTrain extends SubsystemBase {
       m_targetHeading = PoseEstimator.getInstance().m_finalPose.getRotation().getRadians();
     }
 
-    // Calculate Drive Inputs from Controller
+    // Calculate Drive Inputs from Controller - If m_poseQueue is not empty it is cleared when controller input is active.
     if (DriverStation.isTeleopEnabled()){
       if (OperatorConstants.kDriverControllerIsFlightStick){
         driveFlightStick.Translate();
         Drive(FlightStick.forward, FlightStick.left, FlightStick.rotate);
-        m_controllerInputActive = VectorUtils.SRSS(FlightStick.forward, FlightStick.left, FlightStick.rotate) > OperatorConstants.kControllerActiveThreshold;
+        m_controllerInputActive.calculate(VectorUtils.SRSS(FlightStick.forward, FlightStick.left, FlightStick.rotate));
       } else {
         driveController.Translate();
         Drive(Controller.getDriveInstance().Ly, Controller.getDriveInstance().Lx, Controller.getDriveInstance().Rx);
-        m_controllerInputActive = VectorUtils.SRSS(Controller.getDriveInstance().Ly, Controller.getDriveInstance().Lx, Controller.getDriveInstance().Rx) > OperatorConstants.kControllerActiveThreshold;
+        m_controllerInputActive.calculate(VectorUtils.SRSS(Controller.getDriveInstance().Ly, Controller.getDriveInstance().Lx, Controller.getDriveInstance().Rx));
       }
-    }
-
-    // If controller input is detected clear the pose driving queue
-    if (m_controllerInputActive){
-      m_poseQueue.clear();
-      PublishPoseQueue();
     }
 
     // If stopped, clear the trajectory visualization

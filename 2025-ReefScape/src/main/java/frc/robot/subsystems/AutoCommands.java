@@ -228,6 +228,7 @@ public class AutoCommands {
             )
         );
 
+        DriveTrain.getInstance().m_poseQueue.clear();
         PathPlanning.getInstance().navigateTo(target1);
         PathPlanning.getInstance().navigateTo(target2);
         Autonomous.getInstance().m_drivingToReef = true;

@@ -255,7 +255,8 @@ public final class Constants {
     // Default Settings
     public static boolean kFieldCentricDriving = true;
     public static boolean kDefaultDriveAccelLimiter = true;
-    public static double kControllerActiveThreshold = 0.333;
+    public static double kControllerActiveThreshold = 0.4;
+    public static double kControllerActiveHysteresis = 0.1;
   }
 
 
