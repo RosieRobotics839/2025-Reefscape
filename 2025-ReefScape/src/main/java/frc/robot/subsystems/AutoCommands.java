@@ -17,7 +17,6 @@ import frc.robot.Constants;
 import frc.robot.Constants.ArmConstants;
 import frc.robot.Constants.AutoConstants;
 import frc.robot.Constants.EffectorConstants;
-import frc.robot.Constants.ElevatorConstants;
 import frc.robot.Constants.ScoreConstants;
 import frc.robot.Constants.ScoreConstants.ScoreLevel;
 import frc.robot.Constants.VisionConstants;
@@ -237,7 +236,7 @@ public class AutoCommands {
             //Commands.waitSeconds(1),
             new InstantCommand(() -> Arm.getInstance().setPosition(ArmConstants.kAngleMax)),
             Commands.waitUntil(() -> Arm.getInstance().isNearPosition()),
-            new InstantCommand(() -> EndEffector.getInstance().JustShootIt())
+            EndEffector.getInstance().JustShootIt()
         );
     }
     
