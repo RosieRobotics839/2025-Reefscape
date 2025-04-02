@@ -40,7 +40,7 @@ public class Controller extends XboxController {
   public double Ry, Rx, Ry_pre, Rx_pre;
   public boolean m_directElevator = false;
   public boolean m_directArm = false;
-  public static ScoreConstants.ReefAlignment m_reefAlign;
+  public static ScoreConstants.ReefAlignment m_reefAlign = ReefAlignment.LEFT;
 
   public static Integer speedSelect = DriveConstants.kMaxSpeedDefault;
 
@@ -202,20 +202,12 @@ public class Controller extends XboxController {
     );
       
     StageDial1.debounce(0.2,DebounceType.kRising).whileTrue(
-      Commands.either(
-        Commands.sequence(
-          disableDirectControl(),
-          new InstantCommand(()->m_level = ScoreLevel.ALGAE1),
-          Elevator.getInstance().moveToLevelCommand(()->m_level),
-          Arm.getInstance().moveToLevelCommand(()->m_level)
-        ),
         Commands.sequence(
           disableDirectControl(),
           new InstantCommand(()->m_level = ScoreLevel.TROUGH),
           Elevator.getInstance().moveToLevelCommand(()->m_level),
           Arm.getInstance().moveToLevelCommand(()->m_level)
         )
-      ,()->m_reefAlign == ReefAlignment.CENTER)
     );
 
     StageDial2.debounce(0.2,DebounceType.kRising).whileTrue(

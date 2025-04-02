@@ -109,10 +109,10 @@ public class AutoCommands {
                 })),
             Commands.sequence(
                 new InstantCommand(() -> {
-                    PathPlanning.getInstance().navigateTo(PathPlanning.AprilTagAtDistance(tagId, -AutoConstants.kSourceStartingDistance - Constants.kChassis.kWheelBase/2.0, Math.PI));
+                    PathPlanning.getInstance().navigateTo(PathPlanning.AprilTagAtDistance(tagId, new Translation2d(-AutoConstants.kSourceStartingDistance - Constants.kChassis.kWheelBase/2.0, (tagId==coralSourceRTag() ? 1 : -1)*AutoConstants.kSourceOffset), Math.PI));
                 }),
-                new InstantCommand(() -> PathPlanning.getInstance().navigateTo(PathPlanning.AprilTagAtDistance(tagId, -AutoConstants.kSourceDistance - Constants.kChassis.kWheelBase/2.0, Math.PI))),
-                Commands.waitUntil(() -> VectorUtils.isNear(PoseEstimator.getInstance().m_finalPose,PathPlanning.AprilTagAtDistance(tagId, -AutoConstants.kSourceStartingDistance - Constants.kChassis.kWheelBase/2.0), AutoConstants.kSourceTolerance)),
+                new InstantCommand(() -> PathPlanning.getInstance().navigateTo(PathPlanning.AprilTagAtDistance(tagId, new Translation2d(-AutoConstants.kSourceDistance - Constants.kChassis.kWheelBase/2.0, (tagId==coralSourceRTag() ? 1 : -1)*AutoConstants.kSourceOffset), Math.PI))),
+                Commands.waitUntil(() -> VectorUtils.isNear(PoseEstimator.getInstance().m_finalPose,PathPlanning.AprilTagAtDistance(tagId, new Translation2d(-AutoConstants.kSourceStartingDistance - Constants.kChassis.kWheelBase/2.0, (tagId==coralSourceRTag() ? 1 : -1)*AutoConstants.kSourceOffset)), AutoConstants.kSourceTolerance)),
                 Commands.parallel(
                     EndEffector.getInstance().IntakeCommand().asProxy(),
                     wiggle.asProxy()
@@ -175,7 +175,7 @@ public class AutoCommands {
                 );
     
                 finalOffset = new Translation2d(
-                    -AutoConstants.kReefDistance - Constants.kChassis.kWheelBase/2.0,
+                    -AutoConstants.kCenterReefDistance - Constants.kChassis.kWheelBase/2.0,
                     Constants.AutoConstants.kStaticReefOffset
                 );
                 break;
@@ -257,7 +257,7 @@ public class AutoCommands {
                 );
     
                 finalOffset = new Translation2d(
-                    -AutoConstants.kReefDistance - Constants.kChassis.kWheelBase/2.0,
+                    -AutoConstants.kCenterReefDistance - Constants.kChassis.kWheelBase/2.0,
                     Constants.AutoConstants.kStaticReefOffset
                 );
                 break;

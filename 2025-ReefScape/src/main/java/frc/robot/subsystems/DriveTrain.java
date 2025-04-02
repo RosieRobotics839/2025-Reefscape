@@ -172,7 +172,13 @@ public class DriveTrain extends SubsystemBase {
         nt_distance.set(0);
       } else {
         // Moving to Target Pose
-        Pose2d diff = VectorUtils.poseDiff(m_poseQueue.peek(),PoseEstimator.getInstance().m_finalPose);
+        Twist2d leadTwist = new Twist2d(
+          PoseEstimator.getInstance().m_predictedTwist.dx*DriveConstants.kAutoDriveLeadSeconds/0.020,
+          PoseEstimator.getInstance().m_predictedTwist.dy*DriveConstants.kAutoDriveLeadSeconds/0.020,
+          PoseEstimator.getInstance().m_predictedTwist.dtheta*DriveConstants.kAutoDriveLeadSeconds/0.020
+        );
+        Pose2d feedbackPose = PoseEstimator.getInstance().m_finalPose.exp(leadTwist);
+        Pose2d diff = VectorUtils.poseDiff(m_poseQueue.peek(),feedbackPose);
         double distance = Math.max(0,VectorUtils.poseDiff(m_poseQueue.peekLast(),PoseEstimator.getInstance().m_finalPose).getTranslation().getNorm() - kChassis.kWheelBase/2.0);
         nt_distance.set(distance);
         m_autoSpeed = m_autoAccelLimiter.calculate(Math.max(Math.min(1,distance/(DriveConstants.kAutoSlowDist))*DriveConstants.kAutoMaxSpeed, DriveConstants.kAutoMinSpeed));
@@ -180,9 +186,9 @@ public class DriveTrain extends SubsystemBase {
 
         // Cross Track Correction
         Translation2d nearestPoint = VectorUtils.nearestPointOnLine(PoseEstimator.getInstance().m_finalPose.getTranslation(), m_poseQueueStart.getTranslation(), m_poseQueue.peek().getTranslation());
-        Pose2d correction = VectorUtils.poseDiff(new Pose2d(nearestPoint,new Rotation2d(0)),PoseEstimator.getInstance().m_finalPose);
+        Pose2d correction = VectorUtils.poseDiff(new Pose2d(nearestPoint,new Rotation2d(0)),feedbackPose);
         Translation2d limitedCorrection = VectorUtils.vectorInDirectionOf(correction, Math.max(Math.min(correction.getTranslation().getNorm()*DriveConstants.kAutoCrossTrackKp,DriveConstants.kAutoCrossTrackMax),-DriveConstants.kAutoCrossTrackMax));
-        Translation2d drivevector = vector.plus(limitedCorrection);
+        Translation2d drivevector = VectorUtils.vectorInDirectionOf(vector.plus(limitedCorrection), m_autoSpeed);
 
         movement = new Twist2d(drivevector.getX(), drivevector.getY(), 0);
         Drive(movement);

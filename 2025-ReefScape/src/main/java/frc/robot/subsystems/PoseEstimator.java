@@ -72,7 +72,7 @@ public class PoseEstimator extends SubsystemBase {
   public double m_gyroResidual = 0;
   SwerveModulePosition [] m_previousModulePositions;
 
-  Twist2d m_predictedTwist;
+  Twist2d m_predictedTwist = new Twist2d(0,0,0);
 
   public final Field2d m_field = new Field2d();
   FieldObject2d m_fieldsimpose = m_field.getObject("SimPose");

@@ -36,7 +36,7 @@ public class LED extends SubsystemBase {
   public boolean m_effectorMotorTempHigh = false;
   public boolean m_funnelMotorTempHigh = false;
   public boolean m_climberMotorTempHigh = false;
-  public int TestTimeRemaining = 130; // 2 minutes and 10 seconds
+  public int TestTimeRemaining = 135; // 2 minutes and 10 seconds
 
   BooleanPublisher nt_driveTrainMotorsTempHigh = table.getBooleanTopic("driveTrainMotorsTempHigh").publish();
   BooleanPublisher nt_elevatorMotorTempHigh = table.getBooleanTopic("elevatorMotorTempHigh").publish();
@@ -113,7 +113,7 @@ public class LED extends SubsystemBase {
           }
           
       } else {
-        TestTimeRemaining = 130;
+        TestTimeRemaining = 135;
       }
   }
 
