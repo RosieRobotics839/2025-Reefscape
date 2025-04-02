@@ -287,13 +287,17 @@ public class Controller extends XboxController {
 
       ByeAlgae.onTrue(
         Commands.sequence(
+          disableDirectControl(),
           AutoCommands.BargeFling()
-          /*
+        
+        /*
+        Commands.sequence(
+        
           disableDirectControl(),
           new InstantCommand(()->m_level = ScoreConstants.ScoreLevel.ALGAE),
-          Arm.getInstance().moveToLevelCommand(()->m_level)
-          */
-      ));
+          Arm.getInstance().moveToLevelCommand(()->m_level)*/
+        )  
+      );
     } 
   }
 
