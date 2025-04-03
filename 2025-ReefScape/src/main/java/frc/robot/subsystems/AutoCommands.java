@@ -117,8 +117,8 @@ public class AutoCommands {
                         Commands.waitSeconds(1),
                         wiggle.asProxy()
                     ).withTimeout(5)
-                )
-            ).repeatedly().handleInterrupt(()->DriveTrain.getInstance().m_poseQueue.clear())
+                ).repeatedly().handleInterrupt(()->DriveTrain.getInstance().m_poseQueue.clear())
+            )
         ).until(()->{return !Autonomous.getInstance().isInsideReef() && EndEffector.getInstance().hasGamePiece();});
     }
 
