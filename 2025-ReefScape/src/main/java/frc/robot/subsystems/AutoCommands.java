@@ -101,22 +101,24 @@ public class AutoCommands {
     public static Command GetCoral(int tagId){
         return Commands.parallel(
             Commands.sequence(
-                Commands.waitUntil(() -> !Autonomous.getInstance().isInsideReef()),
+                Commands.waitSeconds(0.33),
                 new InstantCommand(() -> {
                     Elevator.getInstance().setPosition(0);
                     Arm.getInstance().setPosition(ArmConstants.kAngleMax);
                 })),
-            Commands.sequence(
-                new InstantCommand(() -> {
-                    PathPlanning.getInstance().navigateTo(PathPlanning.AprilTagAtDistance(tagId, new Translation2d(-AutoConstants.kSourceStartingDistance - Constants.kChassis.kWheelBase/2.0, (tagId==coralSourceRTag() ? 1 : -1)*AutoConstants.kSourceOffset), Math.PI));
-                }),
-                new InstantCommand(() -> PathPlanning.getInstance().navigateTo(PathPlanning.AprilTagAtDistance(tagId, new Translation2d(-AutoConstants.kSourceDistance - Constants.kChassis.kWheelBase/2.0, (tagId==coralSourceRTag() ? 1 : -1)*AutoConstants.kSourceOffset), Math.PI))),
-                Commands.waitUntil(() -> VectorUtils.isNear(PoseEstimator.getInstance().m_finalPose,PathPlanning.AprilTagAtDistance(tagId, new Translation2d(-AutoConstants.kSourceStartingDistance - Constants.kChassis.kWheelBase/2.0, (tagId==coralSourceRTag() ? 1 : -1)*AutoConstants.kSourceOffset)), AutoConstants.kSourceTolerance)),
-                Commands.parallel(
-                    EndEffector.getInstance().IntakeCommand().asProxy(),
-                    wiggle.asProxy()
-                ).withTimeout(5)
-            ).repeatedly().handleInterrupt(()->DriveTrain.getInstance().m_poseQueue.clear())
+            Commands.deadline(EndEffector.getInstance().IntakeCommand().asProxy(),
+                Commands.sequence(
+                    new InstantCommand(() -> {
+                        PathPlanning.getInstance().navigateTo(PathPlanning.AprilTagAtDistance(tagId, new Translation2d(-AutoConstants.kSourceStartingDistance - Constants.kChassis.kWheelBase/2.0, (tagId==coralSourceRTag() ? 1 : -1)*AutoConstants.kSourceOffset), Math.PI));
+                    }),
+                    new InstantCommand(() -> PathPlanning.getInstance().navigateTo(PathPlanning.AprilTagAtDistance(tagId, new Translation2d(-AutoConstants.kSourceDistance - Constants.kChassis.kWheelBase/2.0, (tagId==coralSourceRTag() ? 1 : -1)*AutoConstants.kSourceOffset), Math.PI))),
+                    Commands.sequence(
+                        Commands.waitUntil(() -> DriveTrain.getInstance().m_poseQueue.isEmpty()),
+                        Commands.waitSeconds(1),
+                        wiggle.asProxy()
+                    ).withTimeout(5)
+                ).repeatedly().handleInterrupt(()->DriveTrain.getInstance().m_poseQueue.clear())
+            )
         ).until(()->{return !Autonomous.getInstance().isInsideReef() && EndEffector.getInstance().hasGamePiece();});
     }
 
@@ -165,7 +167,7 @@ public class AutoCommands {
         Translation2d approachOffset;
         Translation2d finalOffset;
     
-        switch (Controller.m_reefAlign) {
+        /*switch (Controller.m_reefAlign) {
             case CENTER:
                 // Center alignment - no lateral offset
                 approachOffset = new Translation2d(
@@ -205,8 +207,18 @@ public class AutoCommands {
                     Constants.AutoConstants.kReefOffset + Constants.AutoConstants.kStaticReefOffset
                 );
                 break;
-        }
-        
+        }*/
+
+        approachOffset = new Translation2d(
+            -AutoConstants.kReefStartingDistance - Constants.kChassis.kWheelBase/2.0,
+            Constants.AutoConstants.kReefOffset * (left ? 1 : -1) + Constants.AutoConstants.kStaticReefOffset
+        );
+    
+        finalOffset = new Translation2d(
+            -AutoConstants.kReefDistance - Constants.kChassis.kWheelBase/2.0,
+            Constants.AutoConstants.kReefOffset * (left ? 1 : -1) + Constants.AutoConstants.kStaticReefOffset
+        );
+
         // Create target poses
         Pose2d target1 = PathPlanning.AprilTagAtDistance(tagId, approachOffset, Units.degreesToRadians(15));
         Pose2d target2 = PathPlanning.AprilTagAtDistance(tagId, finalOffset);

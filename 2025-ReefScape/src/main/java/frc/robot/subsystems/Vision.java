@@ -133,7 +133,7 @@ public class Vision extends SubsystemBase {
 
     // If the robot pose is not near the last accepted pose and the last accepted one was observed very recently, don't trust it.
     if (m_lastVisionPose != null && robotPose.timestampSeconds-m_lastVisionPose.timestampSeconds < 0.5){
-      if (!VectorUtils.isNear(robotPose.estimatedPose.toPose2d(), m_lastVisionPose.estimatedPose.toPose2d(), 1)){
+      if (!VectorUtils.isNear(robotPose.estimatedPose.toPose2d(), m_lastVisionPose.estimatedPose.toPose2d(), 3)){
         return false;
       }
     }
@@ -146,7 +146,7 @@ public class Vision extends SubsystemBase {
     // If the pose estimator has been aligned with vision in the past, check that the robotPose is somewhat near the odometry result.
     if (m_visionHasBeenGood){
       // Vision is not near the pose estimator final pose, but it once was.
-      if (!VectorUtils.isNear(robotPose.estimatedPose.toPose2d(), PoseEstimator.getInstance().m_finalPose, 2)){
+      if (!VectorUtils.isNear(robotPose.estimatedPose.toPose2d(), PoseEstimator.getInstance().m_finalPose, 3)){
         return false;
       }
     }

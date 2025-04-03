@@ -32,7 +32,6 @@ import frc.utils.pathfinding.astar.FieldPose;
 import frc.utils.pathfinding.astar.ScoreHeuristic;
 import frc.utils.pathfinding.astar.Graph;
 import frc.utils.pathfinding.astar.PathScorer;
-import frc.utils.pathfinding.astar.PathfindingUtils;
 import frc.utils.pathfinding.astar.RouteFinder;
 
 /** Add your docs here. */
@@ -202,6 +201,7 @@ public class PathPlanning {
             from = DriveTrain.getInstance().m_poseQueue.getLast();
         }
         
+        /*
         // Check if from is in an obstacle, if so find the shortest way out
         var polygon = PathfindingUtils.PointInConvexPolygons(from.getTranslation(), Autonomous.staticObstacles);
         if (!polygon.isEmpty()){
@@ -211,6 +211,10 @@ public class PathPlanning {
         } else {
             navigateTo(to, from);
         }
+        */
+
+        // Was faster not to navigate to the nearest exit, but just use the penalized route. Still seems to prefer the graph nodes, instead of going through the reef. Good.
+        navigateTo(to, from);
     }
 
     public void navigateTo(Pose2d to, Pose2d from){

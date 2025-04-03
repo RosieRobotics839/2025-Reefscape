@@ -54,7 +54,7 @@ public class EndEffector extends SubsystemBase {
     public Command ExpelCommand(DoubleSupplier speed, BooleanSupplier extended){
       return Commands.sequence( //Outtake for those who don't know
         Commands.waitUntil(() -> {return m_motor.setSpeed((m_hasCoral ? 1 : -1) * speed.getAsDouble());}), // If we have the coral ( ? ) then forward, anything else backward.
-        Commands.waitUntil(() -> {return !hasGamePiece();}), //Checking whether we have a game piece or not.
+        Commands.either(Commands.waitUntil(() -> {return !hasGamePiece();}), Commands.waitSeconds(4), ()->hasGamePiece()),
         Commands.waitSeconds(3).onlyIf(extended)
       ).withTimeout(4).onlyWhile(()->DriverStation.isEnabled())
       .beforeStarting(()->m_intakeRunning=false)

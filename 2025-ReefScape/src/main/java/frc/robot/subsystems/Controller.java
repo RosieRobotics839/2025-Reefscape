@@ -135,8 +135,19 @@ public class Controller extends XboxController {
       return new InstantCommand(()->{getAccessoryInstance().m_directElevator = false; getAccessoryInstance().m_directArm = false;});
     }
 
-    ScoreConstants.ScoreLevel m_level;
-    public Command m_expel = EndEffector.getInstance().ExpelCommand(()->(m_level == ScoreLevel.TROUGH ? EffectorConstants.kTroughOuttakeSpeed : EffectorConstants.kOuttakeSpeed), ()->m_level==ScoreLevel.TROUGH);
+    ScoreConstants.ScoreLevel m_level = ScoreLevel.FUNNEL;
+    private double expelSpeed(){
+      switch (m_level) {
+        case TROUGH:
+          return EffectorConstants.kTroughOuttakeSpeed;
+        case CORAL2:
+        case CORAL3:
+          return EffectorConstants.kOuttakeFastSpeed;
+        default:
+          return EffectorConstants.kOuttakeSpeed;
+      }
+    }
+    public Command m_expel = EndEffector.getInstance().ExpelCommand(()->expelSpeed(), ()->m_level==ScoreLevel.TROUGH);
 
     AccessoryButtons(Controller controller){
 
@@ -266,20 +277,29 @@ public class Controller extends XboxController {
       LeftScore.onTrue(
         Commands.sequence(
           new InstantCommand(()->m_reefAlign = ReefAlignment.LEFT),
-          new InstantCommand(()->nt_scoreAlignment.set("LEFT"))
+          new InstantCommand(()->nt_scoreAlignment.set("LEFT")),
+          disableDirectControl(),
+          Elevator.getInstance().moveToLevelCommand(()->m_level),
+          Arm.getInstance().moveToLevelCommand(()->m_level)
         )
       );
       RightScore.onTrue(
         Commands.sequence(
           new InstantCommand(()->m_reefAlign = ReefAlignment.RIGHT),
-          new InstantCommand(()->nt_scoreAlignment.set("RIGHT"))
+          new InstantCommand(()->nt_scoreAlignment.set("RIGHT")),
+          disableDirectControl(),
+          Elevator.getInstance().moveToLevelCommand(()->m_level),
+          Arm.getInstance().moveToLevelCommand(()->m_level)
         )
       );
 
-      CenterAlign.onTrue(
+      CenterAlign.debounce(0.3).onTrue(
         Commands.sequence(
           new InstantCommand(()->m_reefAlign = ReefAlignment.CENTER),
-          new InstantCommand(()->nt_scoreAlignment.set("CENTER"))
+          new InstantCommand(()->nt_scoreAlignment.set("CENTER")),
+          disableDirectControl(),
+          Elevator.getInstance().moveToLevelCommand(()->m_level),
+          Arm.getInstance().moveToLevelCommand(()->m_level)
         )
       );
 
