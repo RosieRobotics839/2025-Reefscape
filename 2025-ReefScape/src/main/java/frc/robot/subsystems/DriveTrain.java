@@ -30,7 +30,6 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.OperatorConstants;
-import frc.robot.Constants.kChassis;
 import frc.robot.Constants.kDriveTrain;
 import frc.robot.Constants.kDriveTrain.DriveConstants;
 import frc.utils.VectorUtils;
@@ -164,7 +163,7 @@ public class DriveTrain extends SubsystemBase {
     // Follow Drive to Pose Queue, unless controller input is active, which clears the queue in periodic().
     if (!m_poseQueue.isEmpty()){ 
       Twist2d movement;
-      if (VectorUtils.isNear(PoseEstimator.getInstance().m_finalPose, m_poseQueue.peek(), (m_poseQueue.size() > 1 ? DriveConstants.kMidPointAccuracyFactor : 1) * DriveConstants.kAutoToleranceDistance, (m_poseQueue.size() > 1 ? DriveConstants.kMidPointAccuracyFactor : 1) * DriveConstants.kAutoToleranceAngle)){
+      if (VectorUtils.isNear(PoseEstimator.getInstance().m_finalPose, m_poseQueue.peek(), (m_poseQueue.size() > 1 ? DriveConstants.kAutoToleranceMidPointDistance : DriveConstants.kAutoToleranceDistance), (m_poseQueue.size() > 1 ? Math.PI : DriveConstants.kAutoToleranceAngle))){
         // Reached Target Pose
         m_poseQueueStart = m_poseQueue.poll();
         movement = new Twist2d(0,0,0);
@@ -179,9 +178,15 @@ public class DriveTrain extends SubsystemBase {
         );
         Pose2d feedbackPose = PoseEstimator.getInstance().m_finalPose.exp(leadTwist);
         Pose2d diff = VectorUtils.poseDiff(m_poseQueue.peek(),feedbackPose);
-        double distance = Math.max(0,VectorUtils.poseDiff(m_poseQueue.peekLast(),PoseEstimator.getInstance().m_finalPose).getTranslation().getNorm() - kChassis.kWheelBase/2.0);
-        nt_distance.set(distance);
-        m_autoSpeed = m_autoAccelLimiter.calculate(Math.max(Math.min(1,distance/(DriveConstants.kAutoSlowDist))*DriveConstants.kAutoMaxSpeed, DriveConstants.kAutoMinSpeed));
+        double distanceRemaining = VectorUtils.poseDiff(m_poseQueue.peekFirst(),PoseEstimator.getInstance().m_finalPose).getTranslation().getNorm();
+        for (int i=1; i<m_poseQueue.size(); i++){
+          distanceRemaining += VectorUtils.poseDiff(m_poseQueue.get(i),m_poseQueue.get(i-1)).getTranslation().getNorm();
+        }
+        nt_distance.set(distanceRemaining);
+        double distanceToSpeedGain = (DriveConstants.kAutoMaxSpeed-DriveConstants.kAutoMinSpeed)/(DriveConstants.kAutoSlowDist-DriveConstants.kAutoMinDistance);
+        double speedFromDistance = (distanceRemaining-DriveConstants.kAutoMinDistance)*distanceToSpeedGain;
+        double limitedSpeed = Math.max(DriveConstants.kAutoMinSpeed,Math.min(DriveConstants.kAutoMaxSpeed, speedFromDistance));
+        m_autoSpeed = m_autoAccelLimiter.calculate(limitedSpeed);
         Translation2d vector = VectorUtils.vectorInDirectionOf(diff, m_autoSpeed);
 
         // Cross Track Correction
@@ -192,8 +197,8 @@ public class DriveTrain extends SubsystemBase {
 
         movement = new Twist2d(drivevector.getX(), drivevector.getY(), 0);
         Drive(movement);
-        if (m_poseQueue.peek().getRotation() != null && distance < DriveConstants.kAutoTurnToPoseDistance){
-          double angle = (m_poseQueue.peek().getRotation().getRadians());
+        if (m_poseQueue.peekLast().getRotation() != null && distanceRemaining < DriveConstants.kAutoTurnToPoseDistance){
+          double angle = (m_poseQueue.peekLast().getRotation().getRadians());
           setTargetHeading(angle);
         }
       }

@@ -46,7 +46,7 @@ public class EndEffector extends SubsystemBase {
       return Commands.sequence(
         Commands.waitUntil(() -> {return m_motor.setSpeed(EffectorConstants.kIntakeSpeed);}), //Sets speed to intake game piece
         Commands.waitUntil(() -> {return hasGamePiece();}) //Checking whether we have a game piece or not.
-      ).onlyWhile(()->DriverStation.isEnabled())
+      ).onlyWhile(()->DriverStation.isEnabled()).withTimeout(Robot.isSimulation() ? 5 : 600)
       .beforeStarting(()->{m_intakeRunning=true;})
       .finallyDo(()->{m_motor.setRelativePosition(EffectorConstants.kExtraTurn); m_intakeRunning=false; if (Robot.isSimulation()){m_beamBreakTestSensor.set(true);}});
     }
