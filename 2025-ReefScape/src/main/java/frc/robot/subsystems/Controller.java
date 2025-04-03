@@ -135,7 +135,7 @@ public class Controller extends XboxController {
       return new InstantCommand(()->{getAccessoryInstance().m_directElevator = false; getAccessoryInstance().m_directArm = false;});
     }
 
-    ScoreConstants.ScoreLevel m_level;
+    ScoreConstants.ScoreLevel m_level = ScoreLevel.FUNNEL;
     private double expelSpeed(){
       switch (m_level) {
         case TROUGH:
