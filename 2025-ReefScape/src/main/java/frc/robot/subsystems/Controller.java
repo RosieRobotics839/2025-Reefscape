@@ -277,20 +277,29 @@ public class Controller extends XboxController {
       LeftScore.onTrue(
         Commands.sequence(
           new InstantCommand(()->m_reefAlign = ReefAlignment.LEFT),
-          new InstantCommand(()->nt_scoreAlignment.set("LEFT"))
+          new InstantCommand(()->nt_scoreAlignment.set("LEFT")),
+          disableDirectControl(),
+          Elevator.getInstance().moveToLevelCommand(()->m_level),
+          Arm.getInstance().moveToLevelCommand(()->m_level)
         )
       );
       RightScore.onTrue(
         Commands.sequence(
           new InstantCommand(()->m_reefAlign = ReefAlignment.RIGHT),
-          new InstantCommand(()->nt_scoreAlignment.set("RIGHT"))
+          new InstantCommand(()->nt_scoreAlignment.set("RIGHT")),
+          disableDirectControl(),
+          Elevator.getInstance().moveToLevelCommand(()->m_level),
+          Arm.getInstance().moveToLevelCommand(()->m_level)
         )
       );
 
-      CenterAlign.onTrue(
+      CenterAlign.debounce(0.3).onTrue(
         Commands.sequence(
           new InstantCommand(()->m_reefAlign = ReefAlignment.CENTER),
-          new InstantCommand(()->nt_scoreAlignment.set("CENTER"))
+          new InstantCommand(()->nt_scoreAlignment.set("CENTER")),
+          disableDirectControl(),
+          Elevator.getInstance().moveToLevelCommand(()->m_level),
+          Arm.getInstance().moveToLevelCommand(()->m_level)
         )
       );
 
