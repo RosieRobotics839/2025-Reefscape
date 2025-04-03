@@ -136,7 +136,18 @@ public class Controller extends XboxController {
     }
 
     ScoreConstants.ScoreLevel m_level;
-    public Command m_expel = EndEffector.getInstance().ExpelCommand(()->(m_level == ScoreLevel.TROUGH ? EffectorConstants.kTroughOuttakeSpeed : EffectorConstants.kOuttakeSpeed), ()->m_level==ScoreLevel.TROUGH);
+    private double expelSpeed(){
+      switch (m_level) {
+        case TROUGH:
+          return EffectorConstants.kTroughOuttakeSpeed;
+        case CORAL2:
+        case CORAL3:
+          return EffectorConstants.kOuttakeFastSpeed;
+        default:
+          return EffectorConstants.kOuttakeSpeed;
+      }
+    }
+    public Command m_expel = EndEffector.getInstance().ExpelCommand(()->expelSpeed(), ()->m_level==ScoreLevel.TROUGH);
 
     AccessoryButtons(Controller controller){
 
