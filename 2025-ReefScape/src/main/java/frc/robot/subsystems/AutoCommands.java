@@ -167,7 +167,7 @@ public class AutoCommands {
         Translation2d approachOffset;
         Translation2d finalOffset;
     
-        switch (Controller.m_reefAlign) {
+        /*switch (Controller.m_reefAlign) {
             case CENTER:
                 // Center alignment - no lateral offset
                 approachOffset = new Translation2d(
@@ -207,8 +207,18 @@ public class AutoCommands {
                     Constants.AutoConstants.kReefOffset + Constants.AutoConstants.kStaticReefOffset
                 );
                 break;
-        }
-        
+        }*/
+
+        approachOffset = new Translation2d(
+            -AutoConstants.kReefStartingDistance - Constants.kChassis.kWheelBase/2.0,
+            Constants.AutoConstants.kReefOffset * (left ? 1 : -1) + Constants.AutoConstants.kStaticReefOffset
+        );
+    
+        finalOffset = new Translation2d(
+            -AutoConstants.kReefDistance - Constants.kChassis.kWheelBase/2.0,
+            Constants.AutoConstants.kReefOffset * (left ? 1 : -1) + Constants.AutoConstants.kStaticReefOffset
+        );
+
         // Create target poses
         Pose2d target1 = PathPlanning.AprilTagAtDistance(tagId, approachOffset, Units.degreesToRadians(15));
         Pose2d target2 = PathPlanning.AprilTagAtDistance(tagId, finalOffset);

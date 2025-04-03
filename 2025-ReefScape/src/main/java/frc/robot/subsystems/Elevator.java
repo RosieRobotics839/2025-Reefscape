@@ -117,7 +117,7 @@ public class Elevator extends SubsystemBase {
                 setPosition(ElevatorConstants.kMinHeight);
                 break;
             case TROUGH:
-                setPosition(ElevatorConstants.kCoralL1);
+                setPosition(ElevatorConstants.kTroughHeight);
                 break;
             case CORAL2:
                 setPosition(ElevatorConstants.kCoralL2);
@@ -132,7 +132,7 @@ public class Elevator extends SubsystemBase {
                 setPosition(ElevatorConstants.kAlgaeL0);
                 break;
             case ALGAE1:
-                setPosition(ElevatorConstants.kAlgaeL1);
+                setPosition(ElevatorConstants.kTroughHeight);
                 break;
             case ALGAE2:
                 setPosition(ElevatorConstants.kAlgaeL2);
@@ -141,7 +141,7 @@ public class Elevator extends SubsystemBase {
                 setPosition(ElevatorConstants.kAlgaeL3);
                 break;
             case ALGAE4:
-                setPosition(ElevatorConstants.kAlgaeL4);
+                setPosition(ElevatorConstants.kMaxHeight);
                 break;
             default:
         }
