@@ -17,6 +17,7 @@ import frc.robot.Constants;
 import frc.robot.Constants.ArmConstants;
 import frc.robot.Constants.AutoConstants;
 import frc.robot.Constants.EffectorConstants;
+import frc.robot.Constants.ElevatorConstants;
 import frc.robot.Constants.ScoreConstants;
 import frc.robot.Constants.ScoreConstants.ScoreLevel;
 import frc.robot.Constants.VisionConstants;
@@ -119,7 +120,7 @@ public class AutoCommands {
                     ).withTimeout(5)
                 ).repeatedly().handleInterrupt(()->DriveTrain.getInstance().m_poseQueue.clear())
             )
-        ).until(()->{return !Autonomous.getInstance().isInsideReef() && EndEffector.getInstance().hasGamePiece();});
+        ).until(()->{return !Autonomous.getInstance().isInsideReef() && Elevator.getInstance().getPosition() < ElevatorConstants.kMaxHeight/2.0 && EndEffector.getInstance().hasGamePiece();});
     }
 
     public static Command wiggle = Commands.sequence(
