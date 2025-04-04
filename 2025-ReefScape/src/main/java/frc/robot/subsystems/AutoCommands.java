@@ -107,7 +107,11 @@ public class AutoCommands {
                     Elevator.getInstance().setPosition(0);
                     Arm.getInstance().setPosition(ArmConstants.kAngleMax);
                 })),
-            Commands.deadline(EndEffector.getInstance().IntakeCommand().asProxy(),
+            Commands.deadline(
+                Commands.sequence(
+                    Commands.waitUntil(()->{return !Autonomous.getInstance().isInsideReef() && Elevator.getInstance().getPosition() < ElevatorConstants.kMaxHeight/2.0 && !EndEffector.getInstance().hasGamePiece();}),
+                    EndEffector.getInstance().IntakeCommand().asProxy()
+                ),
                 Commands.sequence(
                     new InstantCommand(() -> {
                         PathPlanning.getInstance().navigateTo(PathPlanning.AprilTagAtDistance(tagId, new Translation2d(-AutoConstants.kSourceStartingDistance - Constants.kChassis.kWheelBase/2.0, (tagId==coralSourceRTag() ? 1 : -1)*AutoConstants.kSourceOffset), Math.PI));
