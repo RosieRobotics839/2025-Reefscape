@@ -17,6 +17,7 @@ import frc.robot.Constants;
 import frc.robot.Constants.ArmConstants;
 import frc.robot.Constants.AutoConstants;
 import frc.robot.Constants.EffectorConstants;
+import frc.robot.Constants.ElevatorConstants;
 import frc.robot.Constants.ScoreConstants;
 import frc.robot.Constants.ScoreConstants.ScoreLevel;
 import frc.robot.Constants.VisionConstants;
