@@ -405,16 +405,17 @@ public final class Constants {
     public static final int kReefBlueCenterRefID = 18;
     public static double kReefKOZRadius = Units.feetToMeters(NTDouble.create(6,"Autonomous/kReefKOZRadius", val -> {kReefKOZRadius = Units.feetToMeters(val); Autonomous.staticObstacles = Autonomous.generateStaticObstacles();}));
     public static double kReefGraphNodeRadius = Units.feetToMeters(NTDouble.create(7.0,"Autonomous/kReefGraphNodeRadius", val -> {kReefGraphNodeRadius = Units.feetToMeters(val);}));
-   
+    public static double kMinObstaclePenaltyDistance = Units.feetToMeters(NTDouble.create(2.0,"Autonomous/kMinObstaclePenaltyDistance", val -> {kMinObstaclePenaltyDistance = Units.feetToMeters(val);}));
+ 
     public static double kLineupTimeout = NTDouble.create(7, "Autonomous/kLineupTimeout", val -> kLineupTimeout = val);
     public static double kReefDistance = Units.inchesToMeters(NTDouble.create(6.25, "Autonomous/kReefDistance", val -> kReefDistance = Units.inchesToMeters(val)));
-    public static double kCenterReefDistance = Units.inchesToMeters(NTDouble.create(9.5, "Autonomous/kCenterReefDistance", val -> kCenterReefDistance = Units.inchesToMeters(val)));;
-    public static double kReefStartingDistance = Units.inchesToMeters(NTDouble.create(40, "Autonomous/kReefStartingDistance", val -> kReefStartingDistance = Units.inchesToMeters(val)));;
+    public static double kCenterReefDistance = Units.inchesToMeters(NTDouble.create(9.5, "Autonomous/kCenterReefDistance", val -> kCenterReefDistance = Units.inchesToMeters(val)));
+    public static double kReefStartingDistance = Units.inchesToMeters(NTDouble.create(40, "Autonomous/kReefStartingDistance", val -> kReefStartingDistance = Units.inchesToMeters(val)));
     public static double kReefTolerance = Units.inchesToMeters(NTDouble.create(0.5, "Autonomous/kReefToleranceInch", val -> kReefTolerance = Units.inchesToMeters(val)));
     public static double kReefArmupTolerance = Units.inchesToMeters(NTDouble.create(120, "Autonomous/kReefArmupTolerance", val -> kReefArmupTolerance = Units.inchesToMeters(val)));
     public static double kSourceDistance = Units.inchesToMeters(NTDouble.create(5, "Autonomous/kSourceDistanceInch", val -> kSourceDistance = Units.inchesToMeters(val)));
     public static double kSourceOffset = Units.inchesToMeters(NTDouble.create(0, "Autonomous/kSourceOffsetInch", val -> kSourceOffset = Units.inchesToMeters(val)));
-    public static double kSourceStartingDistance = Units.inchesToMeters(NTDouble.create(44.0, "Autonomous/kSourceStartingDistance", val -> kSourceStartingDistance = Units.inchesToMeters(val)));;
+    public static double kSourceStartingDistance = Units.inchesToMeters(NTDouble.create(44.0, "Autonomous/kSourceStartingDistance", val -> kSourceStartingDistance = Units.inchesToMeters(val)));
     public static double kSourceTolerance = Units.inchesToMeters(NTDouble.create(12.0, "Autonomous/kSourceNearDistanceInch", val -> kSourceTolerance = Units.inchesToMeters(val)));
     public static double kReefOffset = Units.inchesToMeters(NTDouble.create(6.5,"Autonomous/kReefOffset",val -> kReefOffset = Units.inchesToMeters(val)));
     public static double kTroughClearance = NTDouble.create(2, "Autonomous/kTroughClearance", val -> kTroughClearance = Units.inchesToMeters(val));
@@ -423,7 +424,7 @@ public final class Constants {
     
     public static double kFieldLength = 16.451;
     public static double kFieldWidth = 8.211;
-    
+   
   }
 
   public static class kDriveTrain {

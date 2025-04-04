@@ -5,8 +5,6 @@
 package frc.robot;
 
 import edu.wpi.first.math.filter.Debouncer;
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.DataLogManager;
@@ -20,7 +18,6 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
-import edu.wpi.first.wpilibj2.command.InstantCommand;
 import frc.robot.subsystems.Arm;
 import frc.robot.subsystems.Autonomous;
 import frc.robot.subsystems.Climber;
@@ -63,6 +60,7 @@ public class Robot extends TimedRobot {
   public KrakenOrchestra m_orchestra = KrakenOrchestra.getInstance();
   public TwentyFiveChain chain = new TwentyFiveChain();
   public Encouragement encouraging = new Encouragement();
+  public Dashboard m_dashboard = Dashboard.getInstance();
 
   Alliance myAlliance = Alliance.Red;
 
@@ -70,7 +68,7 @@ public class Robot extends TimedRobot {
   {
     if (Robot.isSimulation()){
       nt_smartdashboard.getStringTopic("Auto Selector").publish().set("Build Your Own A(uto)dventure");
-      nt_smartdashboard.getStringTopic("DB/String 0").publish().set("STORE");
+      nt_smartdashboard.getStringTopic("DB/String 0").publish().set("AUTOPOSE.0");
       nt_smartdashboard.getStringTopic("DB/String 1").publish().set("Score.NE.Left.4");
       nt_smartdashboard.getStringTopic("DB/String 2").publish().set("Get.Right");
       nt_smartdashboard.getStringTopic("DB/String 3").publish().set("Score.SE.Right.4");
@@ -78,7 +76,7 @@ public class Robot extends TimedRobot {
       nt_smartdashboard.getStringTopic("DB/String 5").publish().set("Score.SE.Left.4");
       nt_smartdashboard.getStringTopic("DB/String 6").publish().set("Get.Right");
       nt_smartdashboard.getStringTopic("DB/String 7").publish().set("Score.SS.Right.4");
-      nt_smartdashboard.getStringTopic("DB/String 8").publish().set("RETURN");
+      nt_smartdashboard.getStringTopic("DB/String 8").publish().set("AUTOPOSE.1");
       nt_smartdashboard.getStringTopic("DB/String 9").publish().set("");
     }
   }
@@ -188,12 +186,6 @@ public class Robot extends TimedRobot {
    * below with additional strings. If using the SendableChooser make sure to add them to the
    * chooser code above as well.
    */
-  Pose2d poseTo;
-  Pose2d poseFrom;
-  {
-    PoseEstimator.getInstance().m_field.getObject("poseTo").setPose(0,0, new Rotation2d(0));
-    PoseEstimator.getInstance().m_field.getObject("poseFrom").setPose(0,0, new Rotation2d(0));
-  }
 
   @Override
   public void autonomousInit() {
@@ -206,13 +198,6 @@ public class Robot extends TimedRobot {
       case "Build Your Own A(uto)dventure":
         m_autonomousCommand = Dashboard.getInstance().BuildYourOwnAutoCommands();
         break;
-      case "FollowLine":
-        Pose2d from = PoseEstimator.getInstance().m_field.getObject("poseFrom").getPose();
-        Pose2d to = PoseEstimator.getInstance().m_field.getObject("poseTo").getPose();
-        m_autonomousCommand = new InstantCommand(()->PathPlanning.getInstance().navigateTo(to, from));
-        break;
-        
-        //m_autonomousCommand = Dashboard.getInstance().BuildYourOwnAutoCommands();
    }
     CommandScheduler.getInstance().schedule(m_autonomousCommand);
   }

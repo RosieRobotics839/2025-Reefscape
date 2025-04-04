@@ -4,6 +4,7 @@
 
 package frc.utils.pathfinding.astar;
 
+import frc.robot.Constants.AutoConstants;
 import frc.robot.subsystems.Autonomous;
 import frc.utils.VectorUtils;
 
@@ -30,7 +31,9 @@ public class PathScorer implements Scorer<FieldPose> {
                 var end = fromObstacle.get((i+1) % fromObstacle.size());
                 var intersection = VectorUtils.findIntersection(from.getPose().getTranslation(), to.getPose().getTranslation(), start, end);
                 if (intersection.isPresent()){
-                    R+=999*intersection.get().minus(from.getPose().getTranslation()).getNorm();
+                    if (intersection.get().minus(from.getPose().getTranslation()).getNorm() > AutoConstants.kMinObstaclePenaltyDistance){
+                        R+=999*intersection.get().minus(from.getPose().getTranslation()).getNorm();
+                    }
                 }
             }
         } else if (fromObstacle.isEmpty() && !toObstacle.isEmpty()){

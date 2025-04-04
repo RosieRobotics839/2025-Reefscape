@@ -156,7 +156,7 @@ public class Vision extends SubsystemBase {
     return true;
   }
 
-  private boolean poseIsInField(Pose2d pose){
+  public boolean poseIsInField(Pose2d pose){
     return 
       pose.getX() >= 0 &&
       pose.getX() <= aprilTagFieldLayout.getFieldLength() &&
