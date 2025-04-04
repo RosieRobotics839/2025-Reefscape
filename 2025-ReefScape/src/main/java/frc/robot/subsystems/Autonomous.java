@@ -39,7 +39,7 @@ public class Autonomous extends SubsystemBase {
   public Pose2d m_aimPoint;
   public double m_aimPointRotationOffset;
   private NTBoolean nt_isInsideReef = new NTBoolean(false,table,"isInsideReef",null);
-  private Debouncer m_insideReefDebounce = new Debouncer(0.5, DebounceType.kFalling);
+  private Debouncer m_insideReefDebounce = new Debouncer(0.7777777, DebounceType.kFalling);
 
   public static Pose2d m_redReefCenter = PathPlanning.AprilTagAtDistance(AutoConstants.kReefRedCenterRefID, AutoConstants.kReefCenterDistance);
   public static Pose2d m_blueReefCenter = PathPlanning.AprilTagAtDistance(AutoConstants.kReefBlueCenterRefID, AutoConstants.kReefCenterDistance);

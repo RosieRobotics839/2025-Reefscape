@@ -119,7 +119,7 @@ public class AutoCommands {
                     ).withTimeout(5)
                 ).repeatedly().handleInterrupt(()->DriveTrain.getInstance().m_poseQueue.clear())
             )
-        ).until(()->{return !Autonomous.getInstance().isInsideReef() && EndEffector.getInstance().hasGamePiece();});
+        ).until(()->{return !Autonomous.getInstance().isInsideReef() && Elevator.getInstance().getPosition() < ElevatorConstants.kMaxHeight/2.0 && EndEffector.getInstance().hasGamePiece();});
     }
 
     public static Command wiggle = Commands.sequence(
