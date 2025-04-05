@@ -33,7 +33,7 @@ public class EndEffector extends SubsystemBase {
 
     private boolean m_beamBroken = false;
     public boolean m_hasGamePiece = false;
-    public Debouncer m_motorStopped = new Debouncer(0.5, Debouncer.DebounceType.kRising);
+    public Debouncer m_motorStopped = new Debouncer(0.1, Debouncer.DebounceType.kRising);
     private boolean m_hasCoral = false;
     private double m_algaeRelativePosition;
 
@@ -116,7 +116,7 @@ public class EndEffector extends SubsystemBase {
         m_hasCoral = true;
     }
 
-    var motorStopped = m_motorStopped.calculate(m_watchForAlgae && m_motor.getVelocity() < .1);
+    var motorStopped = m_motorStopped.calculate(m_watchForAlgae && m_motor.getVelocity() < .45);
     
     // Coral not detected, checking to see if we have algae.
     if (!m_beamBroken && m_watchForAlgae && motorStopped && DriverStation.isAutonomousEnabled()){

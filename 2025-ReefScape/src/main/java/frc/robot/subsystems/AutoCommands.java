@@ -192,14 +192,14 @@ public class AutoCommands {
                                     PathPlanning.getInstance().navigateTo(target1);
                                 }),
             new InstantCommand(() -> PathPlanning.getInstance().navigateTo(target2)),
-            Commands.waitUntil(() -> DriveTrain.getInstance().m_poseQueue.isEmpty() || DriveTrain.getInstance().m_isStoppedConfirmed || VectorUtils.isNear(PoseEstimator.getInstance().m_finalPose, target1, AutoConstants.kReefArmupTolerance)).withTimeout(3),
+            Commands.waitUntil(() -> DriveTrain.getInstance().m_poseQueue.isEmpty() || DriveTrain.getInstance().m_isStoppedConfirmed || VectorUtils.isNear(PoseEstimator.getInstance().m_finalPose, target1, AutoConstants.kReefTolerance)).withTimeout(3),
             new InstantCommand(() -> Elevator.getInstance().moveToLevel(level)),
             Commands.sequence(new InstantCommand(() -> Arm.getInstance().moveToLevel(level))),
             new InstantCommand(()->{EndEffector.getInstance().m_watchForAlgae = true;}),
-            EndEffector.getInstance().IntakeCommand().until(()->{return EndEffector.getInstance().m_hasAlgae;}).withTimeout(3.0).handleInterrupt(()->EndEffector.getInstance().m_watchForAlgae = false),
+            EndEffector.getInstance().IntakeCommand().withTimeout(3.0).until(()->{return EndEffector.getInstance().m_hasAlgae;}).handleInterrupt(()->EndEffector.getInstance().m_watchForAlgae = false),
             new InstantCommand(()->{EndEffector.getInstance().m_watchForAlgae = false;}),
             new InstantCommand(() -> PathPlanning.getInstance().navigateTo(target1)),
-            Commands.waitUntil(() -> DriveTrain.getInstance().m_poseQueue.isEmpty() || DriveTrain.getInstance().m_isStoppedConfirmed || VectorUtils.isNear(PoseEstimator.getInstance().m_finalPose, target1, AutoConstants.kReefArmupTolerance)).withTimeout(2)
+            Commands.waitUntil(() -> DriveTrain.getInstance().m_poseQueue.isEmpty() || DriveTrain.getInstance().m_isStoppedConfirmed || VectorUtils.isNear(PoseEstimator.getInstance().m_finalPose, target1, AutoConstants.kReefTolerance)).withTimeout(2)
             
         ).finallyDo(()->EndEffector.getInstance().m_watchForAlgae = false);
     }
@@ -299,6 +299,7 @@ public class AutoCommands {
             new InstantCommand(() -> Autonomous.getInstance().stopAiming()),
             Commands.waitUntil(() -> DriveTrain.getInstance().m_poseQueue.isEmpty() || DriveTrain.getInstance().m_isStoppedConfirmed || VectorUtils.isNear(PoseEstimator.getInstance().m_finalPose, target2, AutoConstants.kReefTolerance)).withTimeout(6),
             Commands.waitUntil(() -> Arm.getInstance().isAtPosition() && Elevator.getInstance().isAtPosition()),
+            Commands.waitSeconds(0.5),
             EndEffector.getInstance().ExpelCommand(()->(level == ScoreLevel.TROUGH ? EffectorConstants.kTroughOuttakeSpeed : EffectorConstants.kOuttakeSpeed), ()->level==ScoreLevel.TROUGH).withTimeout(1.5)
         );
     }
