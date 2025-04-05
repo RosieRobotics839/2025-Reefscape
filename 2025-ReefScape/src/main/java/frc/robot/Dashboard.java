@@ -9,6 +9,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import frc.robot.Constants.ScoreConstants.ScoreLevel;
 import frc.robot.subsystems.AutoCommands;
 import frc.robot.subsystems.PathPlanning;
 import frc.robot.subsystems.PoseEstimator;
@@ -79,7 +80,7 @@ public class Dashboard{
  */
     private class Argument{
         public enum TASK {
-            INVALID, SCORE, GETCORAL, WAIT, POSERETURN, POSESTORE, AUTOPOSE
+            INVALID, SCORE, GETCORAL, WAIT, POSERETURN, POSESTORE, AUTOPOSE, GETALGAE
         }
         private TASK type;
         private int var0;
@@ -101,6 +102,7 @@ public class Dashboard{
             else if (input.contains("RET") || input.contains("URN")) type = TASK.POSERETURN; // Return to pose type ID
             else if (input.contains("STO") || input.contains("TOR")) type = TASK.POSESTORE; // Store pose type ID
             else if (input.contains("AUTOP") || input.contains("TOPOS")) type = TASK.AUTOPOSE;
+            else if (input.contains("ALG")) type = TASK.GETALGAE;
             else type = TASK.INVALID;
             try { 
                 if (input.contains("LEF") || input.contains("EFT")) left = true;
@@ -131,6 +133,8 @@ public class Dashboard{
                     // limit scoring level to trough through reef level 4
                     var level = Constants.ScoreConstants.ScoreLevel.values()[Math.max(1,Math.min(4,var0))];
                     return AutoCommands.AutoScore(var1,left,level);
+                case GETALGAE:
+                    return AutoCommands.GetAlgae("NN", ScoreLevel.ALGAE2);
                 default:
                     return AutoCommands.noop(); //noop noop
             }
