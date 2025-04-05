@@ -198,7 +198,9 @@ public class AutoCommands {
             new InstantCommand(()->{EndEffector.getInstance().m_watchForAlgae = true;}),
             EndEffector.getInstance().IntakeCommand().until(()->{return EndEffector.getInstance().m_hasAlgae;}).withTimeout(3.0).handleInterrupt(()->EndEffector.getInstance().m_watchForAlgae = false),
             new InstantCommand(()->{EndEffector.getInstance().m_watchForAlgae = false;}),
-            new InstantCommand(() -> PathPlanning.getInstance().navigateTo(target1))
+            new InstantCommand(() -> PathPlanning.getInstance().navigateTo(target1)),
+            Commands.waitUntil(() -> DriveTrain.getInstance().m_poseQueue.isEmpty() || DriveTrain.getInstance().m_isStoppedConfirmed || VectorUtils.isNear(PoseEstimator.getInstance().m_finalPose, target1, AutoConstants.kReefArmupTolerance)).withTimeout(2)
+            
         ).finallyDo(()->EndEffector.getInstance().m_watchForAlgae = false);
     }
     public static Command AutoScore(String tag, boolean left, ScoreLevel level){

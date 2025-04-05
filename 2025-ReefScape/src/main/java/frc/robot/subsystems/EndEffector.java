@@ -116,7 +116,7 @@ public class EndEffector extends SubsystemBase {
         m_hasCoral = true;
     }
 
-    var motorStopped = m_motorStopped.calculate(m_motor.getVelocity() < .1);
+    var motorStopped = m_motorStopped.calculate(m_watchForAlgae && m_motor.getVelocity() < .1);
     
     // Coral not detected, checking to see if we have algae.
     if (!m_beamBroken && m_watchForAlgae && motorStopped && DriverStation.isAutonomousEnabled()){
