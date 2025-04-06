@@ -33,8 +33,13 @@ public class EndEffector extends SubsystemBase {
 
     private boolean m_beamBroken = false;
     public boolean m_hasGamePiece = false;
+    public Debouncer m_motorStopped = new Debouncer(0.1, Debouncer.DebounceType.kRising);
     private boolean m_hasCoral = false;
     private double m_algaeRelativePosition;
+
+    public boolean m_watchForAlgae = false;
+
+    public boolean m_hasAlgae = false;
 
     public Debouncer m_beamDebouncer = new Debouncer(EffectorConstants.kBeamBreakDebounceSec, Debouncer.DebounceType.kBoth);
 
@@ -67,7 +72,7 @@ public class EndEffector extends SubsystemBase {
         Commands.waitSeconds(2)
       ).withTimeout(4).onlyWhile(()->DriverStation.isEnabled())
       .beforeStarting(()->m_intakeRunning=false)
-      .finallyDo(()->{m_motor.setSpeed(0); if (Robot.isSimulation()){m_beamBreakTestSensor.set(false);}});
+      .finallyDo(()->{m_motor.setSpeed(0); m_hasAlgae = false; if (Robot.isSimulation()){m_beamBreakTestSensor.set(false);}});
     };
 
     public EndEffector(int CANID) {
@@ -110,15 +115,16 @@ public class EndEffector extends SubsystemBase {
         m_hasGamePiece = true;
         m_hasCoral = true;
     }
+
+    var motorStopped = m_motorStopped.calculate(m_watchForAlgae && m_motor.getVelocity() < .45);
     
     // Coral not detected, checking to see if we have algae.
-  /* if (!m_beamBroken && (m_motor.getVelocity() < .1 || m_motor.getOutputCurrent() > 10)){
-      m_hasGamePiece = true; 
-      m_hasCoral = false;
+    if (!m_beamBroken && m_watchForAlgae && motorStopped && DriverStation.isAutonomousEnabled()){
+      m_hasAlgae = true;
       m_algaeRelativePosition = m_motor.getPosition();
-    //Checking to see whether we have a game piece or not by checking if the beam is broken, or velocity is less than 10 RPM, or Current is greater than 40
-    } */
-
+      m_motor.setPosition(m_algaeRelativePosition-0.1);
+    }
+    
     if (m_hasCoral && !m_beamBroken){ // Checking to see if we previously had coral. Seeing is m_hasCoral is still correct because if the beam is not broken we don't have coral anymore.
       m_hasGamePiece = false;
       m_hasCoral = false;

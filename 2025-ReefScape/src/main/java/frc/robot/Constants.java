@@ -253,7 +253,7 @@ public final class Constants {
     public static double kFunnelUp = 3.8;
     public static double kFunnelDown = 0;
 
-    public static int kMotorCurrentLimit = NTInteger.create(30,"Funnel/kCurrentLimit",(val) ->Funnel.getInstance().m_motorFunnel.withStatorLimit(val));
+    public static int kMotorCurrentLimit = NTInteger.create(50,"Funnel/kCurrentLimit",(val) ->Funnel.getInstance().m_motorFunnel.withStatorLimit(val));
     public static double kFunnelAngleTolerance = Units.degreesToRotations(NTDouble.create(180, "Funnel/kFunnelAngleTolerance", val -> kFunnelAngleTolerance = Units.degreesToRadians(val)));
 
     public static double kFunnelGearRatio = 1;

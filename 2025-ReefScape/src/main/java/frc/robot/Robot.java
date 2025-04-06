@@ -70,7 +70,7 @@ public class Robot extends TimedRobot {
       nt_smartdashboard.getStringTopic("Auto Selector").publish().set("Build Your Own A(uto)dventure");
       nt_smartdashboard.getStringTopic("DB/String 0").publish().set("AUTOPOSE.0");
       nt_smartdashboard.getStringTopic("DB/String 1").publish().set("Score.NE.Left.4");
-      nt_smartdashboard.getStringTopic("DB/String 2").publish().set("Get.Right");
+      nt_smartdashboard.getStringTopic("DB/String 2").publish().set("algae");
       nt_smartdashboard.getStringTopic("DB/String 3").publish().set("Score.SE.Right.4");
       nt_smartdashboard.getStringTopic("DB/String 4").publish().set("Get.Right");
       nt_smartdashboard.getStringTopic("DB/String 5").publish().set("Score.SE.Left.4");
