@@ -4,6 +4,7 @@
 
 package frc.robot.subsystems;
 
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Robot;
@@ -16,8 +17,12 @@ import frc.utils.NTValues.NTDouble;
 import com.ctre.phoenix6.configs.Pigeon2Configuration;
 import com.ctre.phoenix6.hardware.Pigeon2;
 import com.ctre.phoenix6.sim.Pigeon2SimState;
+import com.ctre.phoenix.sensors.PigeonIMU;
 
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.filter.Debouncer;
+import edu.wpi.first.math.filter.Debouncer.DebounceType;
+
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.BooleanPublisher;
 import edu.wpi.first.networktables.DoublePublisher;
@@ -29,8 +34,9 @@ public class Gyro extends SubsystemBase {
   private double lastSimYawRad = 0;
   private double simYaw = 0;
 
-  private static Pigeon2 pidgey = new Pigeon2(GyroConstants.kCANID, "rio");
-  private static Pigeon2SimState simstate = new Pigeon2SimState(pidgey);
+  private static PigeonIMU pidgey1;
+  private static Pigeon2 pidgey2;
+  private static Pigeon2SimState simState;
 
   public boolean m_enableTipDetection = true;
 
@@ -42,16 +48,25 @@ public class Gyro extends SubsystemBase {
 
   NetworkTable table = NetworkTableInstance.getDefault().getTable("roboRIO/Gyro");
 
+  Debouncer m_warningTimer = new Debouncer(10,DebounceType.kRising);
+
   public void setDefaultHeading() {
     initypr[0] = ypr[0];
   }
 
   // Constructor Function on init, set gyro yaw to zero.
   public Gyro() {
+    
     if (GyroConstants.kEnabled && !Robot.isSimulation()){
-      pidgey.getConfigurator().apply(new Pigeon2Configuration());
-      pidgey.getYaw().setUpdateFrequency(100);
-      pidgey.setYaw(0);
+      if (GyroConstants.kIsPigeon2){
+        simState = new Pigeon2SimState(pidgey2);
+        pidgey2.getConfigurator().apply(new Pigeon2Configuration());
+        pidgey2.getYaw().setUpdateFrequency(100);
+        pidgey2.setYaw(0);
+      } else {
+        pidgey1 = new PigeonIMU(GyroConstants.kCANID);
+        pidgey1.setYaw(0);
+      }
     }
   } 
 
@@ -83,6 +98,12 @@ public class Gyro extends SubsystemBase {
 
   @Override
   public void periodic() {
+
+    if (m_warningTimer.calculate(!GyroConstants.kEnabled && (DriverStation.isFMSAttached() || DriverStation.isTestEnabled()))){
+      m_warningTimer.calculate(false);
+      System.err.println("ERROR: Gyro was not detected on the CAN bus and is being SIMULATED!");
+    }
+
     if (!GyroConstants.kEnabled || Robot.isSimulation()) {
       // In simulation, just use the pose estimator's rotation
       if (Robot.isSimulation()) {
@@ -95,8 +116,8 @@ public class Gyro extends SubsystemBase {
 
     // If there is a hardware fault, attempt to reset the gyro every 5 seconds
     m_lastReset = Math.max(0, m_lastReset-0.02);
-    if (pidgey.getFault_Hardware().getValue() && m_lastReset == 0){
-      pidgey.reset();
+    if (pidgey2 != null && pidgey2.getFault_Hardware().getValue() && m_lastReset == 0){
+      pidgey2.reset();
       m_lastReset = 5;
       initypr = new double []{0,0,0};
     }
@@ -144,11 +165,16 @@ public class Gyro extends SubsystemBase {
     // read sensor data from Pigeon2
     if (Robot.isSimulation()){
       double simyawrad = PoseEstimator.getInstance().m_sim_actualPose.getRotation().getRadians();
-      simstate.addYaw(Units.radiansToDegrees(VectorUtils.angleDifference(simyawrad,lastSimYawRad)));
+      if (simState != null){
+        simState.addYaw(Units.radiansToDegrees(VectorUtils.angleDifference(simyawrad,lastSimYawRad)));
+      } else {
+        pidgey1.setYaw(Units.radiansToDegrees(simyawrad));
+      }
     }
-    double yaw = (pidgey.getYaw().getValueAsDouble() % 360 + 360) % 360;
-    double pitch = pidgey.getRoll().getValueAsDouble();
-    double roll = pidgey.getPitch().getValueAsDouble(); 
+
+    double yaw = ((pidgey2 != null ? pidgey2.getYaw().getValueAsDouble() : pidgey1.getYaw()) % 360 + 360) % 360;
+    double pitch = ((pidgey2 != null ? pidgey2.getRoll().getValueAsDouble() : pidgey1.getRoll()) % 360 + 360) % 360;
+    double roll = ((pidgey2 != null ? pidgey2.getPitch().getValueAsDouble() : pidgey1.getPitch()) % 360 + 360) % 360;
 
     return new double[]{yaw, pitch, roll};
   }
@@ -184,7 +210,9 @@ public class Gyro extends SubsystemBase {
   }
 
   public void resetPrimarySensor() {
-    pidgey.reset();
+    if (pidgey2 != null){
+      pidgey2.reset();
+    }
   }
 
   public boolean isTipping(){
@@ -212,7 +240,7 @@ public class Gyro extends SubsystemBase {
     boolean GyroGood = false;
     if (GyroConstants.kEnabled){
         // getFault_Hardware() returns False if the hardware is good
-        GyroGood = !pidgey.getFault_Hardware().getValue();
+        GyroGood = !(pidgey2 != null && pidgey2.getFault_Hardware().getValue());
     }
    
     return GyroGood;

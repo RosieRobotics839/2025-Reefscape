@@ -34,6 +34,7 @@ import frc.utils.Action;
 import frc.utils.Encouragement;
 import frc.utils.KrakenOrchestra;
 import frc.utils.TwentyFiveChain;
+import frc.utils.DeviceFinder;
 import frc.robot.subsystems.PoseEstimator;
 import frc.robot.subsystems.SystemLog;
 
@@ -44,6 +45,7 @@ import frc.robot.subsystems.SystemLog;
  */
 public class Robot extends TimedRobot {
 
+  public static DeviceFinder deviceFinder = new DeviceFinder();
   public Command m_autonomousCommand;
   public SystemLog m_systemlog = SystemLog.getInstance();
   public DriveTrain m_drivetrain = DriveTrain.getInstance();
@@ -88,7 +90,7 @@ public class Robot extends TimedRobot {
   private static final String STOP_MUSIC = "notPlaying";
 
   private Debouncer m_recording = new Debouncer(10, Debouncer.DebounceType.kFalling);
-  private Action m_recordTrigger = new Action(false).onTrue(()->DataLogManager.start()).onFalse(()->DataLogManager.stop());
+  private Action m_recordTrigger = new Action(false).onTrue(()->DataLogManager.start("","",0.020)).onFalse(()->DataLogManager.stop());
   private SendableChooser<String> songChooser = new SendableChooser<>();
   private SendableChooser<String> startStop = new SendableChooser<>();
 
@@ -210,7 +212,7 @@ public class Robot extends TimedRobot {
   /** This function is called once when teleop is enabled. */
   @Override
   public void teleopInit() {
-
+    
     m_orchestra.stopMusic(); // Stopping music when we switch to teleop mode
     orchestraIsPlaying = false;
     DriveTrain.getInstance().m_poseQueue.clear();
