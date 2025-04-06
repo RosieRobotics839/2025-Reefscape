@@ -17,6 +17,7 @@ import frc.robot.Robot;
 import frc.robot.Constants.ElevatorConstants;
 import frc.robot.Constants.ScoreConstants;
 import frc.robot.Constants.ScoreConstants.ScoreLevel;
+import frc.utils.Action;
 import frc.utils.Motor;
 import frc.utils.Motor.GainSlot;
 import frc.utils.NTValues.NTBoolean;
@@ -33,6 +34,8 @@ public class Elevator extends SubsystemBase {
     public static Elevator getInstance(){
         return instance;
     }
+
+    Action m_tipProtect = new Action(false).onTrue(()->{Controller.getAccessoryInstance().m_directElevator=false; moveToLevel(ScoreLevel.FUNNEL);});
 
     public Motor m_EleMotor;
     boolean setupElevator = false;
@@ -62,7 +65,7 @@ public class Elevator extends SubsystemBase {
 
     // Check if elevator is at target position
     public boolean isAtPosition() {
-        return Math.abs(getPosition() - m_targetHeight) <= ElevatorConstants.kElevatorTolerance/ElevatorConstants.kSprocketCircumference; 
+        return Math.abs(getPosition() - m_targetHeight) <= ElevatorConstants.kElevatorTolerance; 
     }
 
     public boolean isInDangerZone() {
@@ -114,15 +117,30 @@ public class Elevator extends SubsystemBase {
                 setPosition(ElevatorConstants.kMinHeight);
                 break;
             case TROUGH:
-                setPosition(ElevatorConstants.kHeight1);
+                setPosition(ElevatorConstants.kTroughHeight);
                 break;
-            case LEVEL2:
-                setPosition(ElevatorConstants.kHeight2);
+            case CORAL2:
+                setPosition(ElevatorConstants.kCoralL2);
                 break;
-            case LEVEL3:
-                setPosition(ElevatorConstants.kHeight3);
+            case CORAL3:
+                setPosition(ElevatorConstants.kCoralL3);
                 break;
-            case LEVEL4:
+            case CORAL4:
+                setPosition(ElevatorConstants.kMaxHeight);
+                break;
+            case ALGAE0:
+                setPosition(ElevatorConstants.kAlgaeL0);
+                break;
+            case ALGAE1:
+                setPosition(ElevatorConstants.kTroughHeight);
+                break;
+            case ALGAE2:
+                setPosition(ElevatorConstants.kAlgaeL2);
+                break;
+            case ALGAE3:
+                setPosition(ElevatorConstants.kAlgaeL3);
+                break;
+            case ALGAE4:
                 setPosition(ElevatorConstants.kMaxHeight);
                 break;
             default:
@@ -187,6 +205,8 @@ public class Elevator extends SubsystemBase {
             m_targetHeight = getPosition();
         }
 
+        m_tipProtect.calculate(Gyro.getInstance().isTipping());
+        
         // Start calibration sequence
         if (DriverStation.isEnabled()){
             if (Robot.isReal() && !m_isCalibrated.get() && m_isCalibrating.get()==0){

@@ -1,0 +1,2 @@
+pynetworktables
+pyserial

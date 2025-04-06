@@ -1,15 +1,36 @@
 package frc.robot;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
+import frc.robot.Constants.ScoreConstants.ScoreLevel;
 import frc.robot.subsystems.AutoCommands;
+import frc.robot.subsystems.PathPlanning;
+import frc.robot.subsystems.PoseEstimator;
+import frc.robot.subsystems.Vision;
 
 public class Dashboard{
 
     static Dashboard instance = new Dashboard();
     public static Dashboard getInstance(){
         return instance;
+    }
+
+    int m_numAutoPoses = 6;
+    List<Pose2d> m_autoPoses = new ArrayList<Pose2d>();
+    {
+        var horiz_margin=0.2;
+        var vert_margin = 1.1;
+        for (int i=0; i<m_numAutoPoses; i++){
+        m_autoPoses.add(new Pose2d(Vision.getInstance().aprilTagFieldLayout.getFieldLength()*(horiz_margin+(i/(double)m_numAutoPoses)*(1-2*horiz_margin)),Vision.getInstance().aprilTagFieldLayout.getFieldWidth()*vert_margin, new Rotation2d(Math.PI/4)));
+        }
+        PoseEstimator.getInstance().m_field.getObject("AutoPoses").setPoses(m_autoPoses);
     }
 
     Argument arg0 = new Argument("DB/String 0");
@@ -24,6 +45,7 @@ public class Dashboard{
     Argument arg9 = new Argument("DB/String 9");
 
     public Command BuildYourOwnAutoCommands(){
+        m_autoPoses = PoseEstimator.getInstance().m_field.getObject("AutoPoses").getPoses();
         Command BuildYourOwnAutoCommands = Commands.sequence(
             arg0.getCommand(),
             arg1.getCommand(),
@@ -58,7 +80,7 @@ public class Dashboard{
  */
     private class Argument{
         public enum TASK {
-            INVALID, SCORE, GETCORAL, WAIT, POSERETURN, POSESTORE
+            INVALID, SCORE, GETCORAL, WAIT, POSERETURN, POSESTORE, AUTOPOSE, GETALGAE
         }
         private TASK type;
         private int var0;
@@ -72,12 +94,15 @@ public class Dashboard{
         }
 
         public Command getCommand(){
+            
             String input = SmartDashboard.getString(path, "null").toUpperCase();
             if (input.contains("SCO") || input.contains("CORE")) type = TASK.SCORE; // Scoring ID
             else if (input.contains("GET") || input.contains("SOURCE")) type = TASK.GETCORAL; // Get Coral ID
             else if (input.contains("WAI") || input.contains("AIT")) type = TASK.WAIT; // Wait type ID
             else if (input.contains("RET") || input.contains("URN")) type = TASK.POSERETURN; // Return to pose type ID
             else if (input.contains("STO") || input.contains("TOR")) type = TASK.POSESTORE; // Store pose type ID
+            else if (input.contains("AUTOP") || input.contains("TOPOS")) type = TASK.AUTOPOSE;
+            else if (input.contains("ALG")) type = TASK.GETALGAE;
             else type = TASK.INVALID;
             try { 
                 if (input.contains("LEF") || input.contains("EFT")) left = true;
@@ -86,7 +111,7 @@ public class Dashboard{
                 var1 = input.substring(input.indexOf(".")+1,input.indexOf(".")+3);
             } // Set var to hopefully the note ID
                 catch (NumberFormatException e) {var0 = -1;}
-                catch (StringIndexOutOfBoundsException e) {var0 = -1;}
+                catch (StringIndexOutOfBoundsException e) {var1 = "";}
 
             // if (!isReal()) return Commands.waitSeconds(0);
             switch (type){
@@ -98,8 +123,18 @@ public class Dashboard{
                     return Commands.waitSeconds(var0);
                 case GETCORAL:
                     return AutoCommands.GetCoral(left);
+                case AUTOPOSE:
+                    return new InstantCommand(()->{
+                        if (var0 >= 0 && var0 < m_autoPoses.size() && Vision.getInstance().poseIsInField(m_autoPoses.get(var0))){
+                            PathPlanning.getInstance().navigateTo(m_autoPoses.get(var0));
+                        }
+                    });
                 case SCORE:
-                    return AutoCommands.AutoScore(var1,left,var0);
+                    // limit scoring level to trough through reef level 4
+                    var level = Constants.ScoreConstants.ScoreLevel.values()[Math.max(1,Math.min(4,var0))];
+                    return AutoCommands.AutoScore(var1,left,level);
+                case GETALGAE:
+                    return AutoCommands.GetAlgae("NN", ScoreLevel.ALGAE2);
                 default:
                     return AutoCommands.noop(); //noop noop
             }

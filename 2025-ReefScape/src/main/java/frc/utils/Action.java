@@ -3,6 +3,7 @@ package frc.utils;
 public class Action {
     public boolean m_state;
     
+    public boolean m_enable = true;
     public Runnable onTrue;
     public Runnable onFalse;
     public Runnable onChange;
@@ -13,6 +14,16 @@ public class Action {
 
     public Action(boolean init){
         m_state = init;
+    }
+
+    public Action disable(){
+        m_enable = false;
+        return this;
+    }
+
+    public Action enable(){
+        m_enable = true;
+        return this;
     }
 
     public Action onTrue(Runnable action){
@@ -32,13 +43,13 @@ public class Action {
 
     public void calculate(boolean val){
         if (m_state != val){
-            if (onChange != null){
+            if (m_enable && onChange != null){
                 onChange.run();
             }
-            if (val && onTrue != null){
+            if (m_enable && val && onTrue != null){
                 onTrue.run();
             }
-            if (!val && onFalse != null){
+            if (m_enable && !val && onFalse != null){
                 onFalse.run();
             }
             m_state = val;

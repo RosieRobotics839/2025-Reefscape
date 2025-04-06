@@ -5,6 +5,7 @@
 package frc.robot.subsystems;
 
 import com.revrobotics.spark.config.ClosedLoopConfig.FeedbackSensor;
+
 import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;

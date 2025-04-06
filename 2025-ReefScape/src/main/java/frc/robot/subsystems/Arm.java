@@ -14,6 +14,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.ArmConstants;
+import frc.utils.Action;
 import frc.utils.Calibrate;
 import frc.utils.CalibrationMap;
 import frc.utils.Motor;
@@ -47,6 +48,8 @@ public class Arm extends SubsystemBase{
     boolean scoringLevels2or3 = false;
     boolean scoringLevel4 = false;
 
+    Action m_tipProtect = new Action(false).onTrue(()->{Controller.getAccessoryInstance().m_directArm=false; moveToLevel(ScoreLevel.FUNNEL);});
+    
     DoublePublisher
         nt_positionSensor,
         nt_safetyLimit,
@@ -58,6 +61,9 @@ public class Arm extends SubsystemBase{
     // Checking to see if we are at the score position.
     public Boolean isAtPosition(){
         return Math.abs(getArmPosition() - m_angleTarget) < ArmConstants.kAngleTolerance; 
+    }
+    public Boolean isNearPosition(){
+        return Math.abs(getArmPosition() - m_angleTarget) < ArmConstants.kAngleNearTolerance; 
     }
 
     /**
@@ -142,19 +148,31 @@ public class Arm extends SubsystemBase{
                 setPosition(ArmConstants.kAngleMax);
                 break;
             case TROUGH:
-                setPosition(ArmConstants.kTargetAngleTrough);
+                setPosition(ArmConstants.kTargetCoral1);
                 break;
-            case LEVEL2:
-                setPosition(ArmConstants.kTargetAngleLevelMiddle);
+            case CORAL2:
+                setPosition(ArmConstants.kTargetCoral2);
                 break;
-            case LEVEL3:
-                setPosition(ArmConstants.kTargetAngleLevelMiddle);
+            case CORAL3:
+                setPosition(ArmConstants.kTargetCoral3);
                 break;
-            case LEVEL4:
-                setPosition(ArmConstants.kTargetAngleLevel4);
+            case CORAL4:
+                setPosition(ArmConstants.kTargetCoral4);
                 break;
-            case ALGAE:
-                setPosition(ArmConstants.kAngleMin);
+            case ALGAE0:
+                setPosition(ArmConstants.kTargetAlgae0);
+                break;
+            case ALGAE1:
+                setPosition(ArmConstants.kTargetAlgae1);
+                break;
+            case ALGAE2:
+                setPosition(ArmConstants.kTargetAlgae2);
+                break;
+            case ALGAE3:
+                setPosition(ArmConstants.kTargetAlgae3);
+                break;
+            case ALGAE4:
+                setPosition(ArmConstants.kTargetAlgae4);
                 break;
             default:
         }
@@ -175,6 +193,8 @@ public class Arm extends SubsystemBase{
             m_angleSensorSim.set(m_angleSensorSimMap.get(m_angleTarget));
         }
 
+        
+        m_tipProtect.calculate(Gyro.getInstance().isTipping());
         setArmAngleSafely(m_angleTarget);
 
         nt_setupDone.set(m_setupDone);

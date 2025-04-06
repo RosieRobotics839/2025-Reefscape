@@ -4,7 +4,6 @@
 
 package frc.robot.subsystems;
 
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.function.Consumer;
@@ -13,6 +12,7 @@ import java.util.stream.Collectors;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.filter.SlewRateLimiter;
+import frc.utils.Hysteresis;
 import frc.utils.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -30,7 +30,6 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.OperatorConstants;
-import frc.robot.Constants.kChassis;
 import frc.robot.Constants.kDriveTrain;
 import frc.robot.Constants.kDriveTrain.DriveConstants;
 import frc.utils.VectorUtils;
@@ -59,7 +58,8 @@ public class DriveTrain extends SubsystemBase {
 
   private double m_forward, m_left, m_rotate;
   private double m_forwardcmd, m_leftcmd, m_rotatecmd;
-  private boolean m_controllerInputActive = false;
+
+  private boolean headingLocked = false;
 
   private double m_maxSpeed = DriveConstants.kMaxSpeedMetersPerSecond[DriveConstants.kMaxSpeedDefault];
   private double m_maxRotate = DriveConstants.kMaxRotationVelocity[DriveConstants.kMaxSpeedDefault];
@@ -70,6 +70,8 @@ public class DriveTrain extends SubsystemBase {
   public void setMaxRotate(double maxRotateRadiansPerSecond){
     m_maxRotate = maxRotateRadiansPerSecond;
   }
+
+  public boolean m_tippingRecovery = false;
 
   // Create new swerve modules
   public SwerveModule frontLeft = new SwerveModule(kDriveTrain.kSwerveModule.kCANID_FrontLeft, kDriveTrain.kSwerveModule.kCalibrationFrontLeft, "frontLeft");
@@ -96,6 +98,8 @@ public class DriveTrain extends SubsystemBase {
   final DoublePublisher nt_distance = table.getDoubleTopic("distance").publish();
   final DoublePublisher nt_xtrackerr = table.getDoubleTopic("xtrackerr").publish();
   final BooleanPublisher nt_fieldCentricDriving = table.getBooleanTopic("HeadingPID/fieldCentricDriving").publish();
+  final BooleanPublisher nt_headingLocked = table.getBooleanTopic("HeadingPID/headingLocked").publish();
+  BooleanPublisher nt_driveMotorSetupDone = table.getBooleanTopic("driveMotorSetupDone").publish();
 
   public PIDController m_headingPID;
 
@@ -121,6 +125,11 @@ public class DriveTrain extends SubsystemBase {
   }
 
   public LinkedList<Pose2d> m_poseQueue = new LinkedList<Pose2d>();
+  private Hysteresis m_controllerInputActive = new Hysteresis()
+      .withThreshold(OperatorConstants.kControllerActiveThreshold)
+      .withHysteresis(OperatorConstants.kControllerActiveHysteresis)
+      .onTrue(()->{m_poseQueue.clear(); PublishPoseQueue();});
+
   public boolean m_isStoppedConfirmed;
   public Debouncer stoppedConfirmed = new Debouncer(3, Debouncer.DebounceType.kRising);
   public boolean isStopped(){
@@ -150,13 +159,11 @@ public class DriveTrain extends SubsystemBase {
   }
 
   private void RunDrive() {
-    ArrayList<Pose2d> poses = new ArrayList<Pose2d>();
-  
     crossTrackError = 0;
     // Follow Drive to Pose Queue, unless controller input is active, which clears the queue in periodic().
     if (!m_poseQueue.isEmpty()){ 
       Twist2d movement;
-      if (VectorUtils.isNear(PoseEstimator.getInstance().m_finalPose, m_poseQueue.peek(), (m_poseQueue.size() > 1 ? DriveConstants.kMidPointAccuracyFactor : 1) * DriveConstants.kAutoToleranceDistance, (m_poseQueue.size() > 1 ? DriveConstants.kMidPointAccuracyFactor : 1) * DriveConstants.kAutoToleranceAngle)){
+      if (VectorUtils.isNear(PoseEstimator.getInstance().m_finalPose, m_poseQueue.peek(), (m_poseQueue.size() > 1 ? DriveConstants.kAutoToleranceMidPointDistance : DriveConstants.kAutoToleranceDistance), (m_poseQueue.size() > 1 ? Math.PI : DriveConstants.kAutoToleranceAngle))){
         // Reached Target Pose
         m_poseQueueStart = m_poseQueue.poll();
         movement = new Twist2d(0,0,0);
@@ -164,27 +171,34 @@ public class DriveTrain extends SubsystemBase {
         nt_distance.set(0);
       } else {
         // Moving to Target Pose
-        Pose2d diff = VectorUtils.poseDiff(m_poseQueue.peek(),PoseEstimator.getInstance().m_finalPose);
-        double distance = Math.max(0,VectorUtils.poseDiff(m_poseQueue.peekLast(),PoseEstimator.getInstance().m_finalPose).getTranslation().getNorm() - kChassis.kWheelBase/2.0);
-        nt_distance.set(distance);
-        m_autoSpeed = m_autoAccelLimiter.calculate(Math.max(Math.min(1,distance/(DriveConstants.kAutoSlowDist))*DriveConstants.kAutoMaxSpeed, DriveConstants.kAutoMinSpeed));
+        Twist2d leadTwist = new Twist2d(
+          PoseEstimator.getInstance().m_predictedTwist.dx*DriveConstants.kAutoDriveLeadSeconds/0.020,
+          PoseEstimator.getInstance().m_predictedTwist.dy*DriveConstants.kAutoDriveLeadSeconds/0.020,
+          PoseEstimator.getInstance().m_predictedTwist.dtheta*DriveConstants.kAutoDriveLeadSeconds/0.020
+        );
+        Pose2d feedbackPose = PoseEstimator.getInstance().m_finalPose.exp(leadTwist);
+        Pose2d diff = VectorUtils.poseDiff(m_poseQueue.peek(),feedbackPose);
+        double distanceRemaining = VectorUtils.poseDiff(m_poseQueue.peekFirst(),PoseEstimator.getInstance().m_finalPose).getTranslation().getNorm();
+        for (int i=1; i<m_poseQueue.size(); i++){
+          distanceRemaining += VectorUtils.poseDiff(m_poseQueue.get(i),m_poseQueue.get(i-1)).getTranslation().getNorm();
+        }
+        nt_distance.set(distanceRemaining);
+        double distanceToSpeedGain = (DriveConstants.kAutoMaxSpeed-DriveConstants.kAutoMinSpeed)/(DriveConstants.kAutoSlowDist-DriveConstants.kAutoMinDistance);
+        double speedFromDistance = (distanceRemaining-DriveConstants.kAutoMinDistance)*distanceToSpeedGain;
+        double limitedSpeed = Math.max(DriveConstants.kAutoMinSpeed,Math.min(DriveConstants.kAutoMaxSpeed, speedFromDistance));
+        m_autoSpeed = m_autoAccelLimiter.calculate(limitedSpeed);
         Translation2d vector = VectorUtils.vectorInDirectionOf(diff, m_autoSpeed);
-
 
         // Cross Track Correction
         Translation2d nearestPoint = VectorUtils.nearestPointOnLine(PoseEstimator.getInstance().m_finalPose.getTranslation(), m_poseQueueStart.getTranslation(), m_poseQueue.peek().getTranslation());
-        poses.add(new Pose2d(nearestPoint,new Rotation2d(0)));
-        Pose2d correction = VectorUtils.poseDiff(new Pose2d(nearestPoint,new Rotation2d(0)),PoseEstimator.getInstance().m_finalPose);
-        poses.add(correction);
+        Pose2d correction = VectorUtils.poseDiff(new Pose2d(nearestPoint,new Rotation2d(0)),feedbackPose);
         Translation2d limitedCorrection = VectorUtils.vectorInDirectionOf(correction, Math.max(Math.min(correction.getTranslation().getNorm()*DriveConstants.kAutoCrossTrackKp,DriveConstants.kAutoCrossTrackMax),-DriveConstants.kAutoCrossTrackMax));
-        poses.add(new Pose2d(limitedCorrection, new Rotation2d(0)));
-        Translation2d drivevector = vector.plus(limitedCorrection);
+        Translation2d drivevector = VectorUtils.vectorInDirectionOf(vector.plus(limitedCorrection), m_autoSpeed);
 
-        PoseEstimator.getInstance().m_field.getObject("crossTrack").setPoses(poses);
         movement = new Twist2d(drivevector.getX(), drivevector.getY(), 0);
         Drive(movement);
-        if (m_poseQueue.peek().getRotation() != null && distance < DriveConstants.kAutoTurnToPoseDistance){
-          double angle = (m_poseQueue.peek().getRotation().getRadians());
+        if (m_poseQueue.peekLast().getRotation() != null && distanceRemaining < DriveConstants.kAutoTurnToPoseDistance){
+          double angle = (m_poseQueue.peekLast().getRotation().getRadians());
           setTargetHeading(angle);
         }
       }
@@ -202,8 +216,12 @@ public class DriveTrain extends SubsystemBase {
     lastTime = System.currentTimeMillis();
 
     /* Rotation Control Logic */
-    m_targetHeading += m_rotatecmd * dt * m_maxRotate;
-    m_targetHeading = MathUtil.inputModulus(m_targetHeading, 0, 2*Math.PI);
+    if (!headingLocked){ 
+      m_targetHeading += m_rotatecmd * dt * m_maxRotate;
+      m_targetHeading = MathUtil.inputModulus(m_targetHeading, 0, 2*Math.PI);
+    } else {
+      m_rotatecmd = 0;
+    }
     m_currentHeading = PoseEstimator.getInstance().m_finalPose.getRotation().getRadians();
     m_currentHeading = MathUtil.inputModulus(m_currentHeading, 0, 2*Math.PI);
     double directRotate = (Autonomous.getInstance().m_aimPoint == null ? DriveConstants.kRotationDirectControlRatio : 0);
@@ -259,7 +277,15 @@ public class DriveTrain extends SubsystemBase {
   }
 
   public void setTargetHeading(double targetHeading) {
+    if (!headingLocked) this.m_targetHeading = targetHeading;
+  }
+
+  public void lockTargetHeading(double targetHeading) {
     this.m_targetHeading = targetHeading;
+    headingLocked = true;
+  }
+  public void unlockTargetHeading() {
+    headingLocked = false;
   }
 
   public void syncHeading() {
@@ -279,6 +305,10 @@ public class DriveTrain extends SubsystemBase {
     }
   }
 
+  public boolean isSetupDone() {
+    return m_motorSetupDone;
+  }
+
   Boolean m_motorSetupDone = false;
   boolean testBool = true;
   @Override
@@ -289,29 +319,25 @@ public class DriveTrain extends SubsystemBase {
       m_motorSetupDone = testBool;
     }
 
+    nt_driveMotorSetupDone.set(m_motorSetupDone);
+
     m_isStoppedConfirmed = stoppedConfirmed.calculate(isStopped());
     // Reset target heading on USER button press
     if (!RobotController.isSysActive()){
       m_targetHeading = PoseEstimator.getInstance().m_finalPose.getRotation().getRadians();
     }
 
-    // Calculate Drive Inputs from Controller
+    // Calculate Drive Inputs from Controller - If m_poseQueue is not empty it is cleared when controller input is active.
     if (DriverStation.isTeleopEnabled()){
       if (OperatorConstants.kDriverControllerIsFlightStick){
         driveFlightStick.Translate();
         Drive(FlightStick.forward, FlightStick.left, FlightStick.rotate);
-        m_controllerInputActive = VectorUtils.SRSS(FlightStick.forward, FlightStick.left, FlightStick.rotate) > OperatorConstants.kControllerActiveThreshold;
+        m_controllerInputActive.calculate(VectorUtils.SRSS(FlightStick.forward, FlightStick.left, FlightStick.rotate));
       } else {
         driveController.Translate();
         Drive(Controller.getDriveInstance().Ly, Controller.getDriveInstance().Lx, Controller.getDriveInstance().Rx);
-        m_controllerInputActive = VectorUtils.SRSS(Controller.getDriveInstance().Ly, Controller.getDriveInstance().Lx, Controller.getDriveInstance().Rx) > OperatorConstants.kControllerActiveThreshold;
+        m_controllerInputActive.calculate(VectorUtils.SRSS(Controller.getDriveInstance().Ly, Controller.getDriveInstance().Lx, Controller.getDriveInstance().Rx));
       }
-    }
-
-    // If controller input is detected clear the pose driving queue
-    if (m_controllerInputActive){
-      m_poseQueue.clear();
-      PublishPoseQueue();
     }
 
     // If stopped, clear the trajectory visualization
@@ -325,7 +351,14 @@ public class DriveTrain extends SubsystemBase {
       m_targetHeading = m_currentHeading;
     }
 
-    RunDrive();
+    // If robot is tipping, align the swerve modules in the direction of the tip only let the motors drive away from the obstacle.
+    if (Gyro.getInstance().isTipping()){
+      double speed = VectorUtils.SRSS(FlightStick.forward, FlightStick.left)*m_maxSpeed;
+      SwerveModuleState state = new SwerveModuleState(speed,new Rotation2d(Gyro.getInstance().getTippingAngle()));
+      forEachSwerveModule((m)->{m.setState(state);});
+    } else {
+      RunDrive();
+    }
   }
 
   public static void forEachSwerveModule(Consumer<SwerveModule> lambda){

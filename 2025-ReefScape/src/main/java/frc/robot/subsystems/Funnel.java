@@ -2,6 +2,7 @@ package frc.robot.subsystems;
 
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.networktables.BooleanPublisher;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -24,10 +25,14 @@ public class Funnel extends SubsystemBase{
 
     public Motor m_motorFunnel;
     private double m_targetPosition;
+    public boolean funnelIsUp = false;
+    public boolean funnelIsDown = true;
 
     public Debouncer m_debouncer = new Debouncer(FunnelConstants.kFunnelStallSec, Debouncer.DebounceType.kRising);
     public NTBoolean m_isStalled = new NTBoolean(false, table, "stalled", null);
     public NTBoolean nt_hysteresis = new NTBoolean(false, table, "climberOut", null);
+    BooleanPublisher nt_funnelIsUp = table.getBooleanTopic("funnelIsUp").publish();
+    BooleanPublisher nt_funnelIsDown = table.getBooleanTopic("funnelIsDown").publish();
 
     public boolean atTargetPosition(){ 
         return Math.abs(getPosition()-m_targetPosition) < FunnelConstants.kFunnelAngleTolerance;
@@ -57,19 +62,23 @@ public class Funnel extends SubsystemBase{
     {
         FunnelUpCommand = Commands.sequence(
             new InstantCommand(() -> setRelativePosition(2.0*FunnelConstants.kFunnelUp)),
-            Commands.waitUntil(this::motorStalled).withTimeout(3)
+            Commands.waitUntil(this::motorStalled).withTimeout(3),
+            new InstantCommand(() -> funnelIsUp = true),
+            new InstantCommand(() -> funnelIsDown = false)
         ).beforeStarting(()->FunnelDownCommand.cancel()).handleInterrupt(()->setPosition(getPosition()));
         
         FunnelDownCommand = Commands.sequence(
             new InstantCommand(() -> setPosition(FunnelConstants.kFunnelDown)),
-            Commands.waitUntil(this::atTargetPosition).withTimeout(3)
+            Commands.waitUntil(this::atTargetPosition).withTimeout(3),
+            new InstantCommand(() -> funnelIsUp = false),
+            new InstantCommand(() -> funnelIsDown = true)
         ).beforeStarting(()->FunnelUpCommand.cancel()).handleInterrupt(()->setPosition(getPosition()));
     }
 
     private Hysteresis m_climberHysteresis = new Hysteresis()
     .withThreshold(Units.degreesToRotations(0))
     .withHysteresis(Units.degreesToRotations(5))
-    .onFalse(()->FunnelUpCommand.schedule());
+    .onTrue(()->FunnelUpCommand.schedule());
     
     public Funnel(int CANID) {
     
@@ -90,6 +99,8 @@ public class Funnel extends SubsystemBase{
 
         // Protect funnel based on climber angle input with hysteresis band.
         nt_hysteresis.set(m_climberHysteresis.calculate(Climber.getInstance().motorCal.get(Climber.getInstance().m_angleSensor.get())));
+        nt_funnelIsDown.set(funnelIsDown);
+        nt_funnelIsUp.set(funnelIsUp);
 
         if (m_isStalled.get()){
             m_motorFunnel.setEncoderPosition(FunnelConstants.kFunnelUp);

@@ -17,8 +17,10 @@ import frc.robot.Constants;
 import frc.robot.Constants.ArmConstants;
 import frc.robot.Constants.AutoConstants;
 import frc.robot.Constants.EffectorConstants;
+import frc.robot.Constants.ElevatorConstants;
 import frc.robot.Constants.ScoreConstants;
 import frc.robot.Constants.ScoreConstants.ScoreLevel;
+import frc.robot.Constants.VisionConstants;
 import frc.utils.VectorUtils;
 
 public class AutoCommands {
@@ -51,6 +53,10 @@ public class AutoCommands {
     static public ArrayList <Integer> reefIDs(){ return new ArrayList<Integer>(Arrays.asList(reefNWTag(), reefNNTag(), reefNETag(), reefSWTag(), reefSSTag(), reefSETag()));};
     static public ArrayList <AprilTag> reefTags(){ return Vision.getInstance().aprilTagFieldLayout.getTags().stream().filter(m->contains(reefIDs(),m.ID)).collect(Collectors.toCollection(ArrayList::new));};
     static public ArrayList <Pose2d> reefPoses(){ return reefTags().stream().map(m->m.pose.toPose2d()).collect(Collectors.toCollection(ArrayList::new));};
+
+    static public ArrayList <Integer> sourceIDs(){ return new ArrayList<Integer>(Arrays.asList(coralSourceLTag(), coralSourceRTag()));};
+    static public ArrayList <AprilTag> sourceTags(){ return Vision.getInstance().aprilTagFieldLayout.getTags().stream().filter(m->contains(sourceIDs(),m.ID)).collect(Collectors.toCollection(ArrayList::new));};
+    static public ArrayList <Pose2d> sourcePoses(){ return sourceTags().stream().map(m->m.pose.toPose2d()).collect(Collectors.toCollection(ArrayList::new));};
 
     public static Command NavToPose(Pose2d pose){
         return new InstantCommand(() -> PathPlanning.getInstance().navigateTo(pose));
@@ -94,19 +100,31 @@ public class AutoCommands {
     }
     
     public static Command GetCoral(int tagId){
-        return Commands.sequence(
-            new InstantCommand(() -> Elevator.getInstance().setPosition(0)),
-            new InstantCommand(() -> Arm.getInstance().setPosition(ArmConstants.kAngleMax)),
+        return Commands.parallel(
             Commands.sequence(
-                new InstantCommand(() -> PathPlanning.getInstance().navigateTo(PathPlanning.AprilTagAtDistance(tagId, -AutoConstants.kSourceStartingDistance - Constants.kChassis.kWheelBase/2.0, Math.PI))),
-                new InstantCommand(() -> PathPlanning.getInstance().navigateTo(PathPlanning.AprilTagAtDistance(tagId, -AutoConstants.kSourceDistance - Constants.kChassis.kWheelBase/2.0, Math.PI))),
-                Commands.waitUntil(() -> VectorUtils.isNear(PoseEstimator.getInstance().m_finalPose,PathPlanning.AprilTagAtDistance(tagId, -AutoConstants.kSourceDistance - Constants.kChassis.kWheelBase/2.0), AutoConstants.kSourceTolerance)),
-                Commands.parallel(
-                    EndEffector.getInstance().IntakeCommand().asProxy(),
-                    wiggle.asProxy()
-                ).withTimeout(5)
-            ).repeatedly().handleInterrupt(()->DriveTrain.getInstance().m_poseQueue.clear())
-        ).until(()->EndEffector.getInstance().hasGamePiece());
+                Commands.waitSeconds(0.33),
+                new InstantCommand(() -> {
+                    Elevator.getInstance().setPosition(0);
+                    Arm.getInstance().setPosition(ArmConstants.kAngleMax);
+                })),
+            Commands.deadline(
+                Commands.sequence(
+                    Commands.waitUntil(()->{return !Autonomous.getInstance().isInsideReef() && Elevator.getInstance().getPosition() < ElevatorConstants.kMaxHeight/2.0 && !EndEffector.getInstance().hasGamePiece();}),
+                    EndEffector.getInstance().IntakeCommand().asProxy()
+                ),
+                Commands.sequence(
+                    new InstantCommand(() -> {
+                        PathPlanning.getInstance().navigateTo(PathPlanning.AprilTagAtDistance(tagId, new Translation2d(-AutoConstants.kSourceStartingDistance - Constants.kChassis.kWheelBase/2.0, (tagId==coralSourceRTag() ? 1 : -1)*AutoConstants.kSourceOffset), Math.PI));
+                    }),
+                    new InstantCommand(() -> PathPlanning.getInstance().navigateTo(PathPlanning.AprilTagAtDistance(tagId, new Translation2d(-AutoConstants.kSourceDistance - Constants.kChassis.kWheelBase/2.0, (tagId==coralSourceRTag() ? 1 : -1)*AutoConstants.kSourceOffset), Math.PI))),
+                    Commands.sequence(
+                        Commands.waitUntil(() -> DriveTrain.getInstance().m_poseQueue.isEmpty()),
+                        Commands.waitSeconds(1),
+                        wiggle.asProxy()
+                    ).withTimeout(5)
+                ).repeatedly().handleInterrupt(()->DriveTrain.getInstance().m_poseQueue.clear())
+            )
+        ).until(()->{return !Autonomous.getInstance().isInsideReef() && Elevator.getInstance().getPosition() < ElevatorConstants.kMaxHeight/2.0 && EndEffector.getInstance().hasGamePiece();});
     }
 
     public static Command wiggle = Commands.sequence(
@@ -125,11 +143,66 @@ public class AutoCommands {
             Controller.accessoryButtons.m_expel.asProxy()
         );
     }
+    public static Command GetAlgae(String tag, ScoreLevel level){
+        int tagId;
+        switch (tag){
+            case("NW"):
+                tagId = reefNWTag(); 
+                break;
+            case("NN"):
+                tagId = reefNNTag(); 
+                break;
+            case("NE"):
+                tagId = reefNETag(); 
+                break;
+            case("SW"):
+                tagId = reefSWTag(); 
+                break;
+            case("SS"):
+                tagId = reefSSTag(); 
+                break;
+            case("SE"):
+                tagId = reefSETag(); 
+                break;
+            default:
+                return noop();
+        }
 
-    public static Command AutoScore(String tag, boolean left, int level){
-        return AutoScore(tag, left, Constants.ScoreConstants.ScoreLevel.values()[level]);
+        Translation2d approachOffset;
+        Translation2d finalOffset;
+
+        approachOffset = new Translation2d(
+            -AutoConstants.kReefStartingDistance + Units.inchesToMeters(6) - Constants.kChassis.kWheelBase/2.0,
+            Constants.AutoConstants.kStaticReefOffset
+        );
+    
+        finalOffset = new Translation2d(
+            -AutoConstants.kReefCenterDistance - Constants.kChassis.kWheelBase/2.0,
+            Constants.AutoConstants.kStaticReefOffset
+        );
+
+        // Create target poses
+        Pose2d target1 = PathPlanning.AprilTagAtDistance(tagId, approachOffset, Units.degreesToRadians(15));
+        Pose2d target2 = PathPlanning.AprilTagAtDistance(tagId, finalOffset);
+        //Pose2d targetbarge = PathPlanning.AprilTagAtDistance(bargeFrontTag(), new Translation2d(0,0));
+
+        return Commands.sequence(
+            new InstantCommand(()->{Autonomous.getInstance().m_drivingToReef = true;
+                                    Autonomous.getInstance().aimAtPoint(Autonomous.reefCenter(), VisionConstants.frontCamera.kCamYawRight);
+                                    PathPlanning.getInstance().navigateTo(target1);
+                                }),
+            new InstantCommand(() -> PathPlanning.getInstance().navigateTo(target2)),
+            Commands.waitUntil(() -> DriveTrain.getInstance().m_poseQueue.isEmpty() || DriveTrain.getInstance().m_isStoppedConfirmed || VectorUtils.isNear(PoseEstimator.getInstance().m_finalPose, target1, AutoConstants.kReefTolerance)).withTimeout(3),
+            new InstantCommand(() -> Elevator.getInstance().moveToLevel(level)),
+            Commands.sequence(new InstantCommand(() -> Arm.getInstance().moveToLevel(level))),
+            new InstantCommand(()->{EndEffector.getInstance().m_watchForAlgae = true;}),
+            EndEffector.getInstance().IntakeCommand().withTimeout(3.0).until(()->{return EndEffector.getInstance().m_hasAlgae;}).handleInterrupt(()->EndEffector.getInstance().m_watchForAlgae = false),
+            new InstantCommand(()->{EndEffector.getInstance().m_watchForAlgae = false;}),
+            new InstantCommand(() -> PathPlanning.getInstance().navigateTo(target1)),
+            Commands.waitUntil(() -> DriveTrain.getInstance().m_poseQueue.isEmpty() || DriveTrain.getInstance().m_isStoppedConfirmed || VectorUtils.isNear(PoseEstimator.getInstance().m_finalPose, target1, AutoConstants.kReefTolerance)).withTimeout(2)
+            
+        ).finallyDo(()->EndEffector.getInstance().m_watchForAlgae = false);
     }
-
     public static Command AutoScore(String tag, boolean left, ScoreLevel level){
         int tagId;
         switch (tag){
@@ -155,65 +228,157 @@ public class AutoCommands {
                 return noop();
         }
 
-        Pose2d target1 = PathPlanning.AprilTagAtDistance(
-            tagId,
-            new Translation2d(
-                - AutoConstants.kReefStartingDistance - Constants.kChassis.kWheelBase/2.0,
-                Constants.AutoConstants.kReefOffset * (left ? 1 : -1)+ Constants.AutoConstants.kStaticReefOffset
-            ),Units.degreesToRadians(15)
+        Translation2d approachOffset;
+        Translation2d finalOffset;
+    
+        /*switch (Controller.m_reefAlign) {
+            case CENTER:
+                // Center alignment - no lateral offset
+                approachOffset = new Translation2d(
+                    -AutoConstants.kReefStartingDistance - Constants.kChassis.kWheelBase/2.0,
+                    Constants.AutoConstants.kStaticReefOffset
+                );
+    
+                finalOffset = new Translation2d(
+                    -AutoConstants.kCenterReefDistance - Constants.kChassis.kWheelBase/2.0,
+                    Constants.AutoConstants.kStaticReefOffset
+                );
+                break;
+    
+            case RIGHT:
+                // Right alignment - negative offset
+                approachOffset = new Translation2d(
+                    -AutoConstants.kReefStartingDistance - Constants.kChassis.kWheelBase/2.0,
+                    -Constants.AutoConstants.kReefOffset + Constants.AutoConstants.kStaticReefOffset
+                );
+    
+                finalOffset = new Translation2d(
+                    -AutoConstants.kReefDistance - Constants.kChassis.kWheelBase/2.0,
+                    -Constants.AutoConstants.kReefOffset + Constants.AutoConstants.kStaticReefOffset
+                );
+                break;
+    
+            case LEFT:
+            default:
+                // Left alignment - positive offset
+                approachOffset = new Translation2d(
+                    -AutoConstants.kReefStartingDistance - Constants.kChassis.kWheelBase/2.0,
+                    Constants.AutoConstants.kReefOffset + Constants.AutoConstants.kStaticReefOffset
+                );
+    
+                finalOffset = new Translation2d(
+                    -AutoConstants.kReefDistance - Constants.kChassis.kWheelBase/2.0,
+                    Constants.AutoConstants.kReefOffset + Constants.AutoConstants.kStaticReefOffset
+                );
+                break;
+        }*/
+
+        approachOffset = new Translation2d(
+            -AutoConstants.kReefStartingDistance - Constants.kChassis.kWheelBase/2.0,
+            Constants.AutoConstants.kReefOffset * (left ? 1 : -1) + Constants.AutoConstants.kStaticReefOffset
+        );
+    
+        finalOffset = new Translation2d(
+            -AutoConstants.kReefDistance - Constants.kChassis.kWheelBase/2.0,
+            Constants.AutoConstants.kReefOffset * (left ? 1 : -1) + Constants.AutoConstants.kStaticReefOffset
         );
 
-        Pose2d target2 = PathPlanning.AprilTagAtDistance(
-            tagId,
-            new Translation2d(
-                - AutoConstants.kReefDistance - Constants.kChassis.kWheelBase/2.0,
-                Constants.AutoConstants.kReefOffset * (left ? 1 : -1) + Constants.AutoConstants.kStaticReefOffset
-            )
-        );
-        Pose2d targetbackup = PathPlanning.AprilTagAtDistance(
-            tagId,
-            new Translation2d(
-                - AutoConstants.kReefStartingDistance/2.0 - Constants.kChassis.kWheelBase/2.0,
-                Constants.AutoConstants.kReefOffset * (left ? 1 : -1)+ Constants.AutoConstants.kStaticReefOffset
-            ),Units.degreesToRadians(15)
-        );
+        // Create target poses
+        Pose2d target1 = PathPlanning.AprilTagAtDistance(tagId, approachOffset, Units.degreesToRadians(15));
+        Pose2d target2 = PathPlanning.AprilTagAtDistance(tagId, finalOffset);
 
         return Commands.sequence(
-            Commands.parallel(
-                new InstantCommand(() -> Autonomous.getInstance().m_drivingToReef = true),
-                new InstantCommand(() -> PathPlanning.getInstance().navigateTo(target1))
-            ),
+            new InstantCommand(()->{Autonomous.getInstance().m_drivingToReef = true;
+                                    Autonomous.getInstance().aimAtPoint(Autonomous.reefCenter(), VisionConstants.frontCamera.kCamYawRight);
+                                    PathPlanning.getInstance().navigateTo(target1);
+                                }),
             new InstantCommand(() -> PathPlanning.getInstance().navigateTo(target2)),
             Commands.waitUntil(() -> DriveTrain.getInstance().m_poseQueue.isEmpty() || DriveTrain.getInstance().m_isStoppedConfirmed || VectorUtils.isNear(PoseEstimator.getInstance().m_finalPose, target1, AutoConstants.kReefArmupTolerance)).withTimeout(3),
             new InstantCommand(() -> Elevator.getInstance().moveToLevel(level)),
             Commands.sequence(new InstantCommand(() -> Arm.getInstance().moveToLevel(level))),
+            new InstantCommand(() -> Autonomous.getInstance().stopAiming()),
             Commands.waitUntil(() -> DriveTrain.getInstance().m_poseQueue.isEmpty() || DriveTrain.getInstance().m_isStoppedConfirmed || VectorUtils.isNear(PoseEstimator.getInstance().m_finalPose, target2, AutoConstants.kReefTolerance)).withTimeout(6),
             Commands.waitUntil(() -> Arm.getInstance().isAtPosition() && Elevator.getInstance().isAtPosition()),
-            EndEffector.getInstance().ExpelCommand(()->(level == ScoreLevel.TROUGH ? EffectorConstants.kTroughOuttakeSpeed : EffectorConstants.kOuttakeSpeed), ()->level==ScoreLevel.TROUGH).withTimeout(1.5),
-            new InstantCommand(() -> PathPlanning.getInstance().navigateTo(target1)),
-            Commands.waitUntil(() -> DriveTrain.getInstance().m_poseQueue.isEmpty() || VectorUtils.isNear(PoseEstimator.getInstance().m_finalPose, target1, AutoConstants.kReefTolerance*2.0))
+            Commands.waitSeconds(0.5),
+            EndEffector.getInstance().ExpelCommand(()->(level == ScoreLevel.TROUGH ? EffectorConstants.kTroughOuttakeSpeed : EffectorConstants.kOuttakeSpeed), ()->level==ScoreLevel.TROUGH).withTimeout(1.5)
+        );
+    }
+
+    public static Command BargeFling(){
+        return Commands.sequence(
+            //new InstantCommand(() -> Elevator.getInstance().setPosition(ElevatorConstants.kMaxHeight)),
+            //new InstantCommand(() -> Arm.getInstance().setPosition(ArmConstants.kAngleMin)),
+            //Commands.waitUntil(() -> Arm.getInstance().isAtPosition()),
+            //Commands.waitUntil(() -> Elevator.getInstance().isAtPosition()),
+            //Commands.waitSeconds(1),
+            new InstantCommand(() -> Arm.getInstance().setPosition(ArmConstants.kAngleMax)),
+            Commands.waitUntil(() -> Arm.getInstance().isNearPosition()),
+            EndEffector.getInstance().JustShootIt()
         );
     }
     
-    public static void DriveReefOffset(boolean left){
+    public static void DriveReefOffset() {
         Pose2d target = PoseEstimator.getInstance().m_finalPose.nearest(reefPoses());
-        Pose2d target1 = PathPlanning.PoseAtDistance(target,
-            new Translation2d(
-                - AutoConstants.kReefStartingDistance - Constants.kChassis.kWheelBase/2.0,
-                Constants.AutoConstants.kReefOffset * (left ? 1 : -1) + 2*0.0254
-            ),Units.degreesToRadians(15)
-        );
-                
-        Pose2d target2 = PathPlanning.PoseAtDistance(target,
-            new Translation2d(
-                - AutoConstants.kReefDistance - Constants.kChassis.kWheelBase/2.0,
-                Constants.AutoConstants.kReefOffset * (left ? 1 : -1) + 2*0.0254
-            )
-        );
+    
+        // Calculate lateral offset based on alignment selection
+        Translation2d approachOffset;
+        Translation2d finalOffset;
+    
+        switch (Controller.m_reefAlign) {
+            case CENTER:
+                // Center alignment - no lateral offset
+                approachOffset = new Translation2d(
+                    -AutoConstants.kReefStartingDistance - Constants.kChassis.kWheelBase/2.0,
+                    Constants.AutoConstants.kStaticReefOffset
+                );
+    
+                finalOffset = new Translation2d(
+                    -AutoConstants.kCenterReefDistance - Constants.kChassis.kWheelBase/2.0,
+                    Constants.AutoConstants.kStaticReefOffset
+                );
+                break;
+    
+            case RIGHT:
+                // Right alignment - negative offset
+                approachOffset = new Translation2d(
+                    -AutoConstants.kReefStartingDistance - Constants.kChassis.kWheelBase/2.0,
+                    -Constants.AutoConstants.kReefOffset + Constants.AutoConstants.kStaticReefOffset
+                );
+    
+                finalOffset = new Translation2d(
+                    -AutoConstants.kReefDistance - Constants.kChassis.kWheelBase/2.0,
+                    -Constants.AutoConstants.kReefOffset + Constants.AutoConstants.kStaticReefOffset
+                );
+                break;
+    
+            case LEFT:
+            default:
+                // Left alignment - positive offset
+                approachOffset = new Translation2d(
+                    -AutoConstants.kReefStartingDistance - Constants.kChassis.kWheelBase/2.0,
+                    Constants.AutoConstants.kReefOffset + Constants.AutoConstants.kStaticReefOffset
+                );
+    
+                finalOffset = new Translation2d(
+                    -AutoConstants.kReefDistance - Constants.kChassis.kWheelBase/2.0,
+                    Constants.AutoConstants.kReefOffset + Constants.AutoConstants.kStaticReefOffset
+                );
+                break;
+        }
+        
+        // Create target poses
+        Pose2d target1 = PathPlanning.PoseAtDistance(target, approachOffset, Units.degreesToRadians(15));
+        Pose2d target2 = PathPlanning.PoseAtDistance(target, finalOffset);
 
+        DriveTrain.getInstance().m_poseQueue.clear();
         PathPlanning.getInstance().navigateTo(target1);
         PathPlanning.getInstance().navigateTo(target2);
         Autonomous.getInstance().m_drivingToReef = true;
 
+    }
+
+    public static void AimAtClosestSource(){
+        Pose2d target = PoseEstimator.getInstance().m_finalPose.nearest(sourcePoses());
+        DriveTrain.getInstance().lockTargetHeading(target.getRotation().getRadians());
     }
 }
