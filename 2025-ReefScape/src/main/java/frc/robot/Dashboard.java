@@ -10,10 +10,13 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import frc.robot.Constants.ScoreConstants.ScoreLevel;
+import frc.robot.Constants.kDriveTrain.DriveConstants;
 import frc.robot.subsystems.AutoCommands;
+import frc.robot.subsystems.DriveTrain;
 import frc.robot.subsystems.PathPlanning;
 import frc.robot.subsystems.PoseEstimator;
 import frc.robot.subsystems.Vision;
+import frc.utils.VectorUtils;
 
 public class Dashboard{
 
@@ -80,7 +83,7 @@ public class Dashboard{
  */
     private class Argument{
         public enum TASK {
-            INVALID, SCORE, GETCORAL, WAIT, POSERETURN, POSESTORE, AUTOPOSE, GETALGAE
+            INVALID, SCORE, GETCORAL, WAIT, POSERETURN, POSESTORE, AUTOPOSE, GETALGAE, WAYPOINT
         }
         private TASK type;
         private int var0;
@@ -102,16 +105,23 @@ public class Dashboard{
             else if (input.contains("RET") || input.contains("URN")) type = TASK.POSERETURN; // Return to pose type ID
             else if (input.contains("STO") || input.contains("TOR")) type = TASK.POSESTORE; // Store pose type ID
             else if (input.contains("AUTOP") || input.contains("TOPOS")) type = TASK.AUTOPOSE;
+            else if (input.contains("WAYP") || input.contains("YPOI")) type = TASK.WAYPOINT;
             else if (input.contains("ALG")) type = TASK.GETALGAE;
             else type = TASK.INVALID;
+            if (input.contains("LEF") || input.contains("EFT"))
+                left = true;
+            else if (input.contains("RIG") || input.contains("GHT"))
+                left = false;
             try { 
-                if (input.contains("LEF") || input.contains("EFT")) left = true;
-                else if (input.contains("RIG") || input.contains("GHT")) left = false;
                 var0 = Integer.parseInt(input.substring(input.length()-1)); // Set var to hopefully the score level or wait time
-                var1 = input.substring(input.indexOf(".")+1,input.indexOf(".")+3);
             } // Set var to hopefully the note ID
-                catch (NumberFormatException e) {var0 = -1;}
-                catch (StringIndexOutOfBoundsException e) {var1 = "";}
+            catch (NumberFormatException e) {var0 = -1;}
+            catch (StringIndexOutOfBoundsException e) {var0 = -1;}
+
+            try {
+                var1 = input.substring(input.indexOf(".")+1,input.indexOf(".")+3);
+            }
+            catch (StringIndexOutOfBoundsException e) {var1 = "";}
 
             // if (!isReal()) return Commands.waitSeconds(0);
             switch (type){
@@ -123,18 +133,35 @@ public class Dashboard{
                     return Commands.waitSeconds(var0);
                 case GETCORAL:
                     return AutoCommands.GetCoral(left);
-                case AUTOPOSE:
+                case WAYPOINT:
                     return new InstantCommand(()->{
                         if (var0 >= 0 && var0 < m_autoPoses.size() && Vision.getInstance().poseIsInField(m_autoPoses.get(var0))){
                             PathPlanning.getInstance().navigateTo(m_autoPoses.get(var0));
                         }
-                    });
+                    }); 
+                case AUTOPOSE:
+                    return Commands.sequence(
+                        new InstantCommand(()->{
+                            if (var0 >= 0 && var0 < m_autoPoses.size() && Vision.getInstance().poseIsInField(m_autoPoses.get(var0))){
+                                PathPlanning.getInstance().navigateTo(m_autoPoses.get(var0));
+                            }
+                        }),
+                        Commands.waitUntil(()->{return DriveTrain.getInstance().m_poseQueue.isEmpty() || VectorUtils.isNear(PoseEstimator.getInstance().m_finalPose, m_autoPoses.get(var0), DriveConstants.kAutoToleranceDistance);}).withTimeout(5)
+                    );
                 case SCORE:
                     // limit scoring level to trough through reef level 4
                     var level = Constants.ScoreConstants.ScoreLevel.values()[Math.max(1,Math.min(4,var0))];
                     return AutoCommands.AutoScore(var1,left,level);
                 case GETALGAE:
-                    return AutoCommands.GetAlgae("NN", ScoreLevel.ALGAE2);
+                    switch (var0){
+                    case 2:
+                        return AutoCommands.GetAlgae(var1, ScoreLevel.ALGAE2);
+                    case 3:
+                        return AutoCommands.GetAlgae(var1, ScoreLevel.ALGAE3);
+                    default:
+                    case -1:
+                        return AutoCommands.GetAlgae(var1);
+                    }
                 default:
                     return AutoCommands.noop(); //noop noop
             }

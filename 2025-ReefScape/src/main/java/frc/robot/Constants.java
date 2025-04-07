@@ -102,6 +102,7 @@ public final class Constants {
     public static MyMotorType kMotorType = MyMotorType.NEO;
     public static int kCANID = 7;
     public static double kIntakeSpeed = NTDouble.create(1, "Effector/kIntakeSpeed", val->{kIntakeSpeed=val;});
+    public static double kIntakeSpeedAlgae = NTDouble.create(2, "Effector/kIntakeSpeedAlgae", val->{kIntakeSpeedAlgae=val;});
     public static double kOuttakeSpeed = NTDouble.create(4, "Effector/kOuttakeSpeed", val->{kOuttakeSpeed=val;});
     public static double kOuttakeFastSpeed = NTDouble.create(6, "Effector/kOuttakeFastSpeed", val->{kOuttakeFastSpeed=val;});
     public static double kTroughOuttakeSpeed = NTDouble.create(2.5, "Effector/kTroughOuttakeSpeed", val->{kTroughOuttakeSpeed=val;});
@@ -113,7 +114,7 @@ public final class Constants {
     public static double kRetractDistance = NTDouble.create(10, "Intake/kRetractDistance", val->{kRetractDistance=val;});
 
     public static int kMotorCurrentLimit = (NTInteger.create(30,"Effector/kCurrentLimit", (val) ->EndEffector.getInstance().m_motor.withStatorLimit(val)));
-
+    public static double kMaxSpeed = NTDouble.create(6,"Effector/kMaxSpeed",(val)->EndEffector.getInstance().m_motor.withSpeedLimit(val));
     // Position control gains
     public static Motor.Gains kGainPosition = new Motor.Gains(1.33, 0.000833, 0.00167, 0);
     public static Motor.Gains kGainVelocity = new Motor.Gains(0.083, 0, 0, 0.183);
@@ -321,7 +322,7 @@ public final class Constants {
       public static double kCamPitchUp = Math.toRadians(NTDouble.create(0, "Vision/"+kCameraName+"/kCamPitchUp_deg", val->{kCamPitchUp=Math.toRadians(val); Vision.photonPoseEstimatorFront.setRobotToCameraTransform(kCameraToRobot().inverse());}));
       public static double kCamDiagFOV = Math.toRadians(NTDouble.create(77.2, "Vision/"+kCameraName+"/kCamDiagFOV_deg", val->{kCamDiagFOV=Math.toRadians(val); Vision.photonPoseEstimatorFront.setRobotToCameraTransform(kCameraToRobot().inverse());}));
       public static double kCamForwardOffset = Units.inchesToMeters(NTDouble.create(6.875, "Vision/"+kCameraName+"/kCamForwardOffset_in", val->{kCamForwardOffset=Units.inchesToMeters(val); Vision.photonPoseEstimatorFront.setRobotToCameraTransform(kCameraToRobot().inverse());}));
-      public static double kCamLeftOffset = Units.inchesToMeters(NTDouble.create(7.375, "Vision/"+kCameraName+"/kCamLeftOffset_in", val->{kCamLeftOffset=Units.inchesToMeters(val); Vision.photonPoseEstimatorFront.setRobotToCameraTransform(kCameraToRobot().inverse());}));
+      public static double kCamLeftOffset = Units.inchesToMeters(NTDouble.create(7.375 - 4 /* calibrated offset */, "Vision/"+kCameraName+"/kCamLeftOffset_in", val->{kCamLeftOffset=Units.inchesToMeters(val); Vision.photonPoseEstimatorFront.setRobotToCameraTransform(kCameraToRobot().inverse());}));
 
       public static double kSimMaxLEDRange = 20; // meters
       public static int    kSimCamResolutionW = 1280; // pixels
@@ -400,7 +401,7 @@ public final class Constants {
   
   public static class AutoConstants {
     
-    public static final double kReefCenterDistance = 0.831723; // Determined from Andymark Apriltag Map
+    public static final double kFieldReefCenterFromAprilTagDistance = 0.831723; // Determined from Andymark Apriltag Map
     public static final int kReefRedCenterRefID = 7;
     public static final int kReefBlueCenterRefID = 18;
     public static double kReefKOZRadius = Units.feetToMeters(NTDouble.create(6,"Autonomous/kReefKOZRadius", val -> {kReefKOZRadius = Units.feetToMeters(val); Autonomous.staticObstacles = Autonomous.generateStaticObstacles();}));
@@ -409,7 +410,7 @@ public final class Constants {
  
     public static double kLineupTimeout = NTDouble.create(7, "Autonomous/kLineupTimeout", val -> kLineupTimeout = val);
     public static double kReefDistance = Units.inchesToMeters(NTDouble.create(6.25, "Autonomous/kReefDistance", val -> kReefDistance = Units.inchesToMeters(val)));
-    public static double kCenterReefDistance = Units.inchesToMeters(NTDouble.create(9.5, "Autonomous/kCenterReefDistance", val -> kCenterReefDistance = Units.inchesToMeters(val)));
+    public static double kReefDistanceCenterAlign = Units.inchesToMeters(NTDouble.create(9.5, "Autonomous/kCenterReefDistance", val -> kReefDistanceCenterAlign = Units.inchesToMeters(val)));
     public static double kReefStartingDistance = Units.inchesToMeters(NTDouble.create(40, "Autonomous/kReefStartingDistance", val -> kReefStartingDistance = Units.inchesToMeters(val)));
     public static double kReefTolerance = Units.inchesToMeters(NTDouble.create(0.5, "Autonomous/kReefToleranceInch", val -> kReefTolerance = Units.inchesToMeters(val)));
     public static double kReefArmupTolerance = Units.inchesToMeters(NTDouble.create(120, "Autonomous/kReefArmupTolerance", val -> kReefArmupTolerance = Units.inchesToMeters(val)));
@@ -420,7 +421,7 @@ public final class Constants {
     public static double kReefOffset = Units.inchesToMeters(NTDouble.create(6.5,"Autonomous/kReefOffset",val -> kReefOffset = Units.inchesToMeters(val)));
     public static double kTroughClearance = NTDouble.create(2, "Autonomous/kTroughClearance", val -> kTroughClearance = Units.inchesToMeters(val));
     // Ooga Booga Number
-    public static double kStaticReefOffset = Units.inchesToMeters(NTDouble.create(4,"Autonomous/kStaticReefOffset",val -> kStaticReefOffset = Units.inchesToMeters(val)));
+    public static double kStaticReefOffset = Units.inchesToMeters(NTDouble.create(0,"Autonomous/kStaticReefOffset",val -> kStaticReefOffset = Units.inchesToMeters(val)));
     
     public static double kFieldLength = 16.451;
     public static double kFieldWidth = 8.211;

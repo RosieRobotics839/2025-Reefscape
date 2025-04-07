@@ -4,8 +4,13 @@
 
 package frc.utils.pathfinding.astar;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
+import edu.wpi.first.math.geometry.Translation2d;
 import frc.robot.Constants.AutoConstants;
 import frc.robot.subsystems.Autonomous;
+import frc.robot.subsystems.PathPlanning;
 import frc.utils.VectorUtils;
 
 /** Add your docs here. */
@@ -25,14 +30,21 @@ public class PathScorer implements Scorer<FieldPose> {
             // TO and FROM are in an Obstacle, penalize the whole thing.
             R+=999*to.getPose().getTranslation().minus(from.getPose().getTranslation()).getNorm();
         } else if (toObstacle.isEmpty() && !fromObstacle.isEmpty()){
-            // FROM is in an Obstacle, penalize the part of the path in the obstacle
-            for (int i=0; i<fromObstacle.size(); i++){
-                var start = fromObstacle.get(i);
-                var end = fromObstacle.get((i+1) % fromObstacle.size());
-                var intersection = VectorUtils.findIntersection(from.getPose().getTranslation(), to.getPose().getTranslation(), start, end);
-                if (intersection.isPresent()){
-                    if (intersection.get().minus(from.getPose().getTranslation()).getNorm() > AutoConstants.kMinObstaclePenaltyDistance){
-                        R+=999*intersection.get().minus(from.getPose().getTranslation()).getNorm();
+            // FROM is in an Obstacle, penalize the part of the path in the obstacle only if not the nearest two nodes.
+            List<Translation2d> graphnodes = PathPlanning.getInstance().nodes.stream().map((m)->m.getPose().getTranslation()).collect(Collectors.toList());
+            graphnodes.remove(from.getPose().getTranslation());
+            Translation2d closestNode = from.getPose().getTranslation().nearest(graphnodes);
+            graphnodes.remove(closestNode);
+            Translation2d nextClosestNode = from.getPose().getTranslation().nearest(graphnodes);
+            if (!to.getPose().getTranslation().equals(closestNode) && !to.getPose().getTranslation().equals(nextClosestNode)){
+                for (int i=0; i<fromObstacle.size(); i++){
+                    var start = fromObstacle.get(i);
+                    var end = fromObstacle.get((i+1) % fromObstacle.size());
+                    var intersection = VectorUtils.findIntersection(from.getPose().getTranslation(), to.getPose().getTranslation(), start, end);
+                    if (intersection.isPresent()){
+                        if (intersection.get().minus(from.getPose().getTranslation()).getNorm() > AutoConstants.kMinObstaclePenaltyDistance){
+                            R+=999*intersection.get().minus(from.getPose().getTranslation()).getNorm();
+                        }
                     }
                 }
             }

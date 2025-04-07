@@ -266,7 +266,14 @@ public class PathPlanning {
         navigateTo(closestPose);
 
     }
-    
+    /**
+     * Returns the pose of an AprilTag on the field.
+     * @param id Apriltag ID
+     */
+        public static Pose2d AprilTag(int id) {
+        return Vision.getInstance().aprilTagFieldLayout.getTagPose(id).get().toPose2d();
+    }
+
     /**
      * Provides a way to get the Pose that the robot should be in relative to an apriltag
      * @param id Apriltag ID
@@ -275,8 +282,7 @@ public class PathPlanning {
      * @return
      */
     public static Pose2d AprilTagAtDistance(int id, Translation2d translation, double radians) {
-        Pose2d tagPose = Vision.getInstance().aprilTagFieldLayout.getTagPose(id).get().toPose2d();
-        return PoseAtDistance(tagPose, translation, radians);
+        return PoseAtDistance(AprilTag(id), translation, radians);
     }
 
     public static Pose2d PoseAtDistance(Pose2d pose, Translation2d translation, double radians){

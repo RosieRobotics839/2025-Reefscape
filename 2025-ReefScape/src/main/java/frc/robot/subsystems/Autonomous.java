@@ -41,8 +41,8 @@ public class Autonomous extends SubsystemBase {
   private NTBoolean nt_isInsideReef = new NTBoolean(false,table,"isInsideReef",null);
   private Debouncer m_insideReefDebounce = new Debouncer(0.7777777, DebounceType.kFalling);
 
-  public static Pose2d m_redReefCenter = PathPlanning.AprilTagAtDistance(AutoConstants.kReefRedCenterRefID, AutoConstants.kReefCenterDistance);
-  public static Pose2d m_blueReefCenter = PathPlanning.AprilTagAtDistance(AutoConstants.kReefBlueCenterRefID, AutoConstants.kReefCenterDistance);
+  public static Pose2d m_redReefCenter = PathPlanning.AprilTagAtDistance(AutoConstants.kReefRedCenterRefID, AutoConstants.kFieldReefCenterFromAprilTagDistance);
+  public static Pose2d m_blueReefCenter = PathPlanning.AprilTagAtDistance(AutoConstants.kReefBlueCenterRefID, AutoConstants.kFieldReefCenterFromAprilTagDistance);
   
   public static Pose2d reefCenter(){ return (DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == Alliance.Blue ? Autonomous.m_blueReefCenter : Autonomous.m_redReefCenter ); }
   public static List<Translation2d> reefObstacle(){ return(DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == Alliance.Blue ? Autonomous.bluereef : Autonomous.redreef ); }

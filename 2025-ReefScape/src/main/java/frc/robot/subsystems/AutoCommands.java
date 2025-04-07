@@ -20,6 +20,7 @@ import frc.robot.Constants.EffectorConstants;
 import frc.robot.Constants.ElevatorConstants;
 import frc.robot.Constants.ScoreConstants;
 import frc.robot.Constants.ScoreConstants.ScoreLevel;
+import frc.robot.Constants.kDriveTrain.DriveConstants;
 import frc.robot.Constants.VisionConstants;
 import frc.utils.VectorUtils;
 
@@ -109,12 +110,12 @@ public class AutoCommands {
                 })),
             Commands.deadline(
                 Commands.sequence(
-                    Commands.waitUntil(()->{return !Autonomous.getInstance().isInsideReef() && Elevator.getInstance().getPosition() < ElevatorConstants.kMaxHeight/2.0 && !EndEffector.getInstance().hasGamePiece();}),
+                    Commands.waitUntil(()->{return !Autonomous.getInstance().isInsideReef() && Elevator.getInstance().getPosition() < ElevatorConstants.kMaxHeight/2.0 && !EndEffector.getInstance().hasCoral();}),
                     EndEffector.getInstance().IntakeCommand().asProxy()
                 ),
                 Commands.sequence(
                     new InstantCommand(() -> {
-                        PathPlanning.getInstance().navigateTo(PathPlanning.AprilTagAtDistance(tagId, new Translation2d(-AutoConstants.kSourceStartingDistance - Constants.kChassis.kWheelBase/2.0, (tagId==coralSourceRTag() ? 1 : -1)*AutoConstants.kSourceOffset), Math.PI));
+                        PathPlanning.getInstance().navigateTo(PathPlanning.AprilTagAtDistance(tagId, new Translation2d(-AutoConstants.kSourceStartingDistance*1.25 - Constants.kChassis.kWheelBase/2.0, (tagId==coralSourceRTag() ? 1 : -1)*AutoConstants.kSourceOffset), Math.PI));
                     }),
                     new InstantCommand(() -> PathPlanning.getInstance().navigateTo(PathPlanning.AprilTagAtDistance(tagId, new Translation2d(-AutoConstants.kSourceDistance - Constants.kChassis.kWheelBase/2.0, (tagId==coralSourceRTag() ? 1 : -1)*AutoConstants.kSourceOffset), Math.PI))),
                     Commands.sequence(
@@ -124,7 +125,7 @@ public class AutoCommands {
                     ).withTimeout(5)
                 ).repeatedly().handleInterrupt(()->DriveTrain.getInstance().m_poseQueue.clear())
             )
-        ).until(()->{return !Autonomous.getInstance().isInsideReef() && Elevator.getInstance().getPosition() < ElevatorConstants.kMaxHeight/2.0 && EndEffector.getInstance().hasGamePiece();});
+        ).until(()->{return !Autonomous.getInstance().isInsideReef() && Elevator.getInstance().getPosition() < ElevatorConstants.kMaxHeight/2.0 && EndEffector.getInstance().hasCoral();});
     }
 
     public static Command wiggle = Commands.sequence(
@@ -142,6 +143,29 @@ public class AutoCommands {
             new InstantCommand(() -> Arm.getInstance().moveToLevelCommand(()->level)),
             Controller.accessoryButtons.m_expel.asProxy()
         );
+    }
+
+    static public ScoreLevel AlgaeLevel(String tag, ScoreLevel level){
+        if (level == ScoreLevel.ALGAE0){
+            switch(tag){
+                case("NN"):
+                case("SE"):
+                case("SW"):
+                    level = ScoreLevel.ALGAE2;
+                    break;
+                case("NE"):
+                case("SS"):
+                case("NW"):
+                    level = ScoreLevel.ALGAE3;
+                    break;
+                default:
+            }
+        }
+        return level;
+    }
+
+    public static Command GetAlgae(String tag){
+        return GetAlgae(tag, ScoreLevel.ALGAE0);
     }
     public static Command GetAlgae(String tag, ScoreLevel level){
         int tagId;
@@ -177,31 +201,43 @@ public class AutoCommands {
         );
     
         finalOffset = new Translation2d(
-            -AutoConstants.kReefCenterDistance - Constants.kChassis.kWheelBase/2.0,
+            -AutoConstants.kReefDistanceCenterAlign - Constants.kChassis.kWheelBase/2.0,
             Constants.AutoConstants.kStaticReefOffset
         );
 
         // Create target poses
         Pose2d target1 = PathPlanning.AprilTagAtDistance(tagId, approachOffset, Units.degreesToRadians(15));
         Pose2d target2 = PathPlanning.AprilTagAtDistance(tagId, finalOffset);
+        Pose2d target3 = PathPlanning.AprilTagAtDistance(tagId, approachOffset);
+        Pose2d targetAim = PathPlanning.AprilTagAtDistance(tagId, new Translation2d(0,Constants.AutoConstants.kStaticReefOffset));
         //Pose2d targetbarge = PathPlanning.AprilTagAtDistance(bargeFrontTag(), new Translation2d(0,0));
 
         return Commands.sequence(
-            new InstantCommand(()->{Autonomous.getInstance().m_drivingToReef = true;
-                                    Autonomous.getInstance().aimAtPoint(Autonomous.reefCenter(), VisionConstants.frontCamera.kCamYawRight);
-                                    PathPlanning.getInstance().navigateTo(target1);
+            new InstantCommand(()->{
+                Autonomous.getInstance().m_drivingToReef = true;
+                Autonomous.getInstance().aimAtPoint(targetAim);
+                var _level = AlgaeLevel(tag,level);
+                Arm.getInstance().moveToLevel(ScoreLevel.CORAL3);
+                Elevator.getInstance().moveToLevel(_level);
+                PathPlanning.getInstance().navigateTo(target1);
+            }),
+            Commands.waitUntil(() -> DriveTrain.getInstance().m_poseQueue.isEmpty() || DriveTrain.getInstance().m_isStoppedConfirmed || VectorUtils.isNear(PoseEstimator.getInstance().m_finalPose, target1, DriveConstants.kAutoToleranceMidPointDistance)).withTimeout(5),
+            new InstantCommand(() -> {
+                var _level = AlgaeLevel(tag,level);
+                Arm.getInstance().moveToLevel(_level);
+                Elevator.getInstance().moveToLevel(_level);
+            }),
+            Commands.waitUntil(() -> Arm.getInstance().isAtPosition() && Elevator.getInstance().isAtPosition()),
+            new InstantCommand(()->{
+                PathPlanning.getInstance().navigateTo(target2);
+            }),
+            EndEffector.getInstance().IntakeCommand().beforeStarting(()->EndEffector.getInstance().m_watchForAlgae = true).withTimeout(6.0).until(()->{return EndEffector.getInstance().m_hasAlgae;}).handleInterrupt(()->EndEffector.getInstance().m_watchForAlgae = false),
+            new InstantCommand(()->{EndEffector.getInstance().m_watchForAlgae = false;
+                                    PathPlanning.getInstance().navigateTo(target3);
                                 }),
-            new InstantCommand(() -> PathPlanning.getInstance().navigateTo(target2)),
-            Commands.waitUntil(() -> DriveTrain.getInstance().m_poseQueue.isEmpty() || DriveTrain.getInstance().m_isStoppedConfirmed || VectorUtils.isNear(PoseEstimator.getInstance().m_finalPose, target1, AutoConstants.kReefTolerance)).withTimeout(3),
-            new InstantCommand(() -> Elevator.getInstance().moveToLevel(level)),
-            Commands.sequence(new InstantCommand(() -> Arm.getInstance().moveToLevel(level))),
-            new InstantCommand(()->{EndEffector.getInstance().m_watchForAlgae = true;}),
-            EndEffector.getInstance().IntakeCommand().withTimeout(3.0).until(()->{return EndEffector.getInstance().m_hasAlgae;}).handleInterrupt(()->EndEffector.getInstance().m_watchForAlgae = false),
-            new InstantCommand(()->{EndEffector.getInstance().m_watchForAlgae = false;}),
-            new InstantCommand(() -> PathPlanning.getInstance().navigateTo(target1)),
-            Commands.waitUntil(() -> DriveTrain.getInstance().m_poseQueue.isEmpty() || DriveTrain.getInstance().m_isStoppedConfirmed || VectorUtils.isNear(PoseEstimator.getInstance().m_finalPose, target1, AutoConstants.kReefTolerance)).withTimeout(2)
+            Commands.waitUntil(() -> DriveTrain.getInstance().m_poseQueue.isEmpty() || DriveTrain.getInstance().m_isStoppedConfirmed || VectorUtils.isNear(PoseEstimator.getInstance().m_finalPose, target3, DriveConstants.kAutoToleranceDistance)).withTimeout(5)
             
-        ).finallyDo(()->EndEffector.getInstance().m_watchForAlgae = false);
+        ).finallyDo(()->{EndEffector.getInstance().m_watchForAlgae = false; Autonomous.getInstance().stopAiming();});
     }
     public static Command AutoScore(String tag, boolean left, ScoreLevel level){
         int tagId;
@@ -301,7 +337,7 @@ public class AutoCommands {
             Commands.waitUntil(() -> Arm.getInstance().isAtPosition() && Elevator.getInstance().isAtPosition()),
             Commands.waitSeconds(0.5),
             EndEffector.getInstance().ExpelCommand(()->(level == ScoreLevel.TROUGH ? EffectorConstants.kTroughOuttakeSpeed : EffectorConstants.kOuttakeSpeed), ()->level==ScoreLevel.TROUGH).withTimeout(1.5)
-        );
+        ).unless(()->{return !EndEffector.getInstance().hasGamePiece();});
     }
 
     public static Command BargeFling(){
@@ -333,7 +369,7 @@ public class AutoCommands {
                 );
     
                 finalOffset = new Translation2d(
-                    -AutoConstants.kCenterReefDistance - Constants.kChassis.kWheelBase/2.0,
+                    -AutoConstants.kReefDistanceCenterAlign - Constants.kChassis.kWheelBase/2.0,
                     Constants.AutoConstants.kStaticReefOffset
                 );
                 break;
