@@ -65,10 +65,22 @@ public class KrakenOrchestra extends SubsystemBase {
             }
             
             DriveTrain dt = DriveTrain.getInstance();
-            if (dt.frontLeft.m_motorDrive.motor_talon != null) instruments.add(dt.frontLeft.m_motorDrive.motor_talon);
-            if (dt.frontRight.m_motorDrive.motor_talon != null) instruments.add(dt.frontRight.m_motorDrive.motor_talon);
-            if (dt.rearLeft.m_motorDrive.motor_talon != null) instruments.add(dt.rearLeft.m_motorDrive.motor_talon);
-            if (dt.rearRight.m_motorDrive.motor_talon != null) instruments.add(dt.rearRight.m_motorDrive.motor_talon);
+            if (dt.frontLeft.m_motorDrive.motor_talon != null) {
+                instruments.add(dt.frontLeft.m_motorDrive.motor_talon);
+                System.out.println("front left good XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
+            }
+            if (dt.frontRight.m_motorDrive.motor_talon != null) {
+                instruments.add(dt.frontRight.m_motorDrive.motor_talon);
+                System.out.println("front right good XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
+            }
+            if (dt.rearLeft.m_motorDrive.motor_talon != null) {
+                instruments.add(dt.rearLeft.m_motorDrive.motor_talon);
+                System.out.println("rear left good XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
+            }
+            if (dt.rearRight.m_motorDrive.motor_talon != null) {
+                instruments.add(dt.rearRight.m_motorDrive.motor_talon);
+                System.out.println("rear right good XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
+            }
             
             // Add each instrument to the orchestra and allow it to play music when Driver Station is Disabled
             int successCount = 0;

@@ -291,7 +291,6 @@ public final class Constants {
   }
 
   public static class VisionConstants{
-    // TODO: Tune extra latency to get pose estimator to work smoothly.
     public static double kMaxAmbiguity = NTDouble.create(0.2, "Vision/kMaxAmbiguity", val->kMaxAmbiguity=val);
     public static int    kPipelineIndex = NTInteger.create(0, "Vision/kPipelineIndex", val->Vision.cam1.setPipelineIndex(val));
     public static double kMinTargetArea = NTDouble.create(.1, "Vision/kMinTargetArea", val->kMinTargetArea=val);
@@ -369,7 +368,6 @@ public final class Constants {
 
   // Chassis configuration
   public static class kChassis {
-    // TODO: Update for Delta Wheel Position
     public static final double kTrackWidth = Units.inchesToMeters(24); // Distance between right and left wheels
     public static final double kWheelBase = Units.inchesToMeters(24.25); // Distance between front and back wheels
   }
