@@ -33,7 +33,7 @@ public class EndEffector extends SubsystemBase {
 
     private boolean m_beamBroken = false;
     public boolean m_hasGamePiece = false;
-    public Debouncer m_motorStopped = new Debouncer(0.5, Debouncer.DebounceType.kRising);
+    public Debouncer m_motorStopped = new Debouncer(0.25, Debouncer.DebounceType.kRising);
     private Debouncer m_algaeSim = new Debouncer(2, Debouncer.DebounceType.kRising);
     private boolean m_hasCoral = false;
     private double m_algaeRelativePosition;
@@ -60,7 +60,22 @@ public class EndEffector extends SubsystemBase {
         Commands.waitUntil(() -> {return hasGamePiece();}) //Checking whether we have a game piece or not.
       ).onlyWhile(()->DriverStation.isEnabled()).withTimeout(Robot.isSimulation() ? 15 : 600)
       .beforeStarting(()->{m_intakeRunning=true;})
-      .finallyDo(()->{m_motor.setRelativePosition(EffectorConstants.kExtraTurn); m_intakeRunning=false; if (Robot.isSimulation()){if (!m_watchForAlgae){m_beamBreakTestSensor.set(true);}}; m_watchForAlgae = false;});
+      .finallyDo(()->{
+        if (hasCoral()){
+          m_motor.setRelativePosition(EffectorConstants.kExtraTurn);
+        };
+        if (hasAlgae()){
+          m_motor.setRelativePosition(-EffectorConstants.kAlgaeAfterTurns);
+        }
+        if (!hasGamePiece()){
+          m_motor.setSpeed(0);
+        }
+        if (Robot.isSimulation()){
+          if (!m_watchForAlgae){
+            m_beamBreakTestSensor.set(true);}
+          };
+        m_intakeRunning = false;
+        m_watchForAlgae = false;});
     }
 
     public Command ExpelCommand(DoubleSupplier speed, BooleanSupplier extended){
@@ -117,38 +132,34 @@ public class EndEffector extends SubsystemBase {
 
     // Checking to see if we have coral
     if (beam_trigger){
-        m_hasGamePiece = true;
         m_hasCoral = true;
         m_hasAlgae = false;
+        m_watchForAlgae = false;
     }
-
-    var algaeSim = m_algaeSim.calculate(m_watchForAlgae && m_motor.getVelocity() > 0.5);
-    if (algaeSim){
-      m_motor.setSpeed(0.3);
+    if (Robot.isSimulation()){
+      var algaeSim = m_algaeSim.calculate(m_watchForAlgae && m_motor.getVelocity() > 0.5);
+      if (algaeSim){
+        m_motor.setSpeed(0.3);
+      }
     }
-    var motorStopped = m_motorStopped.calculate(m_watchForAlgae && m_motor.getVelocity() < .45);
+    var motorStopped = m_motorStopped.calculate(m_watchForAlgae && m_motor.getOutputCurrent() > EffectorConstants.kMotorCurrentLimit/2.0 && m_motor.getVelocity() < .45);
     
     // Coral not detected, checking to see if we have algae.
-    if (!m_beamBroken && m_watchForAlgae && motorStopped && DriverStation.isAutonomousEnabled()){
+    if (!m_hasAlgae && !m_beamBroken && m_watchForAlgae && motorStopped && DriverStation.isAutonomousEnabled()){
       m_hasAlgae = true;
-      m_hasGamePiece = true;
       m_algaeRelativePosition = m_motor.getPosition();
-      m_motor.setPosition(m_algaeRelativePosition-0.1);
     }
 
     // If algae was picked up, but the motor has turned more than one revolution since... we probably don't have algae anymore.
-    if (m_hasAlgae && Math.abs(m_motor.getPosition() - m_algaeRelativePosition) > 1){
+    if (m_hasAlgae && (DriverStation.isDisabled() || Math.abs(m_motor.getPosition() - m_algaeRelativePosition) > (1 + EffectorConstants.kAlgaeAfterTurns))){
       m_hasAlgae = false;
     }
     
     if (m_hasCoral && !m_beamBroken){ // Checking to see if we previously had coral. Seeing is m_hasCoral is still correct because if the beam is not broken we don't have coral anymore.
-      m_hasGamePiece = false;
       m_hasCoral = false;
     }
-
-    if (m_hasGamePiece && !m_hasCoral && m_motor.getPosition() < (m_algaeRelativePosition - EffectorConstants.kAlgaeMotorRevolutions)){ //Checking to see if we still have algae by waiting until the position gets to a certain point.
-      m_hasGamePiece = false;
-    }
+    
+    m_hasGamePiece = m_hasAlgae || m_hasCoral;
 
     nt_beamBroken.set(m_beamBroken);
     nt_hasGamePiece.set(m_hasGamePiece);

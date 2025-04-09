@@ -184,20 +184,21 @@ public class Controller extends XboxController {
       // Put funnel back down if both buttons are pressed.
       ClimberIn.and(()->ClimberOut.getAsBoolean()).whileTrue(Funnel.getInstance().FunnelDownCommand);
 
+      Command intake = Commands.sequence(
+        new InstantCommand(()->{
+          if (m_reefAlign == ReefAlignment.CENTER){
+            EndEffector.getInstance().m_watchForAlgae = true;
+          }
+        }),
+        EndEffector.getInstance().IntakeCommand()
+      );
       /* Intake and Outtake Command Sequences */
       Intake.toggleOnTrue(
-        Commands.sequence(
-          new InstantCommand(()->{
-            if (m_reefAlign == ReefAlignment.CENTER){
-              EndEffector.getInstance().m_watchForAlgae = true;
-            }
-          }),
-          EndEffector.getInstance().IntakeCommand()
-        )
+        intake
       );
 
       Outtake.onTrue(
-        m_expel // Expelling either way, no matter algae or coral
+        m_expel.beforeStarting(()->intake.cancel()) // Expelling either way, no matter algae or coral
       );
       
       /* Setting Stage Dial Values */
