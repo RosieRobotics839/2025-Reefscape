@@ -329,7 +329,8 @@ public class AutoCommands {
 
         finalOffset = new Translation2d(
             -AutoConstants.kBargeDistance - Constants.kChassis.kWheelBase/2.0,
-            Constants.AutoConstants.kBargeOffset
+            0 // Driver is controlling y alignment for barge
+            //Constants.AutoConstants.kBargeOffset
         );
 
         // Create target poses
