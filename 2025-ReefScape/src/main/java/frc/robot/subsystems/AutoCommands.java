@@ -54,6 +54,10 @@ public class AutoCommands {
     static public ArrayList <AprilTag> reefTags(){ return Vision.getInstance().aprilTagFieldLayout.getTags().stream().filter(m->contains(reefIDs(),m.ID)).collect(Collectors.toCollection(ArrayList::new));};
     static public ArrayList <Pose2d> reefPoses(){ return reefTags().stream().map(m->m.pose.toPose2d()).collect(Collectors.toCollection(ArrayList::new));};
 
+    static public ArrayList <Integer> bargeIDs(){ return new ArrayList<Integer>(Arrays.asList(bargeFrontTag(), bargeBackTag()));};
+    static public ArrayList <AprilTag> bargeTags(){ return Vision.getInstance().aprilTagFieldLayout.getTags().stream().filter(m->contains(bargeIDs(),m.ID)).collect(Collectors.toCollection(ArrayList::new));};
+    static public ArrayList <Pose2d> bargePoses(){ return bargeTags().stream().map(m->m.pose.toPose2d()).collect(Collectors.toCollection(ArrayList::new));};
+
     static public ArrayList <Integer> sourceIDs(){ return new ArrayList<Integer>(Arrays.asList(coralSourceLTag(), coralSourceRTag()));};
     static public ArrayList <AprilTag> sourceTags(){ return Vision.getInstance().aprilTagFieldLayout.getTags().stream().filter(m->contains(sourceIDs(),m.ID)).collect(Collectors.toCollection(ArrayList::new));};
     static public ArrayList <Pose2d> sourcePoses(){ return sourceTags().stream().map(m->m.pose.toPose2d()).collect(Collectors.toCollection(ArrayList::new));};
@@ -315,6 +319,25 @@ public class AutoCommands {
             Commands.waitUntil(() -> Arm.getInstance().isNearPosition()),
             EndEffector.getInstance().JustShootIt()
         );
+    }
+
+    public static void DriveBargeOffset() {
+        Pose2d target = PoseEstimator.getInstance().m_finalPose.nearest(bargePoses());
+
+        // Calculate lateral offset based on alignment selection
+        Translation2d finalOffset;
+
+        finalOffset = new Translation2d(
+            -AutoConstants.kBargeDistance - Constants.kChassis.kWheelBase/2.0,
+            Constants.AutoConstants.kBargeOffset
+        );
+
+        // Create target poses
+        Pose2d target1 = PathPlanning.PoseAtDistance(target, finalOffset, Units.degreesToRadians(0));
+
+        DriveTrain.getInstance().m_poseQueue.clear();
+        PathPlanning.getInstance().navigateTo(target1);
+        Autonomous.getInstance().m_drivingToBarge = true;
     }
     
     public static void DriveReefOffset() {

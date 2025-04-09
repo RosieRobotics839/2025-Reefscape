@@ -9,7 +9,6 @@ import frc.robot.Constants.kDriveTrain.DriveConstants;
 import frc.utils.VectorUtils;
 import frc.utils.NTValues.NTBoolean;
 import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.Joystick;
@@ -78,23 +77,14 @@ public class FlightStick extends Joystick {
         DriveTrain.getInstance().setMaxRotate(DriveConstants.kMaxRotationVelocity[m_speedSelector]);
       }));
 
-
-      /* Rotate 90 degrees */
-
-      Top5Btn.onTrue(new InstantCommand(()->{
-        DriveTrain.getInstance().setTargetHeading(DriveTrain.getInstance().getTargetHeading()+Units.degreesToRadians(90)); // CCW 90 Degrees
-      }));
-      Top6Btn.onTrue(new InstantCommand(()->{
-        DriveTrain.getInstance().setTargetHeading(DriveTrain.getInstance().getTargetHeading()-Units.degreesToRadians(90)); // CW 90 Degrees
-      }));
-
       Btm8Btn.onTrue(new InstantCommand(()->AutoCommands.DriveReefOffset()));
       Btm7Btn.onTrue(new InstantCommand(()->AutoCommands.AimAtClosestSource()));
       Btm7Btn.onFalse(new InstantCommand(()->DriveTrain.getInstance().unlockTargetHeading()));
+      Btm10Btn.onTrue(new InstantCommand(()->AutoCommands.DriveBargeOffset()));
 
       /* Swap between field centric and proportional */
 
-      Btm9Btn.onTrue(new InstantCommand(() -> {
+      Top6Btn.onTrue(new InstantCommand(() -> {
         OperatorConstants.kFieldCentricDriving = !OperatorConstants.kFieldCentricDriving;
         nt_fieldCentricDriving.set(OperatorConstants.kFieldCentricDriving);
       }));
