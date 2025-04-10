@@ -93,8 +93,8 @@ public final class Constants {
 
     public static double kAngleTolerance = Units.degreesToRadians(NTDouble.create(3, "Arm/kArmAngleTolerance", val -> kAngleTolerance = Units.degreesToRadians(val)));
     public static double kAngleNearTolerance = Units.degreesToRadians(NTDouble.create(40, "Arm/kArmAngleNearTolerance", val -> kAngleNearTolerance = Units.degreesToRadians(val)));
-    public static double kArmGearRatio = 40;
-    public static double kMaxSpeed = 2.0;
+    public static double kArmGearRatio = 4.0*5.0*24.0/12.0;
+    public static double kMaxSpeed = 1.0;
   }
 
   public static class EffectorConstants {
@@ -389,7 +389,7 @@ public final class Constants {
     public static double kRotationInLead = NTDouble.create(-9,"Climber/kAngleInLead",(val) ->kRotationInLead=val); 
     public static double kRotationOutLead = NTDouble.create(5,"Climber/kAngleOutLead",(val) ->kRotationOutLead=val); 
 
-    public static double kAngleIn = Units.degreesToRadians(NTDouble.create(-82,"Climber/kAngleIn",(val) ->kAngleIn=Units.degreesToRadians(val))); 
+    public static double kAngleIn = Units.degreesToRadians(NTDouble.create(-81,"Climber/kAngleIn",(val) ->kAngleIn=Units.degreesToRadians(val))); 
     public static double kAngleOut = Units.degreesToRadians(NTDouble.create(15,"Climber/kAngleOut",(val) ->kAngleOut=Units.degreesToRadians(val))); 
 
     public static double [] kCalibrationX = new double[]{.19, 0.507191, 0.581880, 0.829728, 0.989784}; //analog values from encoder

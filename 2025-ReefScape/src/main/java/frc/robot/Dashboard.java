@@ -9,10 +9,12 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import frc.robot.Constants.ElevatorConstants;
 import frc.robot.Constants.ScoreConstants.ScoreLevel;
 import frc.robot.Constants.kDriveTrain.DriveConstants;
 import frc.robot.subsystems.AutoCommands;
 import frc.robot.subsystems.DriveTrain;
+import frc.robot.subsystems.Elevator;
 import frc.robot.subsystems.PathPlanning;
 import frc.robot.subsystems.PoseEstimator;
 import frc.robot.subsystems.Vision;
@@ -82,8 +84,8 @@ public class Dashboard{
  * Neither have any extra arguments
  */
     private class Argument{
-        public enum TASK {
-            INVALID, SCORE, GETCORAL, WAIT, POSERETURN, POSESTORE, AUTOPOSE, GETALGAE, WAYPOINT
+        public enum TASK { 
+            INVALID, SCORE, GETCORAL, WAIT, POSERETURN, POSESTORE, AUTOPOSE, GETALGAE, WAYPOINT, FLING
         }
         private TASK type;
         private int var0;
@@ -107,6 +109,7 @@ public class Dashboard{
             else if (input.contains("AUTOP") || input.contains("TOPOS")) type = TASK.AUTOPOSE;
             else if (input.contains("WAYP") || input.contains("YPOI")) type = TASK.WAYPOINT;
             else if (input.contains("ALG")) type = TASK.GETALGAE;
+            else if (input.contains("FLI") || input.contains("ING")) type = TASK.FLING;
             else type = TASK.INVALID;
             if (input.contains("LEF") || input.contains("EFT"))
                 left = true;
@@ -162,6 +165,10 @@ public class Dashboard{
                     case -1:
                         return AutoCommands.GetAlgae(var1);
                     }
+                case FLING:
+                    return Commands.sequence(new InstantCommand(() ->Elevator.getInstance().setPosition(ElevatorConstants.kMaxHeight)),
+                            AutoCommands.BargeFling()
+                    );
                 default:
                     return AutoCommands.noop(); //noop noop
             }
