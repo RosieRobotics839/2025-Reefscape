@@ -184,18 +184,26 @@ public class Controller extends XboxController {
       // Put funnel back down if both buttons are pressed.
       ClimberIn.and(()->ClimberOut.getAsBoolean()).whileTrue(Funnel.getInstance().FunnelDownCommand);
 
+      Command intake = Commands.sequence(
+        new InstantCommand(()->{
+          if (m_reefAlign == ReefAlignment.CENTER){
+            EndEffector.getInstance().m_watchForAlgae = true;
+          }
+        }),
+        EndEffector.getInstance().IntakeCommand()
+      );
       /* Intake and Outtake Command Sequences */
       Intake.toggleOnTrue(
-        EndEffector.getInstance().IntakeCommand()
+        intake
       );
 
       Outtake.onTrue(
-        m_expel // Expelling either way, no matter algae or coral
+        m_expel.beforeStarting(()->intake.cancel()) // Expelling either way, no matter algae or coral
       );
       
       /* Setting Stage Dial Values */
 
-    StageDial0.whileTrue(
+    StageDial0.debounce(0.2,DebounceType.kRising).whileTrue(
       Commands.either(
         Commands.sequence(
           disableDirectControl(),
@@ -276,8 +284,10 @@ public class Controller extends XboxController {
 
       LeftScore.onTrue(
         Commands.sequence(
-          new InstantCommand(()->m_reefAlign = ReefAlignment.LEFT),
-          new InstantCommand(()->nt_scoreAlignment.set("LEFT")),
+          new InstantCommand(()->{
+            m_reefAlign = ReefAlignment.LEFT;
+            nt_scoreAlignment.set("LEFT");
+          }),
           disableDirectControl(),
           Elevator.getInstance().moveToLevelCommand(()->m_level),
           Arm.getInstance().moveToLevelCommand(()->m_level)
@@ -285,8 +295,10 @@ public class Controller extends XboxController {
       );
       RightScore.onTrue(
         Commands.sequence(
-          new InstantCommand(()->m_reefAlign = ReefAlignment.RIGHT),
-          new InstantCommand(()->nt_scoreAlignment.set("RIGHT")),
+          new InstantCommand(()->{
+            m_reefAlign = ReefAlignment.RIGHT;
+            nt_scoreAlignment.set("RIGHT");
+          }),
           disableDirectControl(),
           Elevator.getInstance().moveToLevelCommand(()->m_level),
           Arm.getInstance().moveToLevelCommand(()->m_level)
@@ -295,8 +307,10 @@ public class Controller extends XboxController {
 
       CenterAlign.debounce(0.3).onTrue(
         Commands.sequence(
-          new InstantCommand(()->m_reefAlign = ReefAlignment.CENTER),
-          new InstantCommand(()->nt_scoreAlignment.set("CENTER")),
+          new InstantCommand(()->{
+            m_reefAlign = ReefAlignment.CENTER;
+            nt_scoreAlignment.set("CENTER");
+          }),
           disableDirectControl(),
           Elevator.getInstance().moveToLevelCommand(()->m_level),
           Arm.getInstance().moveToLevelCommand(()->m_level)

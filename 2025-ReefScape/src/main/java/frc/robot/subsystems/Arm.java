@@ -24,7 +24,7 @@ import frc.robot.Robot;
 
 public class Arm extends SubsystemBase{
 
-    static NetworkTable table = NetworkTableInstance.getDefault().getTable("roboRIO/Arm/table");
+    static NetworkTable table = NetworkTableInstance.getDefault().getTable("roboRIO/Arm");
     
     DoublePublisher nt_currentAngle, nt_targetAngle;
 
@@ -178,8 +178,7 @@ public class Arm extends SubsystemBase{
         }
     }
     public Command moveToLevelCommand(Supplier<ScoreLevel> level) {
-        return new InstantCommand(()->moveToLevel(level.get()))
-        .unless(()->EndEffector.getInstance().m_intakeRunning);
+        return new InstantCommand(()->moveToLevel(level.get()));
     }
 
     @Override

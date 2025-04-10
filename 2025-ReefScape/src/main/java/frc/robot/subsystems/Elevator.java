@@ -86,6 +86,11 @@ public class Elevator extends SubsystemBase {
                 safeTargetHeight = Math.min(Math.max(safeTargetHeight, ElevatorConstants.kMinHeight), ElevatorConstants.kLimitUnderDZ);
             }
         }
+
+        if (!EndEffector.getInstance().m_watchForAlgae && EndEffector.getInstance().m_intakeRunning && getPosition() < ElevatorConstants.kLimitUnderDZ){
+            // Only allow a decrease in height if intake is running.
+            safeTargetHeight = Math.max(Math.min(safeTargetHeight, getPosition()), ElevatorConstants.kMinHeight);
+        }
         
         // Ensure target height is within allowed range
         safeTargetHeight = Math.min(Math.max(safeTargetHeight, ElevatorConstants.kMinHeight), ElevatorConstants.kMaxHeight);
@@ -148,8 +153,7 @@ public class Elevator extends SubsystemBase {
     }
 
     public Command moveToLevelCommand(Supplier<ScoreLevel> level) {
-        return new InstantCommand(()->moveToLevel(level.get()))
-            .unless(()->EndEffector.getInstance().m_intakeRunning);
+        return new InstantCommand(()->moveToLevel(level.get()));
     }
 
     NTBoolean m_isCalibrated = new NTBoolean(false,table,"isCalibrated",(val)->{});
