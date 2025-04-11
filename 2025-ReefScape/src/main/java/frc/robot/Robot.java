@@ -104,7 +104,7 @@ public class Robot extends TimedRobot {
     songChooser.setDefaultOption("Song 10", Filesystem.getDeployDirectory() + "/" + "song10.chrp");
     songChooser.addOption("Congrats", Filesystem.getDeployDirectory() + "/" + "congrats.chrp");
     songChooser.addOption("Under The Sea", Filesystem.getDeployDirectory() + "/" + "underthesea.chrp");
-    songChooser.addOption("Under The Sea Complex", Filesystem.getDeployDirectory() + "/" + "UnderTheSeaComplex.chrp");
+    songChooser.addOption("Under The Sea Multiple Melodies", Filesystem.getDeployDirectory() + "/" + "undertheseamelodies.chrp");
     songChooser.addOption("SpongeBob Opening Song", Filesystem.getDeployDirectory() + "/" + "spongebobopening.chrp");
     songChooser.addOption("The Jetsons", Filesystem.getDeployDirectory() + "/" + "jetsons.chrp");
     //songChooser.addOption("Wellerman Sea Shanty", Filesystem.getDeployDirectory() + "/" + "wellerman.chrp"); This one sounds good but the other one might sound better, keep both
