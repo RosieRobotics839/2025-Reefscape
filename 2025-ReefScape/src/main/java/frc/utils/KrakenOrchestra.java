@@ -1,10 +1,9 @@
-// Copyright (c) FIRST and other WPILib contributors.
-// Open Source Software; you can modify and/or share it under the terms of
-// the WPILib BSD license file in the root directory of this project.
-
 package frc.utils;
+
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import com.ctre.phoenix6.Orchestra;
 import com.ctre.phoenix6.StatusCode;
 import com.ctre.phoenix6.hardware.TalonFX;
@@ -32,9 +31,16 @@ public class KrakenOrchestra extends SubsystemBase {
 
     public Orchestra m_orchestra = new Orchestra();
 
-    private List<TalonFX> instruments = new ArrayList<>();
+    private List<TalonFX> availableMotors = new ArrayList<>();
     private String currentSong = "";
     private boolean orchestraReady = false;
+    
+    // Song track configuration - maps song filenames to track assignments
+    private Map<String, int[]> songTrackMap = new HashMap<>();
+    
+    // Current track assignments for motors
+    private Map<TalonFX, Integer> currentMotorTrackMap = new HashMap<>();
+    
     BooleanPublisher nt_orchestraIsPlaying = table.getBooleanTopic("orchestraIsPlaying").publish();
     BooleanPublisher nt_orchestraIsReady = table.getBooleanTopic("orchestraIsReady").publish();
     IntegerPublisher nt_instrumentCount = table.getIntegerTopic("instrumentCount").publish();
@@ -42,61 +48,138 @@ public class KrakenOrchestra extends SubsystemBase {
     IntegerPublisher nt_stopStatus = table.getIntegerTopic("stopStatus").publish();
     IntegerPublisher nt_loadStatus = table.getIntegerTopic("loadStatus").publish();
     StringPublisher nt_currentFile = table.getStringTopic("currentSongPlaying").publish();
+    StringPublisher nt_trackAssignments = table.getStringTopic("trackAssignments").publish();
     DoublePublisher nt_fileTimeStamp = table.getDoubleTopic("fileTimeStamp").publish();
 
     private KrakenOrchestra() {
-        // Initialize orchestra with all Kraken motors on the robot
-        initializeInstruments();
+        // Initialize song track assignments
+        initializeSongTracks();
+        
+        // Initialize orchestra with available Kraken motors
+        initializeMotors();
     }
 
-    private void initializeInstruments() {
-        // Clear any existing instruments
-        instruments.clear();
+    private void initializeSongTracks() {
+        // Define preferred tracks for each song
+        // Format: songTrackMap.put("filename.chrp", new int[]{track1, track2, ...});
         
-        // Add Kraken motors from our subsystems
+        // Default tracks (0-5) for most songs
+        songTrackMap.put("song10.chrp", new int[]{0, 1, 2, 3, 4, 5});
+        songTrackMap.put("congrats.chrp", new int[]{0, 1, 2, 3});
+        songTrackMap.put("underthesea.chrp", new int[]{0, 1, 2});
+        
+        // Songs with specific melody tracks prioritized
+        songTrackMap.put("undertheseamelodies.chrp", new int[]{0, 2, 4});
+        songTrackMap.put("spongebobopening.chrp", new int[]{0, 1});
+        songTrackMap.put("jetsons.chrp", new int[]{0, 1});
+        songTrackMap.put("wellerman.chrp", new int[]{0, 2});
+        songTrackMap.put("wellermans.chrp", new int[]{0, 1, 2});
+        songTrackMap.put("jeopardy.chrp", new int[]{0});
+        songTrackMap.put("song2.chrp", new int[]{0, 1});
+        songTrackMap.put("song5.chrp", new int[]{1});
+        songTrackMap.put("eyetiger.chrp", new int[]{0, 2});
+        songTrackMap.put("hespirate.chrp", new int[]{0, 2});
+        songTrackMap.put("updown.chrp", new int[]{0, 2});
+        songTrackMap.put("davyjones.chrp", new int[]{0, 1});
+        songTrackMap.put("loudsound.chrp", new int[]{0});
+    }
+
+    private void initializeMotors() {
+        // Clear any existing motors
+        availableMotors.clear();
+        
         try {
-            // Only add motors that are TalonFX (Kraken) instances
+            // Collect all available TalonFX motor controllers
+            List<TalonFX> motors = new ArrayList<>();
+            
+            // Add Arm motor if available
             if (Arm.getInstance().m_motor.motor_talon != null) {
-                instruments.add(Arm.getInstance().m_motor.motor_talon);
+                motors.add(Arm.getInstance().m_motor.motor_talon);
             }
             
+            // Add Elevator motor if available
             if (Elevator.getInstance().m_EleMotor.motor_talon != null) {
-                instruments.add(Elevator.getInstance().m_EleMotor.motor_talon);
+                motors.add(Elevator.getInstance().m_EleMotor.motor_talon);
             }
             
+            // Add DriveTrain motors if available
             DriveTrain dt = DriveTrain.getInstance();
             if (dt.frontLeft.m_motorDrive.motor_talon != null) {
-                instruments.add(dt.frontLeft.m_motorDrive.motor_talon);
+                motors.add(dt.frontLeft.m_motorDrive.motor_talon);
             }
             if (dt.frontRight.m_motorDrive.motor_talon != null) {
-                instruments.add(dt.frontRight.m_motorDrive.motor_talon);
+                motors.add(dt.frontRight.m_motorDrive.motor_talon);
             }
             if (dt.rearLeft.m_motorDrive.motor_talon != null) {
-                instruments.add(dt.rearLeft.m_motorDrive.motor_talon);
+                motors.add(dt.rearLeft.m_motorDrive.motor_talon);
             }
             if (dt.rearRight.m_motorDrive.motor_talon != null) {
-                instruments.add(dt.rearRight.m_motorDrive.motor_talon);
+                motors.add(dt.rearRight.m_motorDrive.motor_talon);
             }
             
-            // Add each instrument to the orchestra and allow it to play music when Driver Station is Disabled
-            int successCount = 0;
-            for (TalonFX motor : instruments) {
-                StatusCode addStatus = m_orchestra.addInstrument(motor, 0);
-                // Create audio config
+            // Save the available motors
+            availableMotors = motors;
+            
+            // Configure all motors to allow music during disabled
+            for (TalonFX motor : availableMotors) {
                 var audioConfig = new com.ctre.phoenix6.configs.AudioConfigs();
-                // Set AllowMusicDurDisable to true
                 audioConfig.withAllowMusicDurDisable(true);
-                // Apply the configuration to the motor
                 motor.getConfigurator().apply(audioConfig);
-
-                if (addStatus.isOK()) {
-                    successCount++;
-                }
             }
-            orchestraReady = successCount > 0;
+            
+            orchestraReady = !availableMotors.isEmpty();
         } catch (Exception e) {
             orchestraReady = false;
+            System.out.println("Error initializing motors: " + e.getMessage());
         }
+    }
+
+    private void assignTracksForSong(String songFilepath) {
+        // Clear the orchestra and track assignments
+        m_orchestra = new Orchestra();
+        currentMotorTrackMap.clear();
+        
+        // Get the song filename
+        String filename = extractFilename(songFilepath);
+        
+        // Get the track assignments for this song, or use sequential tracks if none exists
+        int[] tracksToPlay;
+        int[] configuredTracks = songTrackMap.get(filename);
+        int motorCount = availableMotors.size();
+        
+        if (configuredTracks != null && configuredTracks.length > 0) {
+            // Use configured tracks, limited by available motors
+            tracksToPlay = new int[Math.min(motorCount, configuredTracks.length)];
+            for (int i = 0; i < tracksToPlay.length; i++) {
+                tracksToPlay[i] = configuredTracks[i];
+            }
+        } else {
+            // Default to sequential tracks (0, 1, 2, ...)
+            tracksToPlay = new int[motorCount];
+            for (int i = 0; i < motorCount; i++) {
+                tracksToPlay[i] = i;
+            }
+        }
+        
+        // Assign the tracks to motors
+        int successCount = 0;
+        StringBuilder trackAssignments = new StringBuilder("Track Assignments: ");
+        
+        for (int i = 0; i < tracksToPlay.length; i++) {
+            TalonFX motor = availableMotors.get(i);
+            int trackId = tracksToPlay[i];
+            
+            StatusCode addStatus = m_orchestra.addInstrument(motor, trackId);
+            
+            if (addStatus.isOK()) {
+                successCount++;
+                currentMotorTrackMap.put(motor, trackId);
+                trackAssignments.append("Motor").append(i).append("->Track").append(trackId).append(" ");
+            }
+        }
+        
+        orchestraReady = successCount > 0;
+        nt_trackAssignments.set(trackAssignments.toString());
     }
 
     private String extractFilename(String filepath) {
@@ -124,10 +207,15 @@ public class KrakenOrchestra extends SubsystemBase {
         }
         
         if (!orchestraReady) {
-            initializeInstruments();
-            return;
+            initializeMotors();
+            if (!orchestraReady) {
+                return;
+            }
         }
 
+        // Assign tracks based on the song configuration
+        assignTracksForSong(filepath);
+        
         currentSong = filepath;
         stopMusic(); // Stop any currently playing music
 
@@ -143,8 +231,8 @@ public class KrakenOrchestra extends SubsystemBase {
             System.out.println("Failed to load music: " + filepath);
         }
     
-    // Update Network Table with current song
-    nt_currentFile.set(filename);
+        // Update Network Table with current song
+        nt_currentFile.set(filename);
     }
 
     public void stopMusic(){
@@ -165,13 +253,22 @@ public class KrakenOrchestra extends SubsystemBase {
     public double getTimeStamp() {
         return m_orchestra.getCurrentTime();
     }
+    
+    // Get the current motor-track assignments
+    public Map<TalonFX, Integer> getCurrentTrackAssignments() {
+        return new HashMap<>(currentMotorTrackMap);
+    }
+    
+    // Add or update a song's track assignments
+    public void updateSongTracks(String songFilename, int[] trackAssignments) {
+        songTrackMap.put(extractFilename(songFilename), trackAssignments);
+    }
 
     @Override
     public void periodic() {
-
         nt_orchestraIsPlaying.set(isPlaying());
         nt_orchestraIsReady.set(orchestraReady);
-        nt_instrumentCount.set(instruments.size());
+        nt_instrumentCount.set(availableMotors.size());
         nt_fileTimeStamp.set(getTimeStamp());
 
         // If motors have been initialized since our last check, try initializing instruments again
@@ -187,10 +284,8 @@ public class KrakenOrchestra extends SubsystemBase {
             }
             
             if (motorsAvailable) {
-                initializeInstruments();
+                initializeMotors();
             }
         }
-
     }
-
 }
