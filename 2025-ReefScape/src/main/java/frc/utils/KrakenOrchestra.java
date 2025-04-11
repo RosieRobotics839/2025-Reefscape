@@ -64,24 +64,24 @@ public class KrakenOrchestra extends SubsystemBase {
         // Format: songTrackMap.put("filename.chrp", new int[]{track1, track2, ...});
         
         // Default tracks (0-5) for most songs
-        songTrackMap.put("song10.chrp", new int[]{0, 1, 2, 3, 4, 5});
-        songTrackMap.put("congrats.chrp", new int[]{0, 1, 2, 3});
-        songTrackMap.put("underthesea.chrp", new int[]{0, 1, 2});
+        songTrackMap.put("song10.chrp", new int[]{0, 0, 0, 0, 0, 0});
+        songTrackMap.put("congrats.chrp", new int[]{0, 0, 0, 0, 0, 0});
+        songTrackMap.put("underthesea.chrp", new int[]{0, 0, 0, 0, 0, 0});
         
         // Songs with specific melody tracks prioritized
-        songTrackMap.put("undertheseamelodies.chrp", new int[]{0, 2, 4});
-        songTrackMap.put("spongebobopening.chrp", new int[]{0, 1});
-        songTrackMap.put("jetsons.chrp", new int[]{0, 1});
-        songTrackMap.put("wellerman.chrp", new int[]{0, 2});
-        songTrackMap.put("wellermans.chrp", new int[]{0, 1, 2});
-        songTrackMap.put("jeopardy.chrp", new int[]{0});
-        songTrackMap.put("song2.chrp", new int[]{0, 1});
-        songTrackMap.put("song5.chrp", new int[]{1});
-        songTrackMap.put("eyetiger.chrp", new int[]{0, 2});
-        songTrackMap.put("hespirate.chrp", new int[]{0, 2});
-        songTrackMap.put("updown.chrp", new int[]{0, 2});
-        songTrackMap.put("davyjones.chrp", new int[]{0, 1});
-        songTrackMap.put("loudsound.chrp", new int[]{0});
+        songTrackMap.put("undertheseamelodies.chrp", new int[]{4, 5, 6, 7, 8, 9});
+        songTrackMap.put("spongebobopening.chrp", new int[]{0, 0, 0, 0, 0, 0});
+        songTrackMap.put("jetsons.chrp", new int[]{1, 2, 5, 9, 10, 12});
+        songTrackMap.put("wellerman.chrp", new int[]{0, 0, 0, 0, 0, 0});
+        songTrackMap.put("wellermans.chrp", new int[]{0, 0, 0, 1, 1, 1});
+        songTrackMap.put("jeopardy.chrp", new int[]{0, 1, 1, 2, 3, 3});
+        songTrackMap.put("song2.chrp", new int[]{0, 0, 0, 0, 0, 0});
+        songTrackMap.put("song5.chrp", new int[]{0, 0, 0, 0, 0, 0});
+        songTrackMap.put("eyetiger.chrp", new int[]{0, 1, 2, 4, 5, 6});
+        songTrackMap.put("hespirate.chrp", new int[]{0, 0, 0, 1, 1, 1});
+        songTrackMap.put("updown.chrp", new int[]{0, 0, 0, 0, 0, 0});
+        songTrackMap.put("davyjones.chrp", new int[]{0, 0, 0, 0, 0, 0});
+        songTrackMap.put("loudsound.chrp", new int[]{0, 1, 2, 3, 4, 5});
     }
 
     private void initializeMotors() {
