@@ -321,20 +321,27 @@ public class AutoCommands {
         );
     }
 
-    public static void DriveBargeOffset() {
+    public static void DriveBargeLineup(){
+        DriveBargeOffset(0, true);
+    }
+
+    public static void DriveBargeOffset(double Yoffset, boolean ignoreY) {
         Pose2d target = PoseEstimator.getInstance().m_finalPose.nearest(bargePoses());
 
         // Calculate lateral offset based on alignment selection
         Translation2d finalOffset;
 
+        double offsetDirection = (Math.abs(VectorUtils.angleDifference(target.getRotation().getRadians(),0)) < Math.PI/2 ? -1 : 1);
+
         finalOffset = new Translation2d(
             -AutoConstants.kBargeDistance - Constants.kChassis.kWheelBase/2.0,
-            0 // Driver is controlling y alignment for barge
-            //Constants.AutoConstants.kBargeOffset
+            offsetDirection*(ignoreY
+                ? PoseEstimator.getInstance().m_finalPose.getY() - target.getY() // Line up to barge using the current y position.
+                : Yoffset) // Use the barge offset and add argument
         );
 
         // Create target poses
-        Pose2d target1 = PathPlanning.PoseAtDistance(target, finalOffset, Units.degreesToRadians(0));
+        Pose2d target1 = PathPlanning.PoseAtDistance(target, finalOffset, Units.degreesToRadians(180));
 
         DriveTrain.getInstance().m_poseQueue.clear();
         PathPlanning.getInstance().navigateTo(target1);
