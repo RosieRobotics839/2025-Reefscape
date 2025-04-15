@@ -33,7 +33,8 @@ public class EndEffector extends SubsystemBase {
 
     private boolean m_beamBroken = false;
     public boolean m_hasGamePiece = false;
-    public Debouncer m_motorStopped = new Debouncer(0.1, Debouncer.DebounceType.kRising);
+    public Debouncer m_motorStopped = new Debouncer(0.25, Debouncer.DebounceType.kRising);
+    private Debouncer m_algaeSim = new Debouncer(2, Debouncer.DebounceType.kRising);
     private boolean m_hasCoral = false;
     private double m_algaeRelativePosition;
 
@@ -46,14 +47,35 @@ public class EndEffector extends SubsystemBase {
     public boolean hasGamePiece(){
       return m_hasGamePiece;
     }
+    public boolean hasCoral(){
+      return m_hasCoral;
+    }
+    public boolean hasAlgae(){
+      return m_hasAlgae;
+    }
 
     public Command IntakeCommand(){
       return Commands.sequence(
-        Commands.waitUntil(() -> {return m_motor.setSpeed(EffectorConstants.kIntakeSpeed);}), //Sets speed to intake game piece
+        Commands.waitUntil(() -> {return m_motor.setSpeed(m_watchForAlgae ? EffectorConstants.kIntakeSpeedAlgae : EffectorConstants.kIntakeSpeed);}), //Sets speed to intake game piece
         Commands.waitUntil(() -> {return hasGamePiece();}) //Checking whether we have a game piece or not.
-      ).onlyWhile(()->DriverStation.isEnabled()).withTimeout(Robot.isSimulation() ? 5 : 600)
+      ).onlyWhile(()->DriverStation.isEnabled()).withTimeout(Robot.isSimulation() ? 15 : 600)
       .beforeStarting(()->{m_intakeRunning=true;})
-      .finallyDo(()->{m_motor.setRelativePosition(EffectorConstants.kExtraTurn); m_intakeRunning=false; if (Robot.isSimulation()){m_beamBreakTestSensor.set(true);}});
+      .finallyDo(()->{
+        if (hasCoral()){
+          m_motor.setRelativePosition(EffectorConstants.kExtraTurn);
+        };
+        if (hasAlgae()){
+          m_motor.setRelativePosition(-EffectorConstants.kAlgaeAfterTurns);
+        }
+        if (!hasGamePiece()){
+          m_motor.setSpeed(0);
+        }
+        if (Robot.isSimulation()){
+          if (!m_watchForAlgae){
+            m_beamBreakTestSensor.set(true);}
+          };
+        m_intakeRunning = false;
+        m_watchForAlgae = false;});
     }
 
     public Command ExpelCommand(DoubleSupplier speed, BooleanSupplier extended){
@@ -80,8 +102,8 @@ public class EndEffector extends SubsystemBase {
       m_motor = new Motor(Constants.EffectorConstants.kCANID, EffectorConstants.kMotorType, "effector")
           .withStatorLimit((int)EffectorConstants.kMotorCurrentLimit)
           .inverted(false)
-          .withGearRatio((EffectorConstants.kGearRatio))
-          .withSpeedLimit(EffectorConstants.kOuttakeSpeed)
+          .withGearRatio(EffectorConstants.kGearRatio)
+          .withSpeedLimit(EffectorConstants.kMaxSpeed)
           .withSlowSpeedControl(true)
           .pidf(EffectorConstants.kGainPosition, Motor.GainSlot.POSITION)
           .pidf(EffectorConstants.kGainVelocity, Motor.GainSlot.SPEED);
@@ -92,7 +114,9 @@ public class EndEffector extends SubsystemBase {
     public NTBoolean nt_beamBroken = new NTBoolean(false, table, "Effector/beamBroken", (val) -> {});
     public NTBoolean nt_hasGamePiece = new NTBoolean(false, table, "Effector/hasGamePiece", (val) -> {});
     public NTBoolean nt_hasCoral = new NTBoolean(false, table, "Effector/hasCoral", (val) -> {});
-
+    public NTBoolean nt_hasAlgae = new NTBoolean(false, table, "Effector/hasAlgae", (val) -> {});
+    public NTBoolean nt_watchForAlgae = new NTBoolean(false, table, "Effector/watchForAlgae", (val) -> {});
+    
     @Override
     public void periodic() {
 
@@ -103,35 +127,44 @@ public class EndEffector extends SubsystemBase {
       m_beamBroken = m_beamDebouncer.calculate(!m_beamBreak.get());
     }
 
-    nt_beamBroken.set(m_beamBroken);
-    nt_hasGamePiece.set(m_hasGamePiece);
-    nt_hasCoral.set(m_hasCoral);
-
     // rising edge trigger on beam break sensor
     beam_trigger = beam_trigger && m_beamBroken;
 
     // Checking to see if we have coral
     if (beam_trigger){
-        m_hasGamePiece = true;
         m_hasCoral = true;
+        m_hasAlgae = false;
+        m_watchForAlgae = false;
     }
-
-    var motorStopped = m_motorStopped.calculate(m_watchForAlgae && m_motor.getVelocity() < .45);
+    if (Robot.isSimulation()){
+      var algaeSim = m_algaeSim.calculate(m_watchForAlgae && m_motor.getVelocity() > 0.5);
+      if (algaeSim){
+        m_motor.setSpeed(0.3);
+      }
+    }
+    var motorStopped = m_motorStopped.calculate(m_watchForAlgae && m_motor.getOutputCurrent() > EffectorConstants.kMotorCurrentLimit/2.0 && m_motor.getVelocity() < .45);
     
     // Coral not detected, checking to see if we have algae.
-    if (!m_beamBroken && m_watchForAlgae && motorStopped && DriverStation.isAutonomousEnabled()){
+    if (!m_hasAlgae && !m_beamBroken && m_watchForAlgae && motorStopped && DriverStation.isAutonomousEnabled()){
       m_hasAlgae = true;
       m_algaeRelativePosition = m_motor.getPosition();
-      m_motor.setPosition(m_algaeRelativePosition-0.1);
+    }
+
+    // If algae was picked up, but the motor has turned more than one revolution since... we probably don't have algae anymore.
+    if (m_hasAlgae && (DriverStation.isDisabled() || Math.abs(m_motor.getPosition() - m_algaeRelativePosition) > (1 + EffectorConstants.kAlgaeAfterTurns))){
+      m_hasAlgae = false;
     }
     
     if (m_hasCoral && !m_beamBroken){ // Checking to see if we previously had coral. Seeing is m_hasCoral is still correct because if the beam is not broken we don't have coral anymore.
-      m_hasGamePiece = false;
       m_hasCoral = false;
     }
+    
+    m_hasGamePiece = m_hasAlgae || m_hasCoral;
 
-    if (m_hasGamePiece && !m_hasCoral && m_motor.getPosition() < (m_algaeRelativePosition - EffectorConstants.kAlgaeMotorRevolutions)){ //Checking to see if we still have algae by waiting until the position gets to a certain point.
-      m_hasGamePiece = false;
-    }
+    nt_beamBroken.set(m_beamBroken);
+    nt_hasGamePiece.set(m_hasGamePiece);
+    nt_hasCoral.set(m_hasCoral);
+    nt_hasAlgae.set(m_hasAlgae);
+    nt_watchForAlgae.set(m_watchForAlgae);
   }
 }

@@ -193,7 +193,7 @@ public class DriveTrain extends SubsystemBase {
         Translation2d nearestPoint = VectorUtils.nearestPointOnLine(PoseEstimator.getInstance().m_finalPose.getTranslation(), m_poseQueueStart.getTranslation(), m_poseQueue.peek().getTranslation());
         Pose2d correction = VectorUtils.poseDiff(new Pose2d(nearestPoint,new Rotation2d(0)),feedbackPose);
         Translation2d limitedCorrection = VectorUtils.vectorInDirectionOf(correction, Math.max(Math.min(correction.getTranslation().getNorm()*DriveConstants.kAutoCrossTrackKp,DriveConstants.kAutoCrossTrackMax),-DriveConstants.kAutoCrossTrackMax));
-        Translation2d drivevector = VectorUtils.vectorInDirectionOf(vector.plus(limitedCorrection), m_autoSpeed);
+        Translation2d drivevector = VectorUtils.vectorInDirectionOf(vector.plus(limitedCorrection), m_autoSpeed).times(DriveConstants.kAutoSpeedScale);
 
         movement = new Twist2d(drivevector.getX(), drivevector.getY(), 0);
         Drive(movement);
