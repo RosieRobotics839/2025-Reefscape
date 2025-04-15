@@ -5,6 +5,7 @@ import java.util.List;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -167,6 +168,8 @@ public class Dashboard{
                     }
                 case FLING:
                     return Commands.sequence(new InstantCommand(() ->Elevator.getInstance().setPosition(ElevatorConstants.kMaxHeight)),
+                            new InstantCommand(()->AutoCommands.DriveBargeOffset(Units.feetToMeters(var0), false)),
+                            Commands.waitUntil(()->DriveTrain.getInstance().m_poseQueue.isEmpty()),
                             AutoCommands.BargeFling()
                     );
                 default:
