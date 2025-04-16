@@ -167,9 +167,10 @@ public class Dashboard{
                         return AutoCommands.GetAlgae(var1);
                     }
                 case FLING:
-                    return Commands.sequence(new InstantCommand(() ->Elevator.getInstance().setPosition(ElevatorConstants.kMaxHeight)),
+                    return Commands.sequence(
                             new InstantCommand(()->AutoCommands.DriveBargeOffset(Units.feetToMeters(var0), false)),
                             Commands.waitUntil(()->DriveTrain.getInstance().m_poseQueue.isEmpty()),
+                            //new InstantCommand(() ->Elevator.getInstance().setPosition(ElevatorConstants.kMaxHeight)),
                             AutoCommands.BargeFling()
                     );
                 default:

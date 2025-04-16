@@ -346,10 +346,10 @@ public class AutoCommands {
 
     public static Command BargeFling(){
         return Commands.sequence(
-            //new InstantCommand(() -> Elevator.getInstance().setPosition(ElevatorConstants.kMaxHeight)),
+            new InstantCommand(() -> Elevator.getInstance().setPosition(ElevatorConstants.kMaxHeight)),
             //new InstantCommand(() -> Arm.getInstance().setPosition(ArmConstants.kAngleMin)),
             //Commands.waitUntil(() -> Arm.getInstance().isAtPosition()),
-            //Commands.waitUntil(() -> Elevator.getInstance().isAtPosition()),
+            Commands.waitUntil(() -> Elevator.getInstance().isAtPosition()),
             //Commands.waitSeconds(1),
             new InstantCommand(() -> Arm.getInstance().setPosition(ArmConstants.kAngleMax)),
             Commands.waitUntil(() -> Arm.getInstance().isNearPosition()),
