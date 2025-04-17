@@ -36,6 +36,7 @@ public class Autonomous extends SubsystemBase {
   List<Translation2d> m_pathpoints;
 
   public Boolean m_drivingToReef = false;
+  public Boolean m_drivingToBarge = false;
   public Pose2d m_aimPoint;
   public double m_aimPointRotationOffset;
   private NTBoolean nt_isInsideReef = new NTBoolean(false,table,"isInsideReef",null);
@@ -153,6 +154,7 @@ public class Autonomous extends SubsystemBase {
     
     if (DriveTrain.getInstance().m_poseQueue.isEmpty()){
       m_drivingToReef = false;
+      m_drivingToBarge = false;
     }
 
     nt_isInsideReef.set(m_insideReefDebounce.calculate(PathfindingUtils.PointInConvexPolygon(PoseEstimator.getInstance().m_finalPose.getTranslation(), reefObstacle())));

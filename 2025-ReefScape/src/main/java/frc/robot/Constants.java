@@ -301,7 +301,8 @@ public final class Constants {
     public static boolean isChampionshipGame = NTBoolean.create(false, "isChampionshipGame", val -> {isChampionshipGame = val; Vision.getInstance().reloadFieldLayout();});
     // Method to get the current field layout path
     public static String getFieldLayoutPath() {
-      return Filesystem.getDeployDirectory() + "/" + "2025-reefscape-andymark.json";
+      //return Filesystem.getDeployDirectory() + "/" + "2025-reefscape-andymark.json";
+      return Filesystem.getDeployDirectory() + "/" + "2025-reefscape-welded.json";
       //return Filesystem.getDeployDirectory() + "/" + "2025-reefscape-buzz.json";
       //return Filesystem.getDeployDirectory() + "/" + "2025-waterbury-practice-field.json";
       //return Filesystem.getDeployDirectory() + "/" + "2025-rosiecarpet.json";
@@ -419,7 +420,9 @@ public final class Constants {
     public static double kSourceStartingDistance = Units.inchesToMeters(NTDouble.create(30.0, "Autonomous/kSourceStartingDistance", val -> kSourceStartingDistance = Units.inchesToMeters(val)));
     public static double kSourceTolerance = Units.inchesToMeters(NTDouble.create(12.0, "Autonomous/kSourceNearDistanceInch", val -> kSourceTolerance = Units.inchesToMeters(val)));
     public static double kReefOffset = Units.inchesToMeters(NTDouble.create(6.5,"Autonomous/kReefOffset",val -> kReefOffset = Units.inchesToMeters(val)));
-    public static double kTroughClearance = NTDouble.create(2, "Autonomous/kTroughClearance", val -> kTroughClearance = Units.inchesToMeters(val));
+    public static double kTroughClearance = Units.inchesToMeters(NTDouble.create(2, "Autonomous/kTroughClearance", val -> kTroughClearance = Units.inchesToMeters(val)));
+    public static double kBargeDistance = Units.inchesToMeters(NTDouble.create(9.0, "Autonomous/kBargeDistance", val -> kBargeDistance = Units.inchesToMeters(val)));
+    public static double kBargeOffset = Units.inchesToMeters(NTDouble.create(30, "Autonomous/kBargeOffset", val -> kBargeOffset = Units.inchesToMeters(val)));
     // Ooga Booga Number
     public static double kStaticReefOffset = Units.inchesToMeters(NTDouble.create(0,"Autonomous/kStaticReefOffset",val -> kStaticReefOffset = Units.inchesToMeters(val)));
     
