@@ -421,7 +421,7 @@ public final class Constants {
     public static double kSourceTolerance = Units.inchesToMeters(NTDouble.create(12.0, "Autonomous/kSourceNearDistanceInch", val -> kSourceTolerance = Units.inchesToMeters(val)));
     public static double kReefOffset = Units.inchesToMeters(NTDouble.create(6.5,"Autonomous/kReefOffset",val -> kReefOffset = Units.inchesToMeters(val)));
     public static double kTroughClearance = Units.inchesToMeters(NTDouble.create(2, "Autonomous/kTroughClearance", val -> kTroughClearance = Units.inchesToMeters(val)));
-    public static double kBargeDistance = Units.inchesToMeters(NTDouble.create(11.5, "Autonomous/kBargeDistance", val -> kBargeDistance = Units.inchesToMeters(val)));
+    public static double kBargeDistance = Units.inchesToMeters(NTDouble.create(9.0, "Autonomous/kBargeDistance", val -> kBargeDistance = Units.inchesToMeters(val)));
     public static double kBargeOffset = Units.inchesToMeters(NTDouble.create(30, "Autonomous/kBargeOffset", val -> kBargeOffset = Units.inchesToMeters(val)));
     // Ooga Booga Number
     public static double kStaticReefOffset = Units.inchesToMeters(NTDouble.create(0,"Autonomous/kStaticReefOffset",val -> kStaticReefOffset = Units.inchesToMeters(val)));
