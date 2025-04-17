@@ -31,7 +31,7 @@ def get_robot_data():
         endeffector = NetworkTables.getTable("roboRIO/EndEffector/Effector")
         gyro = NetworkTables.getTable("roboRIO/Gyro")
         elevator = NetworkTables.getTable("roboRIO/Elevator")
-        arm_debug = NetworkTables.getTable("roboRIO/Arm/table/debug")
+        arm_debug = NetworkTables.getTable("roboRIO/Arm/debug")
         climber = NetworkTables.getTable("roboRIO/Climber")
         funnel = NetworkTables.getTable("roboRIO/Funnel/table")
         vision = NetworkTables.getTable("roboRIO/Vision")
