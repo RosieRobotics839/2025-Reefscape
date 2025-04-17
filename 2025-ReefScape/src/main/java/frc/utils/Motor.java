@@ -450,7 +450,7 @@ public class Motor extends SubsystemBase {
         nt_outputRange.set(max);
         switch (motorType) {
             case KRAKEN:
-                // TODO: Do we need something here?
+                // NO
                 break;
             case NEO:
                 config_neo.closedLoop.outputRange(min, max, ClosedLoopSlot.values()[slot.ordinal()]);
