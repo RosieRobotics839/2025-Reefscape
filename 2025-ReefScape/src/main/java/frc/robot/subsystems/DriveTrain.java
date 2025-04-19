@@ -195,7 +195,11 @@ public class DriveTrain extends SubsystemBase {
         Translation2d limitedCorrection = VectorUtils.vectorInDirectionOf(correction, Math.max(Math.min(correction.getTranslation().getNorm()*DriveConstants.kAutoCrossTrackKp,DriveConstants.kAutoCrossTrackMax),-DriveConstants.kAutoCrossTrackMax));
         Translation2d drivevector = VectorUtils.vectorInDirectionOf(vector.plus(limitedCorrection), m_autoSpeed).times(DriveConstants.kAutoSpeedScale);
 
-        movement = new Twist2d(drivevector.getX(), drivevector.getY(), 0);
+        if (distanceRemaining > DriveConstants.kAutoToleranceDistance){
+          movement = new Twist2d(drivevector.getX(), drivevector.getY(), 0);
+        } else {
+          movement = new Twist2d(0, 0, 0);
+        }
         Drive(movement);
         if (m_poseQueue.peekLast().getRotation() != null && distanceRemaining < DriveConstants.kAutoTurnToPoseDistance){
           double angle = (m_poseQueue.peekLast().getRotation().getRadians());
