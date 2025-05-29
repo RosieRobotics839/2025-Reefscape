@@ -206,7 +206,7 @@ public class AutoCommands {
         );
 
         leaveOffset = new Translation2d(
-            -AutoConstants.kReefAlgaeLeaveDistance - Constants.kChassis.kWheelBase/2.0,
+            -AutoConstants.kReefStartingDistance + Units.inchesToMeters(19) - Constants.kChassis.kWheelBase/2.0,
             Constants.AutoConstants.kStaticReefOffset
         );
     
