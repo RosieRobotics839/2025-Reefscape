@@ -71,10 +71,11 @@ public class SwerveModule extends SubsystemBase {
         .inverted(false)
         .idleBrake(true)
         .withStatorLimit((int)kSwerveModule.kDrivingMotorCurrentLimit)
-        .withSlowSpeedControl((Robot.isSimulation() ? false : false))
+        .withSlowSpeedControl((Robot.isSimulation() ? false : true))
         .withGearRatio(kSwerveModule.kDriveMotorGearReduction)
         .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
         .pidf(kSwerveModule.kDriveKp, kSwerveModule.kDriveKi, kSwerveModule.kDriveKd, kSwerveModule.kDriveKff, Motor.GainSlot.SPEED)
+        .pidf(kSwerveModule.kDrivePosKp, 0, 0, 0, Motor.GainSlot.POSITION)
         .withOutputRange(-1,1)
         .withIZone(0.15); 
 

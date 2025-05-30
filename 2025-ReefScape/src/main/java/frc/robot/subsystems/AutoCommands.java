@@ -197,10 +197,16 @@ public class AutoCommands {
         }
 
         Translation2d approachOffset;
+        Translation2d leaveOffset;
         Translation2d finalOffset;
 
         approachOffset = new Translation2d(
-            -AutoConstants.kReefStartingDistance + Units.inchesToMeters(6) - Constants.kChassis.kWheelBase/2.0,
+            -AutoConstants.kReefStartingDistance + Units.inchesToMeters(9) - Constants.kChassis.kWheelBase/2.0,
+            Constants.AutoConstants.kStaticReefOffset
+        );
+
+        leaveOffset = new Translation2d(
+            -AutoConstants.kReefStartingDistance + Units.inchesToMeters(19) - Constants.kChassis.kWheelBase/2.0,
             Constants.AutoConstants.kStaticReefOffset
         );
     
@@ -212,7 +218,7 @@ public class AutoCommands {
         // Create target poses
         Pose2d target1 = PathPlanning.AprilTagAtDistance(tagId, approachOffset, Units.degreesToRadians(15));
         Pose2d target2 = PathPlanning.AprilTagAtDistance(tagId, finalOffset);
-        Pose2d target3 = PathPlanning.AprilTagAtDistance(tagId, approachOffset);
+        Pose2d target3 = PathPlanning.AprilTagAtDistance(tagId, leaveOffset); // 7
         Pose2d targetAim = PathPlanning.AprilTagAtDistance(tagId, new Translation2d(0,Constants.AutoConstants.kStaticReefOffset));
         //Pose2d targetbarge = PathPlanning.AprilTagAtDistance(bargeFrontTag(), new Translation2d(0,0));
 
@@ -238,8 +244,7 @@ public class AutoCommands {
             EndEffector.getInstance().IntakeCommand().beforeStarting(()->EndEffector.getInstance().m_watchForAlgae = true).withTimeout(6.0).until(()->{return EndEffector.getInstance().m_hasAlgae;}).handleInterrupt(()->EndEffector.getInstance().m_watchForAlgae = false),
             new InstantCommand(()->{EndEffector.getInstance().m_watchForAlgae = false;
                                     PathPlanning.getInstance().navigateTo(target3);
-                                }),
-            Commands.waitUntil(() -> DriveTrain.getInstance().m_poseQueue.isEmpty() || DriveTrain.getInstance().m_isStoppedConfirmed || VectorUtils.isNear(PoseEstimator.getInstance().m_finalPose, target3, DriveConstants.kAutoToleranceDistance)).withTimeout(5)
+                                })
             
         ).finallyDo(()->{EndEffector.getInstance().m_watchForAlgae = false; Autonomous.getInstance().stopAiming();});
     }
@@ -339,7 +344,6 @@ public class AutoCommands {
             new InstantCommand(() -> Autonomous.getInstance().stopAiming()),
             Commands.waitUntil(() -> DriveTrain.getInstance().m_poseQueue.isEmpty() || DriveTrain.getInstance().m_isStoppedConfirmed || VectorUtils.isNear(PoseEstimator.getInstance().m_finalPose, target2, AutoConstants.kReefTolerance)).withTimeout(6),
             Commands.waitUntil(() -> Arm.getInstance().isAtPosition() && Elevator.getInstance().isAtPosition()),
-            Commands.waitSeconds(0.5),
             EndEffector.getInstance().ExpelCommand(()->(level == ScoreLevel.TROUGH ? EffectorConstants.kTroughOuttakeSpeed : EffectorConstants.kOuttakeSpeed), ()->level==ScoreLevel.TROUGH).withTimeout(1.5)
         ).unless(()->{return !EndEffector.getInstance().hasGamePiece();});
     }
@@ -379,7 +383,9 @@ public class AutoCommands {
         // Create target poses
         Pose2d target1 = PathPlanning.PoseAtDistance(target, finalOffset, Units.degreesToRadians(180));
 
-        DriveTrain.getInstance().m_poseQueue.clear();
+        if (DriverStation.isTeleop()){
+            DriveTrain.getInstance().m_poseQueue.clear();
+        }
         PathPlanning.getInstance().navigateTo(target1);
         Autonomous.getInstance().m_drivingToBarge = true;
     }
