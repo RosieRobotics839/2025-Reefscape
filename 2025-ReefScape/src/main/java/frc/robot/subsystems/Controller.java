@@ -362,11 +362,11 @@ public class Controller extends XboxController {
     }
 
     Translate();
-    if (Math.abs(Lx-Lx_pre) > 0.05){
+    if (Math.abs(Lx-Lx_pre) > 2){ // Was 0.05, set to 2 to make it impossible to go manual because manual control was very buggy
       m_directElevator = true;
     }
 
-    if (Math.abs(Ly-Ly_pre) > 0.05){
+    if (Math.abs(Ly-Ly_pre) > 2){ // Was 0.05, set to 2 to make it impossible to go manual because manual control was very buggy
       m_directArm = true;
     }
 

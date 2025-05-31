@@ -201,12 +201,12 @@ public class AutoCommands {
         Translation2d finalOffset;
 
         approachOffset = new Translation2d(
-            -AutoConstants.kReefStartingDistance + Units.inchesToMeters(9) - Constants.kChassis.kWheelBase/2.0,
+            -AutoConstants.kReefStartingDistance + Units.inchesToMeters(15) - Constants.kChassis.kWheelBase/2.0,
             Constants.AutoConstants.kStaticReefOffset
         );
 
         leaveOffset = new Translation2d(
-            -AutoConstants.kReefStartingDistance + Units.inchesToMeters(19) - Constants.kChassis.kWheelBase/2.0,
+            -AutoConstants.kReefStartingDistance + Units.inchesToMeters(27) - Constants.kChassis.kWheelBase/2.0,
             Constants.AutoConstants.kStaticReefOffset
         );
     
@@ -325,11 +325,11 @@ public class AutoCommands {
     
         finalOffset = new Translation2d(
             -AutoConstants.kReefDistance - Constants.kChassis.kWheelBase/2.0,
-            Constants.AutoConstants.kReefOffset * (left ? 1 : -1) + Constants.AutoConstants.kStaticReefOffset
+            Constants.AutoConstants.kReefOffset * (left ? 1 : -1) //+ Constants.AutoConstants.kStaticReefOffset
         );
 
         // Create target poses
-        Pose2d target1 = PathPlanning.AprilTagAtDistance(tagId, approachOffset, Units.degreesToRadians(15));
+        Pose2d target1 = PathPlanning.AprilTagAtDistance(tagId, approachOffset, Units.degreesToRadians(20));
         Pose2d target2 = PathPlanning.AprilTagAtDistance(tagId, finalOffset);
 
         return Commands.sequence(

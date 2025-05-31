@@ -72,7 +72,7 @@ public final class Constants {
     public static Motor.Gains kGainPosition = MotorDefaults.Kraken.kGainPosition;
 
     // Creates Max and Min values for Arm Software Hardstop
-    public static double kAngleMax = Units.degreesToRadians(NTDouble.create(93, "Arm/kAngleMax", (val)->kAngleMax = Units.degreesToRadians(val)));
+    public static double kAngleMax = Units.degreesToRadians(NTDouble.create(90.5, "Arm/kAngleMax", (val)->kAngleMax = Units.degreesToRadians(val)));
     public static double kAngleMin = Units.degreesToRadians(NTDouble.create(-3, "Arm/kAngleMin", (val)->kAngleMin = Units.degreesToRadians(val)));
 
     public static double kTargetCoral1 = Units.degreesToRadians(NTDouble.create(63, "Arm/Target/kCoral1", (val)->kTargetCoral1 = Units.degreesToRadians(val)));
@@ -92,7 +92,7 @@ public final class Constants {
     public static int kArmMotorCurrentLimit = (NTInteger.create(30, "Arm/kCurrentLimit", (val) ->Arm.getInstance().m_motor.withStatorLimit(val)));
 
     public static double kAngleTolerance = Units.degreesToRadians(NTDouble.create(3, "Arm/kArmAngleTolerance", val -> kAngleTolerance = Units.degreesToRadians(val)));
-    public static double kAngleNearTolerance = Units.degreesToRadians(NTDouble.create(40, "Arm/kArmAngleNearTolerance", val -> kAngleNearTolerance = Units.degreesToRadians(val)));
+    public static double kAngleNearTolerance = Units.degreesToRadians(NTDouble.create(50, "Arm/kArmAngleNearTolerance", val -> kAngleNearTolerance = Units.degreesToRadians(val)));
     public static double kArmGearRatio = 4.0*5.0*24.0/12.0;
     public static double kMaxSpeed = 1.0;
   }
@@ -119,7 +119,7 @@ public final class Constants {
     public static Motor.Gains kGainVelocity = new Motor.Gains(0.083, 0, 0, 0.183);
 
     public static double kGearRatio = 100.0/3.0;
-    public static double kAlgaeAfterTurns = NTDouble.create(.1,"Effector/kAlgaeAfterTurns",(val)->kAlgaeAfterTurns=val);
+    public static double kAlgaeAfterTurns = NTDouble.create(0,"Effector/kAlgaeAfterTurns",(val)->kAlgaeAfterTurns=val);
   }
   public static class ElevatorConstants {
 
@@ -300,11 +300,11 @@ public final class Constants {
     public static boolean isChampionshipGame = NTBoolean.create(false, "isChampionshipGame", val -> {isChampionshipGame = val; Vision.getInstance().reloadFieldLayout();});
     // Method to get the current field layout path
     public static String getFieldLayoutPath() {
-      //return Filesystem.getDeployDirectory() + "/" + "2025-reefscape-andymark.json";
+      return Filesystem.getDeployDirectory() + "/" + "2025-reefscape-andymark.json";
       //return Filesystem.getDeployDirectory() + "/" + "2025-reefscape-welded.json";
       //return Filesystem.getDeployDirectory() + "/" + "2025-reefscape-buzz.json";
       //return Filesystem.getDeployDirectory() + "/" + "2025-waterbury-practice-field.json";
-      return Filesystem.getDeployDirectory() + "/" + "2025-rosiecarpet.json";
+      //return Filesystem.getDeployDirectory() + "/" + "2025-rosiecarpet.json";
     }
 
     public static String kFieldLayout = getFieldLayoutPath();
@@ -409,11 +409,11 @@ public final class Constants {
  
     public static double kLineupTimeout = NTDouble.create(7, "Autonomous/kLineupTimeout", val -> kLineupTimeout = val);
     public static double kReefDistance = Units.inchesToMeters(NTDouble.create(6.25, "Autonomous/kReefDistance", val -> kReefDistance = Units.inchesToMeters(val)));
-    public static double kReefDistanceCenterAlign = Units.inchesToMeters(NTDouble.create(9.5, "Autonomous/kCenterReefDistance", val -> kReefDistanceCenterAlign = Units.inchesToMeters(val)));
-    public static double kReefStartingDistance = Units.inchesToMeters(NTDouble.create(40, "Autonomous/kReefStartingDistance", val -> kReefStartingDistance = Units.inchesToMeters(val)));
+    public static double kReefDistanceCenterAlign = Units.inchesToMeters(NTDouble.create(2.5, "Autonomous/kCenterReefDistance", val -> kReefDistanceCenterAlign = Units.inchesToMeters(val)));
+    public static double kReefStartingDistance = Units.inchesToMeters(NTDouble.create(52, "Autonomous/kReefStartingDistance", val -> kReefStartingDistance = Units.inchesToMeters(val)));
     public static double kReefTolerance = Units.inchesToMeters(NTDouble.create(1, "Autonomous/kReefToleranceInch", val -> kReefTolerance = Units.inchesToMeters(val)));
     public static double kReefArmupTolerance = Units.inchesToMeters(NTDouble.create(120, "Autonomous/kReefArmupTolerance", val -> kReefArmupTolerance = Units.inchesToMeters(val)));
-    public static double kSourceDistance = Units.inchesToMeters(NTDouble.create(5, "Autonomous/kSourceDistanceInch", val -> kSourceDistance = Units.inchesToMeters(val)));
+    public static double kSourceDistance = Units.inchesToMeters(NTDouble.create(0, "Autonomous/kSourceDistanceInch", val -> kSourceDistance = Units.inchesToMeters(val)));
     public static double kSourceOffset = Units.inchesToMeters(NTDouble.create(14, "Autonomous/kSourceOffsetInch", val -> kSourceOffset = Units.inchesToMeters(val)));
     public static double kSourceStartingDistance = Units.inchesToMeters(NTDouble.create(30.0, "Autonomous/kSourceStartingDistance", val -> kSourceStartingDistance = Units.inchesToMeters(val)));
     public static double kSourceTolerance = Units.inchesToMeters(NTDouble.create(12.0, "Autonomous/kSourceNearDistanceInch", val -> kSourceTolerance = Units.inchesToMeters(val)));
