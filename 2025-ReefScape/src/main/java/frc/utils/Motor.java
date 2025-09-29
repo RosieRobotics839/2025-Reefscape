@@ -52,6 +52,7 @@ public class Motor extends SubsystemBase {
     public static class kFreeRunRPM{
         final double NEO = 5676;
         final double X60 = 6000;
+        final double X44 = 7530;
     }
 
     public TalonFX motor_talon;
