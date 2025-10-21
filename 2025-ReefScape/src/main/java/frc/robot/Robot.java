@@ -37,6 +37,8 @@ import frc.utils.TwentyFiveChain;
 import frc.robot.subsystems.PoseEstimator;
 import frc.robot.subsystems.SystemLog;
 import au.grapplerobotics.CanBridge;
+import au.grapplerobotics.LaserCan;
+import au.grapplerobotics.ConfigurationFailedException;
 
 /**
  * The methods in this class are called automatically corresponding to each mode, as described in
