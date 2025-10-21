@@ -36,6 +36,7 @@ import frc.utils.KrakenOrchestra;
 import frc.utils.TwentyFiveChain;
 import frc.robot.subsystems.PoseEstimator;
 import frc.robot.subsystems.SystemLog;
+import au.grapplerobotics.CanBridge;
 
 /**
  * The methods in this class are called automatically corresponding to each mode, as described in
@@ -97,6 +98,9 @@ public class Robot extends TimedRobot {
    * initialization code.
    */
   public Robot() {
+
+    CanBridge.runTCP();
+    
     chain.whereIsIt("?");
     addPeriodic(()->Controller.getAccessoryInstance().accessoryPeriodic(),0.020,0.010);
 
