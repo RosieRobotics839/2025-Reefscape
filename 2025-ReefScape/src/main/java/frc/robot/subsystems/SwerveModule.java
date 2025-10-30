@@ -5,6 +5,7 @@
 package frc.robot.subsystems;
 
 import com.revrobotics.spark.config.ClosedLoopConfig.FeedbackSensor;
+
 import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
@@ -17,6 +18,7 @@ import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.util.Units;
 import frc.robot.Constants.kDriveTrain.DriveConstants;
 import frc.robot.Constants.kDriveTrain.kSwerveModule;
+import frc.robot.Robot;
 import frc.utils.FirstOrderLag;
 import frc.utils.Motor;
 import frc.utils.NTValues.NTDouble;
@@ -69,9 +71,11 @@ public class SwerveModule extends SubsystemBase {
         .inverted(false)
         .idleBrake(true)
         .withStatorLimit((int)kSwerveModule.kDrivingMotorCurrentLimit)
+        .withSlowSpeedControl((Robot.isSimulation() ? false : true))
         .withGearRatio(kSwerveModule.kDriveMotorGearReduction)
         .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
         .pidf(kSwerveModule.kDriveKp, kSwerveModule.kDriveKi, kSwerveModule.kDriveKd, kSwerveModule.kDriveKff, Motor.GainSlot.SPEED)
+        .pidf(kSwerveModule.kDrivePosKp, 0, 0, 0, Motor.GainSlot.POSITION)
         .withOutputRange(-1,1)
         .withIZone(0.15); 
 

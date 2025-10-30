@@ -30,7 +30,7 @@ public class NTDouble {
         return instance.get();
     }
 
-    public NTDouble(Double defaultValue, NetworkTable _table, String name, DoubleConsumer lambda){
+    public NTDouble(double defaultValue, NetworkTable _table, String name, DoubleConsumer lambda){
         subscriber = _table.getDoubleTopic(name).subscribe(defaultValue);
         publisher = _table.getDoubleTopic(name).publish();
         publisher.set(defaultValue);
@@ -39,7 +39,9 @@ public class NTDouble {
             name,
             EnumSet.of(NetworkTableEvent.Kind.kValueRemote),
             (table,key,event)-> {
-                lambda.accept(event.valueData.value.getDouble());
+                if (lambda != null){
+                    lambda.accept(event.valueData.value.getDouble());
+                }
                 if (resetOnRecv){
                     set(defaultValue);
                 }

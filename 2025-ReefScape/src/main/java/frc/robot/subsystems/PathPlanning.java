@@ -23,9 +23,10 @@ import org.json.simple.parser.JSONParser;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Filesystem;
+import frc.robot.Constants.AutoConstants;
 import frc.utils.VectorUtils;
 import frc.utils.pathfinding.astar.FieldPose;
 import frc.utils.pathfinding.astar.ScoreHeuristic;
@@ -44,7 +45,6 @@ public class PathPlanning {
     FieldPose m_current = new FieldPose(-1, "current", PoseEstimator.getInstance().m_finalPose);
     FieldPose m_destination = new FieldPose(-2, "destination", PoseEstimator.getInstance().m_finalPose);
 
-    public List<FieldPose> orignodes = new ArrayList<FieldPose>();
     Map<Integer, Set<Integer>> map = new HashMap<Integer, Set<Integer>>();
     PathScorer nextNodeScorer = new PathScorer();
     ScoreHeuristic targetScorer = new ScoreHeuristic();
@@ -63,22 +63,43 @@ public class PathPlanning {
     }
 
     private void addNode(FieldPose pose, int[] connectedNodes){
-        orignodes.add(pose);
+        nodes.add(pose);
         map.put(pose.getId(), connection(pose.getId(), connectedNodes));
     }
+
+    public void GenerateReefNodes (){
+        for (Integer i=0; i<6; i++){
+            addNode(new FieldPose(
+                i,
+                i.toString(),
+                new Pose2d(
+                    Autonomous.reefCenter().getTranslation().plus(
+                        new Translation2d(
+                            AutoConstants.kReefGraphNodeRadius,
+                            new Rotation2d(Autonomous.reefCenter().getRotation().getRadians()+Units.degreesToRadians(30+60*i))
+                        )
+                    ),
+                    null
+                )
+            ),
+            // The line below defines the connections between navigation nodes.
+            // the reason it looks weird is because it needs to wrap around to complete the circle around the reef.
+            // Node zero needs to connect to both node 5 and node 1, like 5 <- 0 -> 1. When i is 0, (i+5) % 6 is equal to 5. (i+7) % 6 is equal to 1.
+            new int[]{(i+5) % 6, (i+7) % 6}
+            );
+        };
+    }
+
     public PathPlanning(){
-        fromChorFile("autopointgraph.json");
+        //fromChorFile("autopointgraph.json");
+        
         calcFieldGraph();
     }
 
     public void calcFieldGraph(){
         nodes.clear();
-        if (FlightStick.m_blueAlly){
-            nodes.addAll(this.orignodes);
-        } else {
-            double halffield = Vision.getInstance().aprilTagFieldLayout.getFieldLength()/2.0;
-            nodes.addAll(this.orignodes.stream().map(f->new FieldPose(f.getId(), f.getName(), new Pose2d(new Translation2d(halffield+(halffield-f.getPose().getX()),f.getPose().getY()),null))).collect(Collectors.toList()));
-        }
+        map.clear();
+        GenerateReefNodes();
 
         int nnodes = nodes.size();
 
@@ -179,6 +200,20 @@ public class PathPlanning {
         } else {
             from = DriveTrain.getInstance().m_poseQueue.getLast();
         }
+        
+        /*
+        // Check if from is in an obstacle, if so find the shortest way out
+        var polygon = PathfindingUtils.PointInConvexPolygons(from.getTranslation(), Autonomous.staticObstacles);
+        if (!polygon.isEmpty()){
+            var nearestExit = new Pose2d(PathfindingUtils.nearestExit(from.getTranslation(),polygon),from.getRotation());
+            navigateTo(nearestExit, from);
+            navigateTo(to, nearestExit);
+        } else {
+            navigateTo(to, from);
+        }
+        */
+
+        // Was faster not to navigate to the nearest exit, but just use the penalized route. Still seems to prefer the graph nodes, instead of going through the reef. Good.
         navigateTo(to, from);
     }
 
@@ -189,9 +224,13 @@ public class PathPlanning {
         // Otherwise find the best route using A*
         RouteFinder<FieldPose> routeFinder = new RouteFinder<FieldPose>(fieldgraph, nextNodeScorer, targetScorer);
         List<FieldPose> route = routeFinder.findRoute(m_current, m_destination);
+        if (DriveTrain.getInstance().m_poseQueue.isEmpty()){
+            DriveTrain.getInstance().m_poseQueueStart = from;
+        }
         for (int i=1; i<route.size()-1; i++){
             DriveTrain.getInstance().m_poseQueue.offer(new Pose2d(route.get(i).getPose().getTranslation(),null));
         }
+
         DriveTrain.getInstance().m_poseQueue.offer(to);
         DriveTrain.getInstance().PublishPoseQueue();
     }
@@ -227,9 +266,45 @@ public class PathPlanning {
         navigateTo(closestPose);
 
     }
-    public static Pose2d AprilTagAtDistance(int id, double distance) {
-      Pose2d tagLocation = Vision.getInstance().aprilTagFieldLayout.getTagPose(id).get().toPose2d();
-      return tagLocation.plus(new Transform2d(distance,0,new Rotation2d(Math.PI)));
+    /**
+     * Returns the pose of an AprilTag on the field.
+     * @param id Apriltag ID
+     */
+        public static Pose2d AprilTag(int id) {
+        return Vision.getInstance().aprilTagFieldLayout.getTagPose(id).get().toPose2d();
     }
 
+    /**
+     * Provides a way to get the Pose that the robot should be in relative to an apriltag
+     * @param id Apriltag ID
+     * @param translation to move relative to the apriltag, if looking at it.
+     * @param radians angle to rotate the robot applied after translating it.
+     * @return
+     */
+    public static Pose2d AprilTagAtDistance(int id, Translation2d translation, double radians) {
+        return PoseAtDistance(AprilTag(id), translation, radians);
+    }
+
+    public static Pose2d PoseAtDistance(Pose2d pose, Translation2d translation, double radians){
+        Pose2d result = new Pose2d(
+            pose.getTranslation().plus(translation.rotateBy(new Rotation2d(pose.getRotation().getRadians()+Math.PI))),
+            pose.getRotation().plus(new Rotation2d(radians+Math.PI))
+        );
+        return result;
+    }
+    public static Pose2d PoseAtDistance(Pose2d pose, Translation2d translation){
+        return PoseAtDistance(pose, translation, 0);
+    }
+    
+    public static Pose2d AprilTagAtDistance(int id, Translation2d translation) {
+        return AprilTagAtDistance(id, translation, 0);
+    }
+
+    public static Pose2d AprilTagAtDistance(int id, double distance) {
+        return AprilTagAtDistance(id, new Translation2d(distance, 0), 0);
+    }
+    
+    public static Pose2d AprilTagAtDistance(int id, double distance, double radians) {
+        return AprilTagAtDistance(id, new Translation2d(distance, 0), radians);
+    }
 }

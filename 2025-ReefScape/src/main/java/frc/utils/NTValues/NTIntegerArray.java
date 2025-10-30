@@ -40,7 +40,9 @@ public class NTIntegerArray {
             name,
             EnumSet.of(NetworkTableEvent.Kind.kValueRemote),
             (t,k,e)-> {
-                lambda.accept(e.valueData.value.getIntegerArray());
+                if (lambda != null){
+                    lambda.accept(e.valueData.value.getIntegerArray());
+                }
                 if (resetOnRecv){
                     publisher.set(defaultValue);
                 }

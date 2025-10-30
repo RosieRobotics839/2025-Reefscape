@@ -1,5 +1,7 @@
 package frc.robot.subsystems;
 
+import java.util.function.Supplier;
+
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.BooleanPublisher;
 import edu.wpi.first.networktables.DoublePublisher;
@@ -7,19 +9,22 @@ import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DutyCycleEncoder;
+import edu.wpi.first.wpilibj.simulation.DutyCycleEncoderSim;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.ArmConstants;
+import frc.utils.Action;
 import frc.utils.Calibrate;
+import frc.utils.CalibrationMap;
 import frc.utils.Motor;
 import frc.utils.NTValues.NTDouble;
-import frc.robot.Constants.GameConstants;
+import frc.robot.Constants.ScoreConstants.ScoreLevel;
+import frc.robot.Robot;
 
 public class Arm extends SubsystemBase{
 
-    static NetworkTable table = NetworkTableInstance.getDefault().getTable("roboRIO/Arm/table");
+    static NetworkTable table = NetworkTableInstance.getDefault().getTable("roboRIO/Arm");
     
     DoublePublisher nt_currentAngle, nt_targetAngle;
 
@@ -31,9 +36,10 @@ public class Arm extends SubsystemBase{
 
     public Motor m_motor;
     public DutyCycleEncoder m_angleSensor;
+    public DutyCycleEncoderSim m_angleSensorSim;
+    private CalibrationMap m_angleSensorSimMap;
     public double m_currentAngle = 0;
-    public double m_angleTarget = Units.degreesToRadians(NTDouble.create(0, table, "angle/targetAngle",(val)->setArmAngle(Units.degreesToRadians(val))));
-    public double targetAngle = 0;
+    public double m_angleTarget = Units.degreesToRadians(NTDouble.create(90, table, "angle/targetAngle",(val)->setPosition(Units.degreesToRadians(val))));
     public double elevatorCurrentHeight;
     double m_armOffset = 0; //change later
     double m_newArmOffset = 0;
@@ -41,8 +47,9 @@ public class Arm extends SubsystemBase{
     boolean scoringTrough = false;
     boolean scoringLevels2or3 = false;
     boolean scoringLevel4 = false;
-    GameConstants.ScoreLevel m_scoreReefLevel;
 
+    Action m_tipProtect = new Action(false).onTrue(()->{Controller.getAccessoryInstance().m_directArm=false; moveToLevel(ScoreLevel.FUNNEL);});
+    
     DoublePublisher
         nt_positionSensor,
         nt_safetyLimit,
@@ -54,6 +61,9 @@ public class Arm extends SubsystemBase{
     // Checking to see if we are at the score position.
     public Boolean isAtPosition(){
         return Math.abs(getArmPosition() - m_angleTarget) < ArmConstants.kAngleTolerance; 
+    }
+    public Boolean isNearPosition(){
+        return Math.abs(getArmPosition() - m_angleTarget) < ArmConstants.kAngleNearTolerance; 
     }
 
     /**
@@ -93,8 +103,12 @@ public class Arm extends SubsystemBase{
         return getArmPosition() > ArmConstants.kAngleMaxDZ;
     }
 
-    public void setArmAngle(double target){
-        m_angleTarget = target;
+    /**
+     * Sets the arm position, protected by safe limits
+     * @param radians target position
+     */
+    public void setPosition(double radians){
+        m_angleTarget = radians;
     }
 
     public Arm(int CANID, int analogID) {
@@ -114,6 +128,11 @@ public class Arm extends SubsystemBase{
             .withGearRatio(ArmConstants.kArmGearRatio)
             .withSpeedLimit(ArmConstants.kMaxSpeed);
 
+        if (Robot.isSimulation()){
+            m_angleSensorSim = new DutyCycleEncoderSim(m_angleSensor);
+            m_angleSensorSimMap = new CalibrationMap(ArmConstants.kCalibrationY,ArmConstants.kCalibrationX);
+        }
+
         Calibrate.motor("arm",
             ArmConstants.kCalibrationX,
             ArmConstants.kCalibrationY,
@@ -123,28 +142,43 @@ public class Arm extends SubsystemBase{
         );
     } 
 
-    public Command createMoveToAngleCommand(double target) {
-        return Commands.sequence(
-            // Move to safe angle
-            Commands.runOnce(() -> setArmAngle(targetAngle))
-        );
+    public void moveToLevel(ScoreLevel level){
+        switch (level){
+            case FUNNEL:
+                setPosition(ArmConstants.kAngleMax);
+                break;
+            case TROUGH:
+                setPosition(ArmConstants.kTargetCoral1);
+                break;
+            case CORAL2:
+                setPosition(ArmConstants.kTargetCoral2);
+                break;
+            case CORAL3:
+                setPosition(ArmConstants.kTargetCoral3);
+                break;
+            case CORAL4:
+                setPosition(ArmConstants.kTargetCoral4);
+                break;
+            case ALGAE0:
+                setPosition(ArmConstants.kTargetAlgae0);
+                break;
+            case ALGAE1:
+                setPosition(ArmConstants.kTargetAlgae1);
+                break;
+            case ALGAE2:
+                setPosition(ArmConstants.kTargetAlgae2);
+                break;
+            case ALGAE3:
+                setPosition(ArmConstants.kTargetAlgae3);
+                break;
+            case ALGAE4:
+                setPosition(ArmConstants.kTargetAlgae4);
+                break;
+            default:
+        }
     }
-
-    // Example commands for different positions
-    public Command moveToTroughCommand() {
-        return createMoveToAngleCommand(ArmConstants.kTargetAngleTrough);
-    }
-
-    public Command moveToLevel2Command() {
-        return createMoveToAngleCommand(ArmConstants.kTargetAngleLevelMiddle);
-    }
-
-    public Command moveToLevel3Command() {
-        return createMoveToAngleCommand(ArmConstants.kTargetAngleLevelMiddle);
-    }
-
-    public Command moveToLevel4Command() {
-        return createMoveToAngleCommand(ArmConstants.kTargetAngleLevel4);
+    public Command moveToLevelCommand(Supplier<ScoreLevel> level) {
+        return new InstantCommand(()->moveToLevel(level.get()));
     }
 
     @Override
@@ -154,6 +188,12 @@ public class Arm extends SubsystemBase{
             m_angleTarget = getArmPosition();
         }
 
+        if (Robot.isSimulation()){
+            m_angleSensorSim.set(m_angleSensorSimMap.get(m_angleTarget));
+        }
+
+        
+        m_tipProtect.calculate(Gyro.getInstance().isTipping());
         setArmAngleSafely(m_angleTarget);
 
         nt_setupDone.set(m_setupDone);

@@ -8,6 +8,7 @@ import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Robot;
 import frc.robot.Constants.GyroConstants;
+import frc.utils.Hysteresis;
 import frc.utils.VectorUtils;
 import frc.utils.NTValues.NTBoolean;
 import frc.utils.NTValues.NTDouble;
@@ -16,6 +17,7 @@ import com.ctre.phoenix6.configs.Pigeon2Configuration;
 import com.ctre.phoenix6.hardware.Pigeon2;
 import com.ctre.phoenix6.sim.Pigeon2SimState;
 
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.BooleanPublisher;
 import edu.wpi.first.networktables.DoublePublisher;
@@ -30,7 +32,9 @@ public class Gyro extends SubsystemBase {
   private static Pigeon2 pidgey = new Pigeon2(GyroConstants.kCANID, "rio");
   private static Pigeon2SimState simstate = new Pigeon2SimState(pidgey);
 
-  private static Gyro gyro = new Gyro(); 
+  public boolean m_enableTipDetection = true;
+
+  private static Gyro gyro = new Gyro();
   
   public static Gyro getInstance(){
     return gyro;
@@ -44,7 +48,7 @@ public class Gyro extends SubsystemBase {
 
   // Constructor Function on init, set gyro yaw to zero.
   public Gyro() {
-    if (GyroConstants.kEnabled){
+    if (GyroConstants.kEnabled && !Robot.isSimulation()){
       pidgey.getConfigurator().apply(new Pigeon2Configuration());
       pidgey.getYaw().setUpdateFrequency(100);
       pidgey.setYaw(0);
@@ -58,11 +62,18 @@ public class Gyro extends SubsystemBase {
   public boolean init = true;
   NTBoolean nt_init = new NTBoolean(false,table,"init",val->init=val); {nt_init.resetOnRecv = true;}
 
+  Hysteresis m_isTipped = new Hysteresis().withThreshold(GyroConstants.kTippingAngle).withHysteresis(GyroConstants.kTippingHysteresis);
+
   final DoublePublisher nt_yaw = table.getDoubleTopic("yaw").publish();
   final DoublePublisher nt_pitch = table.getDoubleTopic("pitch").publish();
   final DoublePublisher nt_roll = table.getDoubleTopic("roll").publish();
   final DoublePublisher nt_offset = table.getDoubleTopic("offset").publish();
   final BooleanPublisher nt_status = table.getBooleanTopic("status").publish();
+  final BooleanPublisher nt_isTipped = table.getBooleanTopic("isTipped").publish();
+  final DoublePublisher nt_tipHeading = table.getDoubleTopic("tipHeading").publish();
+  final DoublePublisher nt_gvx = table.getDoubleTopic("gvx").publish();
+  final DoublePublisher nt_gvy = table.getDoubleTopic("gvy").publish();
+  final DoublePublisher nt_gvz = table.getDoubleTopic("gvz").publish();
 
   final NTDouble nt_simOffset = new NTDouble(0.0,table,"CAUTION/offset",val->initypr[0]=initypr[0]+val); {nt_simOffset.resetOnRecv=true;}
   final DoublePublisher nt_simYaw = table.getDoubleTopic("sim/yaw").publish();
@@ -72,7 +83,13 @@ public class Gyro extends SubsystemBase {
 
   @Override
   public void periodic() {
-    if (!GyroConstants.kEnabled){
+    if (!GyroConstants.kEnabled || Robot.isSimulation()) {
+      // In simulation, just use the pose estimator's rotation
+      if (Robot.isSimulation()) {
+        ypr[0] = PoseEstimator.getInstance().m_sim_actualPose.getRotation().getRadians();
+        nt_yaw.set(Units.radiansToDegrees(ypr[0]));
+        nt_status.set(false);
+      }
       return;
     }
 
@@ -97,6 +114,8 @@ public class Gyro extends SubsystemBase {
     
     // Get new ypr values in degrees
     double [] newypr = getypr();
+    getTippingAngle();
+    m_isTipped.calculate(m_enableTipDetection ? VectorUtils.SRSS(VectorUtils.angleDifference(0,getPitch()),VectorUtils.angleDifference(0,getRoll())) : 0);
 
     // Convert the continuous values offset by the init or vision correction to radians, this outputs values between 0 and 2*pi
     ypr[0] = (((newypr[0]+initypr[0]) % 360)*(Math.PI)/180.0 + 2*Math.PI) % (2*Math.PI);
@@ -108,6 +127,7 @@ public class Gyro extends SubsystemBase {
       initypr[0] += 180.0/Math.PI * Math.max(Math.min(VectorUtils.angleDifference(PoseEstimator.getInstance().m_visionTheta.getRadians(),ypr[0]), GyroConstants.kVisionCorrectionMaxRate * 0.020), -GyroConstants.kVisionCorrectionMaxRate * 0.020);
     }
 
+    nt_isTipped.set(m_isTipped.get());
     nt_status.set(getStatus());
     nt_yaw.set(Units.radiansToDegrees(ypr[0]));
     nt_pitch.set(Units.radiansToDegrees(ypr[1]));
@@ -117,7 +137,7 @@ public class Gyro extends SubsystemBase {
   }
 
   public double [] getypr(){
-    if (!GyroConstants.kEnabled){
+    if (!GyroConstants.kEnabled || Robot.isSimulation()){
       return new double[]{0, 0, 0};
     }
 
@@ -127,11 +147,8 @@ public class Gyro extends SubsystemBase {
       simstate.addYaw(Units.radiansToDegrees(VectorUtils.angleDifference(simyawrad,lastSimYawRad)));
     }
     double yaw = (pidgey.getYaw().getValueAsDouble() % 360 + 360) % 360;
-    // we're not using pitch and roll, don't bother requesting them over the CAN bus.
-    // double pitch = (pidgey.getPitch().getValue();
-    // double roll = (pidgey.getRoll().getValue(); 
-    double pitch = 0;
-    double roll = 0;
+    double pitch = pidgey.getRoll().getValueAsDouble();
+    double roll = pidgey.getPitch().getValueAsDouble(); 
 
     return new double[]{yaw, pitch, roll};
   }
@@ -148,8 +165,30 @@ public class Gyro extends SubsystemBase {
     return ypr[2];
   }
 
+  /**
+   * Returns the direction that the robot is tipping.
+   * The returned angle is relative to the robot
+   * @return angle from forward in radians
+   */
+  public double getTippingAngle(){
+    double gvx = -pidgey.getGravityVectorY().getValueAsDouble();
+    double gvy = pidgey.getGravityVectorX().getValueAsDouble();
+    nt_gvx.set(gvx);
+    nt_gvy.set(gvy);
+    if (Math.abs(gvx) <= 1e-6 && Math.abs(gvy) <= 1e-6){
+      return 0;
+    }
+    double tipHeading = new Translation2d(gvx,gvy).getAngle().getRadians();
+    nt_tipHeading.set(Units.radiansToDegrees(tipHeading));
+    return tipHeading;
+  }
+
   public void resetPrimarySensor() {
     pidgey.reset();
+  }
+
+  public boolean isTipping(){
+    return m_isTipped.get();
   }
 
   public void setGyroInit(double _y, double _p, double _r){
@@ -167,6 +206,9 @@ public class Gyro extends SubsystemBase {
   }
 
   public boolean getStatus() {
+    if (Robot.isSimulation()) {
+      return false;  // Always return false in simulation
+    }
     boolean GyroGood = false;
     if (GyroConstants.kEnabled){
         // getFault_Hardware() returns False if the hardware is good

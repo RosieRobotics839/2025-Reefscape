@@ -5,16 +5,19 @@
 package frc.robot.subsystems;
 
 import frc.robot.Constants.OperatorConstants;
-//import frc.robot.Constants.ShooterConstants;
 import frc.robot.Constants.kDriveTrain.DriveConstants;
 import frc.utils.VectorUtils;
+import frc.utils.NTValues.NTBoolean;
 import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.util.Units;
+import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 
 public class FlightStick extends Joystick {
+
+  static NetworkTable table = NetworkTableInstance.getDefault().getTable("roboRIO/FlightStick");
 
   public static double forward;
   public static double left;
@@ -29,6 +32,7 @@ public class FlightStick extends Joystick {
   public static DriveButtons driveButtons = new DriveButtons(driveController);
 
   public static boolean m_preventDriverRotation = false;
+  public static NTBoolean nt_fieldCentricDriving = new NTBoolean(OperatorConstants.kFieldCentricDriving, table, "fieldCentricDriving", (val)-> {});
 
   public static FlightStick getDriveInstance(){
     return driveController;
@@ -41,7 +45,7 @@ public class FlightStick extends Joystick {
 
     private Integer m_speedSelector = DriveConstants.kMaxSpeedDefault;
 
-    public JoystickButton Trigger,Top2Btn,Top3Btn,Top4Btn,Top5Btn,Top6Btn,Btm7Btn,Btm8Btn,Btm9Btn,Btm10Btn,Btm11Btn,Btm12Btn;
+    public JoystickButton Trigger,Top2Btn,Top3Btn,Top4Btn,Top5Btn,Top6Btn,Btm4Btn,Btm7Btn,Btm8Btn,Btm9Btn,Btm10Btn,Btm11Btn,Btm12Btn;
     DriveButtons(FlightStick controller){
       Trigger   = new JoystickButton(controller, 1);  // Trigger on Joystick
       Top2Btn   = new JoystickButton(controller, 2);  // Button on side of main stick
@@ -49,7 +53,8 @@ public class FlightStick extends Joystick {
       Top4Btn   = new JoystickButton(controller, 4);  //  |
       Top5Btn    = new JoystickButton(controller, 5);  // |
       Top6Btn    = new JoystickButton(controller, 6);  // ↓
-      Btm7Btn  = new JoystickButton(controller, 7);  // On bottom part of stick
+      Btm4Btn  = new JoystickButton(controller, 4);  // On bottom part of stick
+      Btm7Btn  = new JoystickButton(controller, 7);  //  |
       Btm8Btn  = new JoystickButton(controller, 8);  //  |
       Btm9Btn  = new JoystickButton(controller, 9);  //  |
       Btm10Btn  = new JoystickButton(controller, 10); // |
@@ -60,9 +65,6 @@ public class FlightStick extends Joystick {
       //Trigger.onFalse(new InstantCommand(() -> {turboscale=1.0;}));
   
       /* Change speed modes */
-
-      Btm11Btn.onTrue(Funnel.getInstance().FunnelDownCommand());
-      Btm12Btn.onTrue(Funnel.getInstance().FunnelUpCommand());
 
       Trigger.onTrue(new InstantCommand(() -> {
         m_speedSelector = rangeLimit(++m_speedSelector, 0, DriveConstants.kMaxSpeedMetersPerSecond.length-1);
@@ -75,86 +77,26 @@ public class FlightStick extends Joystick {
         DriveTrain.getInstance().setMaxRotate(DriveConstants.kMaxRotationVelocity[m_speedSelector]);
       }));
 
-
-      /* Rotate 90 degrees */
-
-      Top5Btn.onTrue(new InstantCommand(()->{
-        DriveTrain.getInstance().setTargetHeading(DriveTrain.getInstance().getTargetHeading()+Units.degreesToRadians(90)); // CCW 90 Degrees
-      }));
-      Top6Btn.onTrue(new InstantCommand(()->{
-        DriveTrain.getInstance().setTargetHeading(DriveTrain.getInstance().getTargetHeading()-Units.degreesToRadians(90)); // CW 90 Degrees
-      }));
-
-      // Btm4Btn.whileTrue(new InstantCommand(() -> {
-      //   IntakeShooter.getInstance().setIntakeSpeed(1);
-      // }));
-      // Btm4Btn.onFalse(new InstantCommand(() -> {
-      //   IntakeShooter.getInstance().setIntakeSpeed(0);
-      // }));
-      // Btm5Btn.onTrue(new InstantCommand(() -> {
-      //   IntakeShooter.getInstance().setShooterSpeed(1);
-      // }));
-      // Btm5Btn.onFalse(new InstantCommand(() -> {
-      //   IntakeShooter.getInstance().setShooterSpeed(0);
-      // }));
-
-
-        /* Aim at Speaker */
-
-      /* Btm8Btn.onTrue(new InstantCommand(()->{
-        Autonomous.getInstance().aimAtPoint(Vision.getInstance().aprilTagFieldLayout.getTagPose(AutonomousCommands.speakerTag()).get().toPose2d(),Units.degreesToRadians(180));
-      }));
-      Btm8Btn.onFalse(new InstantCommand(()->{
-        Autonomous.getInstance().stopAiming();
-      }));
-
-
-      Btm7Btn.onTrue(new InstantCommand(()->{
-        Autonomous.getInstance().aimAtPoint(Vision.getInstance().aprilTagFieldLayout.getTagPose(AutonomousCommands.ampTag()).get().toPose2d(),Units.degreesToRadians(180));
-      }));
-      Btm7Btn.onFalse(new InstantCommand(()->{
-        Autonomous.getInstance().stopAiming();
-      })); */
-      /* Go to HP / Amp */
-
-      /* Top4Btn.onTrue(new InstantCommand(()->{
-        PathPlanning.getInstance().navigateTo(new Pose2d(PathPlanning.AprilTagAtDistance(5,Units.feetToMeters(2)).getTranslation(),new Rotation2d(Units.degreesToRadians(-90))));
-        IntakeShooter.getInstance().setShooterAngle(ShooterConstants.kAnglePreset.Amp);
-      }));
-      Top3Btn.onTrue(new InstantCommand(()->{
-        PathPlanning.getInstance().navigateTo(new Pose2d(PathPlanning.AprilTagAtDistance(4,Units.feetToMeters(6)).getTranslation(),new Rotation2d(Units.degreesToRadians(180))));
-        IntakeShooter.getInstance().setShooterAngle(ShooterConstants.kAnglePreset.Speaker);
-      })); */
-
+      Btm8Btn.onTrue(new InstantCommand(()->AutoCommands.DriveReefOffset()));
+      Btm7Btn.onTrue(new InstantCommand(()->AutoCommands.AimAtClosestSource()));
+      Btm7Btn.onFalse(new InstantCommand(()->DriveTrain.getInstance().unlockTargetHeading()));
+      Btm10Btn.onTrue(new InstantCommand(()->AutoCommands.DriveBargeLineup()));
 
       /* Swap between field centric and proportional */
 
-      Btm9Btn.onTrue(new InstantCommand(() -> {
+      Top6Btn.onTrue(new InstantCommand(() -> {
         OperatorConstants.kFieldCentricDriving = !OperatorConstants.kFieldCentricDriving;
+        nt_fieldCentricDriving.set(OperatorConstants.kFieldCentricDriving);
       }));
       Btm11Btn.onTrue(new InstantCommand(() -> {
         DriveTrain.getInstance().setMaxRotate(DriveConstants.kGetItOffMeRotationSpeed);
       }));
       Btm11Btn.onFalse(new InstantCommand(() -> {
-        DriveTrain.getInstance().setMaxRotate(Units.degreesToRadians(75));
+        DriveTrain.getInstance().setMaxRotate(DriveConstants.kMaxRotationVelocity[m_speedSelector]);
       }));
+      Btm12Btn.onTrue(new InstantCommand(()->Gyro.getInstance().m_enableTipDetection = false));
+      Btm12Btn.onFalse(new InstantCommand(()->Gyro.getInstance().m_enableTipDetection = true));
 
-
-      /* Intake in */
-      /* Btm10Btn.onTrue(new InstantCommand(() -> {
-        IntakeShooter.getInstance().setIntakeSpeedRatio(1);
-      }));
-      Btm10Btn.onFalse(new InstantCommand(() -> {
-        IntakeShooter.getInstance().setIntakeSpeedRatio(0);
-      }));
-      Btm12Btn.whileTrue(new RepeatCommand(new InstantCommand(() -> {
-        m_preventDriverRotation = true;
-        Autonomous.getInstance().aimAtNote();
-      })));
-      Btm12Btn.onFalse(new InstantCommand(() -> {
-        m_preventDriverRotation = false;
-        Vision.getInstance().unlockTarget();
-      })); */
     }
   }
 
@@ -172,13 +114,12 @@ public class FlightStick extends Joystick {
     slider = this.getThrottle();
 
     Translation2d Lstick = new Translation2d(-this.getX(),-this.getY());
-    Lstick = VectorUtils.deadband(Lstick,0.1,1);
+    Lstick = VectorUtils.deadband(Lstick,0.15,1);
     forward = flipField * turboscale * Lstick.getY();  // Forward is Positive
     left = flipField * Lstick.getX();               // Left is Positive
     
     Translation2d Rstick = new Translation2d(this.getZ(),0);
     Rstick = VectorUtils.deadband(Rstick,0.35,1);
     rotate = -Rstick.getX();             // CCW is Positive
-
   }
 }

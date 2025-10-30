@@ -33,6 +33,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import com.revrobotics.spark.config.ClosedLoopConfig.FeedbackSensor;
 
 import frc.robot.Constants.MotorDefaults;
+import frc.robot.Robot;
 import frc.utils.CANSparkMax.MyCANSparkMax;
 import frc.utils.NTValues.NTBoolean;
 import frc.utils.NTValues.NTDouble;
@@ -51,11 +52,13 @@ public class Motor extends SubsystemBase {
     public static class kFreeRunRPM{
         final double NEO = 5676;
         final double X60 = 6000;
+        final double X44 = 7530;
     }
 
     public TalonFX motor_talon;
     TalonFXConfiguration config_talon;
 
+    private Boolean m_usingAltEncoder = false;
     public MyCANSparkMax motor_neo;
     private boolean m_setupMotorDone = false;
     public double calibration = 0;
@@ -78,9 +81,6 @@ public class Motor extends SubsystemBase {
     boolean m_lowspeedreverse;
     ControlType m_controlType = ControlType.NONE;
     GainSlot m_gainslot = GainSlot.POSITION;
-
-    double m_testSpeed;
-    double m_testPosition;
     
     Boolean m_isStopped = true;
     boolean m_testEnable;
@@ -106,6 +106,7 @@ public class Motor extends SubsystemBase {
 
     NTInteger
     nt_slot,
+    nt_curLimit,
     nt_controltype;
 
     NTBoolean
@@ -120,7 +121,6 @@ public class Motor extends SubsystemBase {
     nt_position,
     nt_speed,
     nt_current,
-    nt_curLimit,
     nt_izone,
     nt_speedLim,
     nt_speedLimPos,
@@ -177,7 +177,8 @@ public class Motor extends SubsystemBase {
     public Motor (int CANID_, MyMotorType motorType_, String name_) {
         m_inConstructor = true;
         CANID = CANID_;
-        motorType = motorType_;
+        // Override motor type to SIMULATED when in simulation mode
+        motorType = Robot.isSimulation() ? MyMotorType.SIMULATED : motorType_;
         name = name_;
         nt_angleinit = table.getDoubleTopic("angle/init/"+name).publish();
         nt_speedcmd = table.getDoubleTopic("motor/speedcmd/"+name).publish();
@@ -197,7 +198,7 @@ public class Motor extends SubsystemBase {
         nt_inverted     = new NTBoolean(MotorDefaults.kInverted,testtable,"motors/"+name+"/inverted",(val)->inverted(val));
         nt_idleBrake    = new NTBoolean(MotorDefaults.kIdleBrake, testtable,"motors/"+name+"/idlebrake",(val)->idleBrake(val));
         nt_outputRange  = new NTDouble(MotorDefaults.kOutputRange, testtable,"motors/"+name+"/outrange",(val)->withOutputRange(-val,val));
-        nt_curLimit     = new NTDouble(MotorDefaults.kCurrentLimit,testtable,"motors/"+name+"/currentLimit",(val)->withStatorLimit(val));
+        nt_curLimit     = new NTInteger(MotorDefaults.kCurrentLimit,testtable,"motors/"+name+"/currentLimit",(val)->withStatorLimit(val));
         nt_current      = new NTDouble(0.0,testtable,"motors/"+name+"/current",(val)->{});
         nt_slot         = new NTInteger(0, testtable,"motors/"+name+"/gains/slot",(val)->{nt_Kp.set(m_gains[val].Kp);nt_Ki.set(m_gains[val].Ki);nt_Kd.set(m_gains[val].Kd);nt_Kff.set(m_gains[val].Kff);});
         nt_controltype  = new NTInteger(-1, testtable,"motors/"+name+"/controltype",(val)->{});
@@ -316,7 +317,7 @@ public class Motor extends SubsystemBase {
         return this;
     }
 
-    public Motor withStatorLimit(double stallLimit){
+    public Motor withStatorLimit(int stallLimit){
         switch (motorType) {
             case KRAKEN:
                 config_talon.CurrentLimits
@@ -324,7 +325,7 @@ public class Motor extends SubsystemBase {
                     .withStatorCurrentLimitEnable(true);
                 break;
             case NEO:
-                config_neo.smartCurrentLimit((int)stallLimit);
+                config_neo.smartCurrentLimit(stallLimit);
                 break;
             default:
         }
@@ -450,7 +451,7 @@ public class Motor extends SubsystemBase {
         nt_outputRange.set(max);
         switch (motorType) {
             case KRAKEN:
-                // TODO: Do we need something here?
+                // NO
                 break;
             case NEO:
                 config_neo.closedLoop.outputRange(min, max, ClosedLoopSlot.values()[slot.ordinal()]);
@@ -652,12 +653,37 @@ public class Motor extends SubsystemBase {
         return status;
     }
 
+    /**
+     * Returns the motor target position.
+     * @return rotations
+     */
+    public double getTargetPosition(){
+        return m_positionTarget;
+    }
+
+    /**
+     * Returns the motor target speed.
+     * @return rotations per second
+     */
+    public double getTargetSpeed(){
+        return m_speedTarget;
+    }
+
+    /**
+     * Sets the position of the motor or alternate encoder in rotations.
+     * @param position in rotations
+     * @return
+     */
     public boolean setEncoderPosition(double position){
         switch (motorType) {
             case KRAKEN:
                 return motor_talon.setPosition(position).isOK();
             case NEO:
-                return encoder_neo.setPosition(position) == REVLibError.kOk; // Our math is based on rotations per Minute
+                if (m_usingAltEncoder){
+                    return motor_neo.getAlternateEncoder().setPosition(position) == REVLibError.kOk;
+                } else {
+                    return encoder_neo.setPosition(position) == REVLibError.kOk;
+                }
             case SIMULATED:
                 m_simPosition = position;
                 return true;
@@ -709,6 +735,17 @@ public class Motor extends SubsystemBase {
         return 0.0;
     }
 
+    public double getMotorTemperature(){
+        switch (motorType) {
+            case KRAKEN:
+                return motor_talon.getDeviceTemp().getValueAsDouble();
+            case NEO:
+                return motor_neo.getMotorTemperature();
+            default:
+        }
+        return 0.0;
+    }
+
     public boolean isSetupDone() {
         return m_setupMotorDone;
     }
@@ -725,7 +762,7 @@ public class Motor extends SubsystemBase {
                 case NEO:
                     break;
                 case SIMULATED:
-                    if (m_testPosition == 0){
+                    if (m_controlType == ControlType.SPEED){
                         m_simPosition = m_simPosition + m_simSpeed * 0.020; // Move simulated motor over a 20ms period.
                     }
                     break;
@@ -761,6 +798,7 @@ public class Motor extends SubsystemBase {
                 _setTargetPosition(posRequest, m_gainslot);
             }
         }
+
         nt_controltype.set(m_controlType.ordinal());
         nt_position.set(getPosition());
         nt_speed.set(getVelocity());

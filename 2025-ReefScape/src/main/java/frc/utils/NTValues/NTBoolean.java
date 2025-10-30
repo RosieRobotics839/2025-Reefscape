@@ -40,10 +40,12 @@ public class NTBoolean {
             name,
             EnumSet.of(NetworkTableEvent.Kind.kValueRemote),
             (table,key,event)-> {
+                if (lambda != null){
                     lambda.accept(event.valueData.value.getBoolean());
-                    if (resetOnRecv){
-                        set(defaultValue);
-                    }
+                }
+                if (resetOnRecv){
+                    set(defaultValue);
+                }
             }
         );
     }

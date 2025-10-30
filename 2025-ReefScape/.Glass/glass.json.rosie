@@ -1,0 +1,131 @@
+{
+  "NetworkTables": {
+    "transitory": {
+      "roboRIO": {
+        "open": true
+      }
+    },
+    "types": {
+      "/FMSInfo": "FMSInfo",
+      "/SmartDashboard/Field": "Field2d"
+    },
+    "windows": {
+      "/SmartDashboard/Field": {
+        "AprilTags": {
+          "arrows": false,
+          "color": [
+            0.8970588445663452,
+            0.8970588445663452,
+            0.8970588445663452,
+            255.0
+          ],
+          "length": 0.15000000596046448,
+          "weight": 2.0,
+          "width": 0.4000000059604645
+        },
+        "AutoPoses": {
+          "arrowColor": [
+            0.0,
+            0.47058820724487305,
+            1.0,
+            255.0
+          ],
+          "color": [
+            0.7549019455909729,
+            0.7549019455909729,
+            0.7549019455909729,
+            255.0
+          ],
+          "length": 0.699999988079071,
+          "width": 0.699999988079071
+        },
+        "AutoTraj": {
+          "arrowColor": [
+            1.0,
+            1.0,
+            1.0,
+            255.0
+          ],
+          "arrowSize": 100,
+          "arrowWeight": 1.0,
+          "color": [
+            0.9411764740943909,
+            0.48442909121513367,
+            0.48442909121513367,
+            255.0
+          ],
+          "length": 0.30000001192092896,
+          "selectable": false,
+          "style": "Line",
+          "weight": 1.0,
+          "width": 0.30000001192092896
+        },
+        "GraphNodes": {
+          "arrows": false,
+          "color": [
+            0.6029411554336548,
+            0.6029411554336548,
+            0.6029411554336548,
+            255.0
+          ],
+          "length": 0.20000000298023224,
+          "selectable": false,
+          "width": 0.20000000298023224
+        },
+        "KeepOut0": {
+          "arrows": false,
+          "selectable": false,
+          "style": "Line (Closed)"
+        },
+        "KeepOut1": {
+          "arrows": false,
+          "selectable": false,
+          "style": "Line (Closed)"
+        },
+        "KeepOut2": {
+          "arrows": false,
+          "selectable": false,
+          "style": "Line (Closed)"
+        },
+        "Robot": {
+          "arrowColor": [
+            0.7843137383460999,
+            0.7843137383460999,
+            0.7843137383460999,
+            255.0
+          ],
+          "color": [
+            1.0,
+            0.47058820724487305,
+            0.0,
+            255.0
+          ],
+          "length": 0.6000000238418579,
+          "selectable": false,
+          "width": 0.6000000238418579
+        },
+        "SimPose": {
+          "selectable": false,
+          "style": "Hidden"
+        },
+        "bottom": 1638,
+        "builtin": "2025 Reefscape",
+        "height": 8.051901817321777,
+        "left": 534,
+        "right": 3466,
+        "top": 291,
+        "width": 17.54825210571289,
+        "window": {
+          "visible": true
+        }
+      }
+    }
+  },
+  "NetworkTables Info": {
+    "visible": true
+  },
+  "NetworkTables Settings": {
+    "mode": "Client (NT4)",
+    "serverTeam": "839"
+  }
+}
