@@ -64,7 +64,7 @@ public final class Constants {
     public static double kLimitUnderDZ = Units.inchesToMeters(NTDouble.create(9.0,"Arm/DZ/kLimUnderDZ",(val)->kLimitUnderDZ=Units.inchesToMeters(val)));; // The Limit for how high the Elevator can go under the danger zone (dz / 9 - 21 inches)
     public static double kLimitAboveDZ = Units.inchesToMeters(NTDouble.create(21.0,"Arm/DZ/kLimAboveDZ",(val)->kLimitAboveDZ=Units.inchesToMeters(val)));; // The Limit for how high the Elevator can go above the danger zone (dz / 9 - 21 inches)
     public static double kAngleMaxDZ = Units.degreesToRadians(NTDouble.create(70.0,"Arm/DZ/kAngleMax",(val)->kAngleMaxDZ=Units.degreesToRadians(val))); // The Max Angle in degrees for the Arm while it is in the Danger Zone (dz)
-    public static MyMotorType kMotorType = MyMotorType.KRAKEN;
+    public static MyMotorType kMotorType = MyMotorType.SIMULATED;
     public static double kAngleDZMargin = Units.degreesToRadians(NTDouble.create(7.0,"Arm/DZ/kAngleMargin",(val)->kAngleDZMargin=Units.degreesToRadians(val))); // The margin to keep in degrees for the Arm while it is in the Danger Zone (dz)
     
     public static int kCANID = 4;
@@ -100,7 +100,7 @@ public final class Constants {
 
   public static class EffectorConstants {
     public static double kExtraTurn = NTDouble.create(0.15, "Effector/kExtraTurn", val->{kExtraTurn=val;});;
-    public static MyMotorType kMotorType = MyMotorType.NEO;
+    public static MyMotorType kMotorType = MyMotorType.SIMULATED;
     public static int kCANID = 7;
     public static double kIntakeSpeed = NTDouble.create(1, "Effector/kIntakeSpeed", val->{kIntakeSpeed=val;});
     public static double kIntakeSpeedAlgae = NTDouble.create(2, "Effector/kIntakeSpeedAlgae", val->{kIntakeSpeedAlgae=val;});
@@ -124,7 +124,7 @@ public final class Constants {
   }
   public static class ElevatorConstants {
 
-    public static MyMotorType kMotorType = MyMotorType.KRAKEN;
+    public static MyMotorType kMotorType = MyMotorType.SIMULATED;
     public static int kEleCANID = 12;
 
     public static double kLimitUnderDZ = Units.inchesToMeters(NTDouble.create(4.0,"Elevator/DZ/kLimUnderDZ",(val)->kLimitUnderDZ=Units.inchesToMeters(val)));; // The Limit for how high the Elevator can go under the danger zone (dz / 9 - 21 inches)
@@ -243,7 +243,7 @@ public final class Constants {
     public static double kStallCurrentRatio = NTDouble.create(0.8, "Funnel/Stall/CurrentRatio",(val)->kStallCurrentRatio=val);
     public static double kStallSpeed = NTDouble.create(0.05, "Funnel/Stall/Speed",(val)->kStallSpeed=val);
 
-    public static MyMotorType kMotorType = MyMotorType.NEO;
+    public static MyMotorType kMotorType = MyMotorType.SIMULATED;
     public static int kFunnelCANID = 8;
 
     // Position control gains
@@ -277,7 +277,7 @@ public final class Constants {
 
 
   public static class GyroConstants{
-    public static boolean kEnabled = true;
+    public static boolean kEnabled = false;
     public static double kTippingAngle = Units.degreesToRadians(NTDouble.create(12.5,"Gyro/kTippingAngle",val->kTippingAngle=Units.degreesToRadians(val)));
     public static double kTippingHysteresis = Units.degreesToRadians(NTDouble.create(5,"Gyro/kTippingHysteresis",val->kTippingHysteresis=Units.degreesToRadians(val)));
     public static int kCANID = 50;
@@ -382,7 +382,7 @@ public final class Constants {
   public static class ClimberConstants {
     
     public static final Gains kPositionGain = new Gains(10, 0, 0, 0);
-    public static MyMotorType kMotorType = MyMotorType.NEO;
+    public static MyMotorType kMotorType = MyMotorType.SIMULATED;
     public static int kDigitalInputID = 2;
     public static int kCANID = 3;
 
@@ -495,12 +495,12 @@ public final class Constants {
       public static CANID_t kCANID_RearLeft = new CANID_t(0, 6, 5);
       public static CANID_t kCANID_RearRight = new CANID_t(1, 14, 13);
 
-      public static MyMotorType kDriveType = MyMotorType.KRAKEN;
-      public static MyMotorType kSteerType = MyMotorType.NEO;
-      public static double kCalibrationFrontLeft = (kDriveType == MyMotorType.KRAKEN ? 2487.0 : 1502.0);
-      public static double kCalibrationFrontRight = (kDriveType == MyMotorType.KRAKEN ? 1104.0 : 2455.0);
-      public static double kCalibrationRearLeft = (kDriveType == MyMotorType.KRAKEN ? 823.0 : 3634.0);
-      public static double kCalibrationRearRight = (kDriveType == MyMotorType.KRAKEN ? 3949.0 : 2011.0);
+      public static MyMotorType kDriveType = MyMotorType.SIMULATED;
+      public static MyMotorType kSteerType = MyMotorType.SIMULATED;
+      public static double kCalibrationFrontLeft = (kDriveType == MyMotorType.SIMULATED ? 2487.0 : 1502.0);
+      public static double kCalibrationFrontRight = (kDriveType == MyMotorType.SIMULATED ? 1104.0 : 2455.0);
+      public static double kCalibrationRearLeft = (kDriveType == MyMotorType.SIMULATED ? 823.0 : 3634.0);
+      public static double kCalibrationRearRight = (kDriveType == MyMotorType.SIMULATED ? 3949.0 : 2011.0);
 
       // Maximum Current Limits
       public static int kDrivingMotorCurrentLimit = NTInteger.create(40,"SwerveModule/kDrivingMotorCurrentLimit",val->DriveTrain.forEachSwerveModule((m)->{m.m_motorDrive.withStatorLimit(val);}));

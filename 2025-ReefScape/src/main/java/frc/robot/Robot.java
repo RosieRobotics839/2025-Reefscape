@@ -33,12 +33,13 @@ import frc.robot.subsystems.Vision;
 import frc.utils.Action;
 import frc.utils.Encouragement;
 import frc.utils.KrakenOrchestra;
+import frc.utils.Laser;
 import frc.utils.TwentyFiveChain;
 import frc.robot.subsystems.PoseEstimator;
 import frc.robot.subsystems.SystemLog;
 
 import au.grapplerobotics.CanBridge;
-import au.grapplerobotics.LaserCan;
+//import au.grapplerobotics.LaserCan;
 
 /**
  * The methods in this class are called automatically corresponding to each mode, as described in
@@ -64,6 +65,8 @@ public class Robot extends TimedRobot {
   public TwentyFiveChain chain = new TwentyFiveChain();
   public Encouragement encouraging = new Encouragement();
   public Dashboard m_dashboard = Dashboard.getInstance();
+
+  public Laser m_laser = new Laser(49, Laser.MyLaserType.LASERCAN, "THRIFTYLASER");
 
   Alliance myAlliance = Alliance.Red;
 
@@ -146,6 +149,8 @@ public class Robot extends TimedRobot {
   boolean noDS = true;
   @Override
   public void robotPeriodic() {
+
+    DriverStation.silenceJoystickConnectionWarning(true);
 
     // Record data as long as robot is enabled (and some time after to keep recording between auto and teleop)
     m_recordTrigger.calculate(m_recording.calculate(isEnabled()));
