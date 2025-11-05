@@ -285,7 +285,6 @@ public final class Constants {
   }
 
   public static class LaserConstants{
-    public static int kLaserCANid = 49;
   }
 
   public static class PoseConstants{

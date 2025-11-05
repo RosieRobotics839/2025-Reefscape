@@ -39,7 +39,6 @@ import frc.robot.subsystems.PoseEstimator;
 import frc.robot.subsystems.SystemLog;
 
 import au.grapplerobotics.CanBridge;
-//import au.grapplerobotics.LaserCan;
 
 /**
  * The methods in this class are called automatically corresponding to each mode, as described in
@@ -66,7 +65,8 @@ public class Robot extends TimedRobot {
   public Encouragement encouraging = new Encouragement();
   public Dashboard m_dashboard = Dashboard.getInstance();
 
-  public Laser m_laser = new Laser(49, Laser.MyLaserType.LASERCAN, "THRIFTYLASER");
+  public Laser m_thriftylaser = new Laser(49, Laser.MyLaserType.LASERCAN, "THRIFTYLASER");
+  public Laser m_fusionlaser = new Laser(48, Laser.MyLaserType.FUSIONLASER, "FUSIONLASER");
 
   Alliance myAlliance = Alliance.Red;
 
