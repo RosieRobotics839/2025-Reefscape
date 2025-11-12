@@ -48,7 +48,7 @@ public class Laser extends SubsystemBase {
 
         // Set default configuration
         // LaserCan has predefined sample times so it ignores the argument
-        setRangingMode(MyRangingMode.SHORT, SAMPLE_TIME_BALANCED);
+        setRangingMode(MyRangingMode.LONG, SAMPLE_TIME_BALANCED);
         setRegionOfInterest(ROI_NARROW);
 
     }
