@@ -77,10 +77,7 @@ public class FlightStick extends Joystick {
         DriveTrain.getInstance().setMaxRotate(DriveConstants.kMaxRotationVelocity[m_speedSelector]);
       }));
 
-      Btm8Btn.onTrue(new InstantCommand(()->AutoCommands.DriveReefOffset()));
-      Btm7Btn.onTrue(new InstantCommand(()->AutoCommands.AimAtClosestSource()));
       Btm7Btn.onFalse(new InstantCommand(()->DriveTrain.getInstance().unlockTargetHeading()));
-      Btm10Btn.onTrue(new InstantCommand(()->AutoCommands.DriveBargeLineup()));
 
       /* Swap between field centric and proportional */
 
